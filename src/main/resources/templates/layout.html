@@ -44,7 +44,7 @@
             <ul class="navbar-nav mb-2 mb-lg-0 d-flex justify-content-center w-100">
                 <li class="nav-item mx-3"><a class="nav-link active" aria-current="page" th:href="@{/dashboard}">Tổng quan</a></li>
                 <li class="nav-item mx-3"><a class="nav-link" th:href="@{/category}">Quản lý danh mục</a></li>
-                <li class="nav-item mx-3"><a class="nav-link" href="#">Quản lý khóa học</a></li>
+                <li class="nav-item mx-3"><a class="nav-link" th:href="@{/courses}">Quản lý khóa học</a></li>
             </ul>
         </div>
     </div>
@@ -198,5 +198,37 @@ var myLineChart = new Chart(ctx, {
   }
 });
 
+</script>
+<script>
+    // Mảng các path SVG khác nhau
+    const wavePaths = [
+        "M0,100 C150,200 350,0 500,100 L500,150 L0,150 Z",
+        "M0,100 C250,0 350,200 500,100 L500,150 L0,150 Z",
+        "M0,50 C150,100 350,0 500,50 L500,150 L0,150 Z",
+        "M0,100 C200,50 300,150 500,100 L500,150 L0,150 Z",
+        "M0,150 C200,50 300,150 500,50 L500,150 L0,150 Z"
+    ];
+
+    // Mảng các màu sắc khác nhau
+    const colors = [
+        "#7F9CF5",
+        "#FFB6C1",
+        "#FF6347",
+        "#4682B4",
+        "#32CD32"
+    ];
+
+    // Lấy tất cả các SVG có class 'random-wave'
+    const svgs = document.querySelectorAll('.random-wave');
+
+    // Lặp qua tất cả các SVG và đặt path + màu ngẫu nhiên
+    svgs.forEach(svg => {
+        const randomPath = wavePaths[Math.floor(Math.random() * wavePaths.length)];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+        // Thêm d và fill vào thẻ path
+        svg.querySelector('path').setAttribute('d', randomPath);
+        svg.querySelector('path').setAttribute('fill', randomColor);
+    });
 </script>
 </html>

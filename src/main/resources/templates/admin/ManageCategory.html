@@ -9,112 +9,125 @@
 
   <style>
     .btn-cate i {
-      margin-right: 5px;
+        margin-right: 5px;
+    }
+
+    .link-cate {
+        text-decoration: none;
+        color: #fff;
     }
 
     .btn-edit:hover {
-      background-color: #e9ce7d !important;
+        background-color: #e9ce7d !important;
     }
 
     .btn-create:hover {
-      background-color: #7ac7e3 !important;
+        background-color: #7ac7e3 !important;
     }
 
     .categories li {
-      list-style:none;
-      border-bottom: 1px solid #e1e1e1;
+        list-style:none;
+        border-bottom: 1px solid #e1e1e1;
     }
 
     .btn-load,
     .btn-load i{
-      margin-left: 5px;
+        margin-left: 5px;
     }
   </style>
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
 <!--  search input-->
-  <div class="d-flex justify-content-end">
-    <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;">
-      <div class="input-group mt-2 mb-3">
-        <input type="text" class="form-control small" placeholder="Tìm kiếm..." aria-label="Search" aria-describedby="basic-addon2">
-        <div class="input-group-append">
-          <button class="btn btn-primary" type="button" style="border-radius: 0 5px 5px 0;">
-            <i class="fas fa-search fa-sm"></i>
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
+    <div class="d-flex justify-content-end">
+        <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;">
+            <div class="input-group mt-2 mb-3">
+                <input type="text" class="form-control small" placeholder="Tìm kiếm..." aria-label="Search" aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="button" style="border-radius: 0 5px 5px 0;">
+                        <i class="fas fa-search fa-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 <!--btns edit and create category-->
-  <div class="row">
-      <div class="col d-sm-flex align-items-center justify-content-between">
-        <h1 class="h3 mb-0 text-gray-800">Danh mục các khóa học</h1>
-      </div>
-      <div class="col d-flex justify-content-end">
-        <button type="submit" class="btn btn-cate btn-edit text-white bg-warning" style="margin-right: 5px;"><i class="bi bi-pencil-fill "></i>Sửa</button>
-        <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;"><i class="bi bi-plus"></i>Tạo danh mục</button>
-      </div>
-  </div>
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 class="h3 mb-0 text-gray-800">Danh mục các khóa học</h1>
+        </div>
+        <div class="col d-flex justify-content-end">
+            <a class="link-cate" th:href="@{/category/edit-category}">
+                <button type="submit" class="btn btn-cate btn-edit text-white bg-warning" style="margin-right: 5px;">
+                <i class="bi bi-pencil-fill "></i>Sửa
+                </button>
+            </a>
+            <a class="link-cate" th:href="@{/category/create-category}">
+                <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
+                    <i class="bi bi-plus"></i>Tạo danh mục
+                </button>
+            </a>
+        </div>
+    </div>
 
 <!--  list category-->
-  <div class="accordion mt-2" id="courseAccordion">
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingOne">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-          Trường... (số lượng courses)
-        </button>
-      </h2>
-      <ul id="collapseOne" class="accordion-collapse collapse categories" aria-labelledby="headingOne" data-bs-parent="#courseAccordion" style="">
-        <li class="accordion-body">
-          Khoa... (số lượng courses)
-        </li>
-        <li class="accordion-body">
-          Khoa... (số lượng courses)
-        </li>
-        <li class="accordion-body">
-          Khoa... (số lượng courses)
-        </li>
-      </ul>
+    <div class="accordion mt-2" id="courseAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                  Trường... (số lượng courses)
+                </button>
+            </h2>
+            <ul id="collapseOne" class="accordion-collapse collapse categories" aria-labelledby="headingOne" data-bs-parent="#courseAccordion" style="">
+                <li class="accordion-body">
+                  Khoa... (số lượng courses)
+                </li>
+                <li class="accordion-body">
+                  Khoa... (số lượng courses)
+                </li>
+                <li class="accordion-body">
+                  Khoa... (số lượng courses)
+                </li>
+            </ul>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Khoa... (số lượng courses)
+                </button>
+            </h2>
+            <ul id="collapseTwo" class="accordion-collapse collapse categories" aria-labelledby="headingTwo" data-bs-parent="#courseAccordion" style="">
+                <li class="accordion-body">
+                  Bộ môn... (số lượng courses)
+                </li>
+                <li class="accordion-body">
+                  Bộ môn... (số lượng courses)
+                </li>
+            </ul>
+        </div>
     </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="headingTwo">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Khoa... (số lượng courses)
-        </button>
-      </h2>
-      <ul id="collapseTwo" class="accordion-collapse collapse categories" aria-labelledby="headingTwo" data-bs-parent="#courseAccordion" style="">
-        <li class="accordion-body">
-          Bộ môn... (số lượng courses)
-        </li>
-        <li class="accordion-body">
-          Bộ môn... (số lượng courses)
-        </li>
-      </ul>
-    </div>
-  </div>
 
 <!--  btns to upload files-->
-  <div class="row">
-    <div class="d-flex justify-content-end">
-      <div class="row mt-2">
+    <div class="row">
         <div class="d-flex justify-content-end">
-          <form>
-            <label class="btn btn-primary btn-load" for="uploadFileList">Tải danh sách học phần<i class="bi bi-upload"></i></label>
-            <input type="file" id="uploadFileList" class="d-none">
-          </form>
-          <form>
-            <label class="btn btn-primary btn-load" for="uploadFileTKB">Tải TKB giảng viên<i class="bi bi-upload"></i></label>
-            <input type="file" id="uploadFileTKB" class="d-none">
-          </form>
-          <form>
-            <label class="btn btn-primary btn-load" for="uploadFileSV">Tải danh sách sinh viên<i class="bi bi-upload"></i></label>
-            <input type="file" id="uploadFileSV" class="d-none">
-          </form>
+            <div class="row mt-2">
+                <div class="d-flex justify-content-end">
+                    <form>
+                        <label class="btn btn-primary btn-load" for="uploadFileList">Tải danh sách học phần<i class="bi bi-upload"></i></label>
+                        <input type="file" id="uploadFileList" class="d-none">
+                    </form>
+                    <form>
+                        <label class="btn btn-primary btn-load" for="uploadFileTKB">Tải TKB giảng viên<i class="bi bi-upload"></i></label>
+                        <input type="file" id="uploadFileTKB" class="d-none">
+                    </form>
+                    <form>
+                        <label class="btn btn-primary btn-load" for="uploadFileSV">Tải danh sách sinh viên<i class="bi bi-upload"></i></label>
+                        <input type="file" id="uploadFileSV" class="d-none">
+                    </form>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
 </div>
 </body>

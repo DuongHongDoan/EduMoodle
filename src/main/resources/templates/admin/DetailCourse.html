@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">{Găn tên khóa học}</title>
+  <style>
+    .courses-name {
+        border-bottom: 2px solid #1f5ca9;
+    }
+
+    .tab-content {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .btn-cate i {
+        margin-right: 5px;
+    }
+
+    .btn-create:hover {
+        background-color: #7ac7e3 !important;
+    }
+    .listStudent {
+        list-style: none;
+        font-size: 1.2rem;
+    }
+
+    .listStudent li {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .action-icons {
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        cursor: pointer;
+    }
+
+    .gv-sv {
+        border-bottom: 1px solid #dee2e6;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body">
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+          <!-- Tab navigation -->
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="khoahoc-tab" data-bs-toggle="tab" data-bs-target="#khoahoc" type="button" role="tab" aria-controls="khoahoc" aria-selected="true">Khóa học</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="thanhvien-tab" data-bs-toggle="tab" data-bs-target="#thanhvien" type="button" role="tab" aria-controls="thanhvien" aria-selected="false" tabindex="-1">Thành viên</button>
+                </li>
+            </ul>
+
+          <!-- Tab content -->
+            <div class="tab-content" id="myTabContent">
+              <!-- Tab Khóa học -->
+                <div class="tab-pane fade active show" id="khoahoc" role="tabpanel" aria-labelledby="khoahoc-tab">
+                    <div class="accordion mt-3" id="accordionExample">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                  Topic 1
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample" style="">
+                                <div class="accordion-body">
+                                  Nội dung của Topic 1.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                  Topic 2
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample" style="">
+                                <div class="accordion-body">Nội dung của Topic 2.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Thành viên -->
+                <div class="tab-pane fade" id="thanhvien" role="tabpanel" aria-labelledby="thanhvien-tab">
+                    <div class="row">
+                        <div class="col d-flex justify-content-end">
+                            <a class="link-cate" th:href="@{/courses/add-member}">
+                                <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
+                                    <i class="bi bi-plus"></i>Thêm thành viên
+                                </button>
+                            </a>
+                        </div>
+                    </div>
+
+                  <!-- Giáo viên -->
+                    <div class="row">
+                        <div class="col-12 d-sm-flex align-items-center gv-sv">
+                          <!--<h3 class="h3 courses-name mb-0 text-gray-800">Giảng viên</h3>-->
+                            <h4 class="fw-bold">Giáo viên</h4>
+                        </div>
+                        <div class="col align-items-center">
+                            <ul class="listStudent">
+                                <li>Nguyễn Văn A 111111
+                                    <div class="action-icons">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                    </div>
+                                </li>
+                                <li>Nguyễn Văn B 222222
+                                    <div class="action-icons">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                  <!-- Học viên -->
+                    <div class="row">
+                        <div class="col-12 d-sm-flex align-items-center gv-sv">
+                          <!--<h3 class="h3 courses-name mb-0 text-gray-800">Giảng viên</h3>-->
+                            <h4 class="fw-bold mt-4">Sinh viên <span class="text-muted">(22)</span></h4>
+                        </div>
+                        <div class="col align-items-center">
+                            <ul class="listStudent">
+                                <li>Bùi Doãn Tùng Lâm B1807566
+                                    <div class="action-icons">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                    </div>
+                                </li>
+                                <li>Bùi Doãn Tùng Lâm B1807566
+                                    <div class="action-icons">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                    </div>
+                                </li>
+                                <li>Bùi Doãn Tùng Lâm B1807566
+                                    <div class="action-icons">
+                                        <i class="bi bi-pencil-fill text-primary"></i>
+                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
