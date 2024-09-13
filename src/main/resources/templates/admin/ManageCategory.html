@@ -8,6 +8,10 @@
   <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Quản lý danh mục</title>
 
   <style>
+    .list-category {
+        border-bottom: 2px solid #0056b3;
+    }
+
     .btn-cate i {
         margin-right: 5px;
     }
@@ -54,7 +58,7 @@
 <!--btns edit and create category-->
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-between">
-            <h1 class="h3 mb-0 text-gray-800">Danh mục các khóa học</h1>
+            <h1 class="h3 list-category mb-0 text-gray-800">Danh mục các khóa học</h1>
         </div>
         <div class="col d-flex justify-content-end">
             <a class="link-cate" th:href="@{/category/edit-category}">
