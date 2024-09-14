@@ -61,12 +61,12 @@
             <h1 class="h3 list-category mb-0 text-gray-800">Danh mục các khóa học</h1>
         </div>
         <div class="col d-flex justify-content-end">
-            <a class="link-cate" th:href="@{/category/edit-category}">
+            <a class="link-cate" th:href="@{/admin/category/edit-category}">
                 <button type="submit" class="btn btn-cate btn-edit text-white bg-warning" style="margin-right: 5px;">
                 <i class="bi bi-pencil-fill "></i>Sửa
                 </button>
             </a>
-            <a class="link-cate" th:href="@{/category/create-category}">
+            <a class="link-cate" th:href="@{/admin/category/create-category}">
                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                     <i class="bi bi-plus"></i>Tạo danh mục
                 </button>
@@ -74,41 +74,27 @@
         </div>
     </div>
 
-<!--  list category-->
-    <div class="accordion mt-2" id="courseAccordion">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingOne">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                  Trường... (số lượng courses)
+    <!-- List parent categories -->
+    <div class="accordion mt-2" id="courseAccordion2"  th:if="${categories != null}">
+        <div th:each="parentCategory : ${categories.get(0)}" class="accordion-item">
+            <h2 class="accordion-header" th:attr="id='heading' + ${parentCategory.id}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        th:data-bs-target="'#collapse' + ${parentCategory.id}" aria-expanded="false" th:attr="aria-controls='collapse' + ${parentCategory.id}">
+                    <span th:utext="${parentCategory.name}"></span>
+                    <span th:text="('(' + ${totalCoursesByParent[parentCategory.id]} + ')')"></span>
                 </button>
             </h2>
-            <ul id="collapseOne" class="accordion-collapse collapse categories" aria-labelledby="headingOne" data-bs-parent="#courseAccordion" style="">
-                <li class="accordion-body">
-                  Khoa... (số lượng courses)
-                </li>
-                <li class="accordion-body">
-                  Khoa... (số lượng courses)
-                </li>
-                <li class="accordion-body">
-                  Khoa... (số lượng courses)
+            <ul th:id="'collapse' + ${parentCategory.id}" th:attr="aria-labelledby='heading' + ${parentCategory.id}" class="accordion-collapse collapse categories" data-bs-parent="#courseAccordion">
+                <!-- List child categories -->
+                <li class="accordion-body" th:each="childCategory : ${categories.get(parentCategory.id)}">
+                    <span th:utext="${childCategory.name}"></span>
+                    <span th:text="('(' + ${childCategory.coursecount} + ')')"></span>
                 </li>
             </ul>
         </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="headingTwo">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                  Khoa... (số lượng courses)
-                </button>
-            </h2>
-            <ul id="collapseTwo" class="accordion-collapse collapse categories" aria-labelledby="headingTwo" data-bs-parent="#courseAccordion" style="">
-                <li class="accordion-body">
-                  Bộ môn... (số lượng courses)
-                </li>
-                <li class="accordion-body">
-                  Bộ môn... (số lượng courses)
-                </li>
-            </ul>
-        </div>
+    </div>
+    <div th:if="${categories == null}">
+        <p>No categories found.</p>
     </div>
 
 <!--  btns to upload files-->
