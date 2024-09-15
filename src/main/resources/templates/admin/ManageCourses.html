@@ -46,13 +46,9 @@
     <div class="row">
         <div class="col-xl-8">
             <select class="form-select" id="coursesCategory">
-              <!-- Loop through categories from model and create options -->
-              <!--                            <option th:each="category : ${categories}"-->
-              <!--                                    th:value="${category.id}"-->
-              <!--                                    th:text="${category.name}"></option>-->
-                <option value="Danh mục 1">Trường1..../Khoa1....</option>
-                <option value="Danh mục 2">Trường2..../Khoa2....</option>
-                <option value="Danh mục 3">Trường3..../Khoa3....</option>
+                <option th:each="category : ${categoriesHierarchy}"
+                        th:value="${category}"
+                        th:utext="${category}"></option>
             </select>
         </div>
         <div class="col-xl-4 d-flex justify-content-end">
@@ -74,12 +70,12 @@
             <h1 class="list-courses-name h3 mb-0 text-gray-800">Danh sách các khóa học</h1>
         </div>
         <div class="col d-flex justify-content-end">
-            <a class="link-cate" th:href="@{/courses/edit-course}">
+            <a class="link-cate" th:href="@{/admin/courses/edit-course}">
                 <button type="submit" class="btn btn-cate btn-edit text-white bg-warning" style="margin-right: 5px;">
                     <i class="bi bi-pencil-fill "></i>Sửa
                 </button>
             </a>
-            <a class="link-cate" th:href="@{/courses/create-course}">
+            <a class="link-cate" th:href="@{/admin/courses/create-course}">
                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                     <i class="bi bi-plus"></i>Tạo khóa học
                 </button>
