@@ -35,7 +35,14 @@ public class CategoriesController {
             categories = new HashMap<>();
         }
 
+        // Lấy tổng số khóa học cho từng danh mục cha
+        Map<Integer, Integer> totalCoursesByParent = categoriesService.getTotalCoursesByParent();
+        if (totalCoursesByParent == null) {
+            totalCoursesByParent = new HashMap<>();
+        }
+
         model.addAttribute("categories", categories);
+        model.addAttribute("totalCoursesByParent", totalCoursesByParent);
         return "admin/ManageCategory";
     }
 }

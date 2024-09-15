@@ -67,18 +67,53 @@ public class CategoriesService {
         Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent = getCategoriesGroupedByParent();
         Map<Integer, Integer> totalCoursesByParent = new HashMap<>();
 
+        // Duyệt qua tất cả các danh mục
         for (Map.Entry<Integer, List<CategoriesDTO>> entry : categoriesGroupedByParent.entrySet()) {
             int parentId = entry.getKey();
             List<CategoriesDTO> subCategories = entry.getValue();
             int totalCourses = 0;
 
-            for (CategoriesDTO subCategory : subCategories) {
-                totalCourses += subCategory.getCoursecount(); // Số khóa học của danh mục con
+            // Tính số khóa học của các danh mục con
+            if (subCategories != null && !subCategories.isEmpty()) {
+                for (CategoriesDTO subCategory : subCategories) {
+                    totalCourses += subCategory.getCoursecount(); // Số khóa học của danh mục con
+                }
             }
 
+            // Cộng khóa học của chính danh mục cha
+            CategoriesDTO parentCategory = findParentCategory(parentId, categoriesGroupedByParent);
+            if (parentCategory != null) {
+                totalCourses += parentCategory.getCoursecount(); // Cộng khóa học của chính danh mục cha
+            }
+
+            // Đưa tổng số khóa học vào Map
             totalCoursesByParent.put(parentId, totalCourses);
+        }
+
+        // Xử lý các danh mục không có con nhưng có khóa học
+        for (List<CategoriesDTO> categories : categoriesGroupedByParent.values()) {
+            for (CategoriesDTO category : categories) {
+                // Nếu danh mục không phải là cha của bất kỳ danh mục con nào
+                if (!totalCoursesByParent.containsKey(category.getId())) {
+                    totalCoursesByParent.put(category.getId(), category.getCoursecount());
+                }
+            }
         }
 
         return totalCoursesByParent;
     }
+
+    // Phương thức tìm kiếm danh mục cha theo ID
+    private CategoriesDTO findParentCategory(int parentId, Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent) {
+        for (List<CategoriesDTO> categories : categoriesGroupedByParent.values()) {
+            for (CategoriesDTO category : categories) {
+                if (category.getId() == parentId) {
+                    return category;
+                }
+            }
+        }
+        return null;
+    }
+
+
 }
