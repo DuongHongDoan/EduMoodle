@@ -12,6 +12,14 @@
         border-bottom: 2px solid #0056b3;
     }
 
+    .accordion-header .accordion-button a,
+    .accordion-body a{
+        text-decoration: none;
+        color: #555555;
+        font-size: 1.23rem;
+        line-height: 1;
+    }
+
     .btn-cate i {
         margin-right: 5px;
     }
@@ -79,16 +87,20 @@
         <div th:each="parentCategory : ${categories.get(0)}" class="accordion-item">
             <h2 class="accordion-header" th:attr="id='heading' + ${parentCategory.id}">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        th:data-bs-target="'#collapse' + ${parentCategory.id}" aria-expanded="false" th:attr="aria-controls='collapse' + ${parentCategory.id}">
-                    <span th:utext="${parentCategory.name}"></span>
-                    <span th:text="('(' + ${totalCoursesByParent[parentCategory.id]} + ')')"></span>
+                            th:data-bs-target="'#collapse' + ${parentCategory.id}" aria-expanded="false" th:attr="aria-controls='collapse' + ${parentCategory.id}">
+                        <a th:href="@{/admin/courses/categoryid/{id}(id=${parentCategory.id})}">
+                            <span th:utext="${parentCategory.name}"></span>
+                            <span th:text="('(' + ${totalCoursesByParent[parentCategory.id]} + ')')"></span>
+                        </a>
                 </button>
             </h2>
             <ul th:id="'collapse' + ${parentCategory.id}" th:attr="aria-labelledby='heading' + ${parentCategory.id}" class="accordion-collapse collapse categories" data-bs-parent="#courseAccordion">
                 <!-- List child categories -->
                 <li class="accordion-body" th:each="childCategory : ${categories.get(parentCategory.id)}">
-                    <span th:utext="${childCategory.name}"></span>
-                    <span th:text="('(' + ${childCategory.coursecount} + ')')"></span>
+                    <a th:href="@{/admin/courses/categoryid/{id}(id=${childCategory.id})}">
+                        <span th:utext="${childCategory.name}"></span>
+                        <span th:text="('(' + ${childCategory.coursecount} + ')')"></span>
+                    </a>
                 </li>
             </ul>
         </div>

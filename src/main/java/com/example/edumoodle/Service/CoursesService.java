@@ -1,75 +1,90 @@
 package com.example.edumoodle.Service;
 
 import com.example.edumoodle.DTO.CategoriesDTO;
+import com.example.edumoodle.DTO.CoursesDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CoursesService {
 
-    @Autowired
-    private CategoriesService categoriesService;
+    @Value("${moodle.token}")
+    private String token;
 
-    public List<String> getParentChildCategories() {
-        Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent = categoriesService.getCategoriesGroupedByParent();
-        List<String> categoryHierarchy = new ArrayList<>();
-        Set<Integer> parentIdsWithChildren = new HashSet<>();
+    @Value("${moodle.domainName}")
+    private String domainName;
 
-        // Lưu trữ tất cả các danh mục vào tập hợp
-        Set<CategoriesDTO> allCategories = new HashSet<>();
-        for (List<CategoriesDTO> categories : categoriesGroupedByParent.values()) {
-            for (CategoriesDTO category : categories) {
-                if (category.getParent() == 0) {  // Chỉ thêm những danh mục có parentId khác 0
-                    allCategories.add(category);
-                }
-            }
-        }
+    public List<CoursesDTO> getAllCourses() {
+        String apiMoodleFunc = "core_course_get_courses";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json";
 
-        // Duyệt qua các danh mục cha
-        for (Map.Entry<Integer, List<CategoriesDTO>> entry : categoriesGroupedByParent.entrySet()) {
-            int parentId = entry.getKey();
-            List<CategoriesDTO> subCategories = entry.getValue();
+        RestTemplate restTemplate = new RestTemplate();
+        CoursesDTO[] courseArray = restTemplate.getForObject(url, CoursesDTO[].class);
 
-            // Tìm danh mục cha
-            CategoriesDTO parentCategory = findParentCategory(parentId, categoriesGroupedByParent);
-            if (parentCategory != null) {
-                String parentCategoryName = parentCategory.getName();
-                // Nếu danh mục cha có danh mục con
-                if (subCategories != null && !subCategories.isEmpty()) {
-                    parentIdsWithChildren.add(parentId); // Đánh dấu danh mục cha có con
-                    categoryHierarchy.add(parentCategoryName); // Thêm danh mục cha
-                    for (CategoriesDTO subCategory : subCategories) {
-                        // Thêm cấu trúc "cha / con" vào danh sách
-                        categoryHierarchy.add(parentCategoryName + " / " + subCategory.getName());
-                    }
-                }
-            }
-        }
+        // Lọc bỏ những course có categoryid = 0
+        assert courseArray != null;
 
-        // Xử lý các danh mục không có con
-        for (CategoriesDTO category : allCategories) {
-            if (!parentIdsWithChildren.contains(category.getId()) &&
-                    !categoryHierarchy.contains(category.getName())) {
-                categoryHierarchy.add(category.getName());
-            }
-        }
-        // Debug: In ra danh sách phân cấp cha/con trước khi trả về
-//        categoryHierarchy.forEach(System.out::println);
-
-        return categoryHierarchy;
+        return Arrays.stream(courseArray)
+                .filter(course -> course.getCategoryid() != null && course.getCategoryid() != 0)
+                .collect(Collectors.toList());
     }
 
-    // Phương thức tìm kiếm danh mục cha theo ID
-    private CategoriesDTO findParentCategory(int parentId, Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent) {
-        for (List<CategoriesDTO> categories : categoriesGroupedByParent.values()) {
-            for (CategoriesDTO category : categories) {
-                if (category.getId() == parentId) {
-                    return category;
-                }
-            }
-        }
-        return null;
+    // Lấy tất cả các danh mục
+    public Map<Integer, String> getMapCategories() {
+        String apiMoodleFunc = "core_course_get_categories";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json";
+
+        RestTemplate restTemplate = new RestTemplate();
+        CategoriesDTO[] categoryArray = restTemplate.getForObject(url, CategoriesDTO[].class);
+
+        // Chuyển đổi danh sách danh mục thành Map<id, name> để dễ dàng ánh xạ categoryID bên course sang categoryName
+        assert categoryArray != null;
+        return Arrays.stream(categoryArray)
+                .collect(Collectors.toMap(CategoriesDTO::getId, CategoriesDTO::getName));
+    }
+
+    public List<CategoriesDTO> getAllCategories() {
+        String apiMoodleFunc = "core_course_get_categories";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json";
+
+        RestTemplate restTemplate = new RestTemplate();
+        CategoriesDTO[] categoryArray = restTemplate.getForObject(url, CategoriesDTO[].class);
+        assert categoryArray != null;
+        return Arrays.asList(categoryArray);
+    }
+
+//    public List<CoursesDTO> getCoursesByCategory(int categoryId) {
+//        List<CoursesDTO> allCourses = getAllCourses();
+//        return allCourses.stream()
+//                .filter(course -> course.getCategoryid() == categoryId)
+//                .collect(Collectors.toList());
+//    }
+
+    public List<CoursesDTO> getCoursesByParentCategory(int parentCategoryId) {
+        List<CategoriesDTO> allCategories = getAllCategories();
+        List<Integer> categoryIds = allCategories.stream()
+                .filter(category -> category.getParent() == parentCategoryId)
+                .map(CategoriesDTO::getId)
+                .collect(Collectors.toList());
+        categoryIds.add(parentCategoryId); // Thêm danh mục cha vào danh sách
+
+        List<CoursesDTO> allCourses = getAllCourses();
+        return allCourses.stream()
+                .filter(course -> categoryIds.contains(course.getCategoryid()))
+                .collect(Collectors.toList());
     }
 }

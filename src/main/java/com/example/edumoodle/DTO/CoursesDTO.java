@@ -2,7 +2,7 @@ package com.example.edumoodle.DTO;
 
 public class CoursesDTO {
     private Integer id;
-    private Integer category;
+    private Integer categoryid;
     private String fullname;
     private String shortname;
     private String summary;
@@ -15,20 +15,12 @@ public class CoursesDTO {
         this.id = id;
     }
 
-    public Integer getCategory() {
-        return category;
+    public Integer getCategoryid() {
+        return categoryid;
     }
 
-    public void setCategory(Integer category) {
-        this.category = category;
-    }
-
-    public String getFullname() {
-        return fullname;
-    }
-
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setCategoryid(Integer categoryid) {
+        this.categoryid = categoryid;
     }
 
     public String getShortname() {
@@ -37,6 +29,14 @@ public class CoursesDTO {
 
     public void setShortname(String shortname) {
         this.shortname = shortname;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 
     public String getSummary() {

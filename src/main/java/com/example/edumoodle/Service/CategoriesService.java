@@ -1,6 +1,7 @@
 package com.example.edumoodle.Service;
 
 import com.example.edumoodle.DTO.CategoriesDTO;
+import com.example.edumoodle.DTO.CategoryHierarchyDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,10 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class CategoriesService {
@@ -50,7 +48,7 @@ public class CategoriesService {
             return new HashMap<>();
         }
 
-        logger.info("Fetched {} categories from Moodle API", categories.length);
+//        logger.info("Fetched {} categories from Moodle API", categories.length);
 
         // Nhóm các danh mục theo parent
         Map<Integer, List<CategoriesDTO>> categoryMap = new HashMap<>();
@@ -102,6 +100,106 @@ public class CategoriesService {
 
         return totalCoursesByParent;
     }
+    public List<CategoryHierarchyDTO> getParentChildCategories() {
+        Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent = getCategoriesGroupedByParent();
+        List<CategoryHierarchyDTO> categoryHierarchy = new ArrayList<>();
+        Set<Integer> parentIdsWithChildren = new HashSet<>();
+
+        // Lưu trữ tất cả các danh mục vào tập hợp
+        Set<CategoriesDTO> allCategories = new HashSet<>();
+        for (List<CategoriesDTO> categories : categoriesGroupedByParent.values()) {
+            for (CategoriesDTO category : categories) {
+                if (category.getParent() == 0) {  // Chỉ thêm những danh mục có parentId khác 0
+                    allCategories.add(category);
+                }
+            }
+        }
+
+        // Duyệt qua các danh mục cha
+        for (Map.Entry<Integer, List<CategoriesDTO>> entry : categoriesGroupedByParent.entrySet()) {
+            int parentId = entry.getKey();
+            List<CategoriesDTO> subCategories = entry.getValue();
+
+            // Tìm danh mục cha
+            CategoriesDTO parentCategory = findParentCategory(parentId, categoriesGroupedByParent);
+            if (parentCategory != null) {
+                String parentCategoryName = parentCategory.getName();
+                Integer parentCategoryId = parentCategory.getId();
+
+                // Nếu danh mục cha có danh mục con
+                if (subCategories != null && !subCategories.isEmpty()) {
+                    parentIdsWithChildren.add(parentId); // Đánh dấu danh mục cha có con
+                    categoryHierarchy.add(new CategoryHierarchyDTO(parentCategoryId, parentCategoryName)); // Thêm danh mục cha
+
+                    for (CategoriesDTO subCategory : subCategories) {
+                        // Thêm cấu trúc "cha / con" vào danh sách
+                        String subCategoryName = parentCategoryName + " / " + subCategory.getName();
+                        categoryHierarchy.add(new CategoryHierarchyDTO(subCategory.getId(), subCategoryName));
+                    }
+                }
+            }
+        }
+
+        // Xử lý các danh mục không có con
+        for (CategoriesDTO category : allCategories) {
+            if (!parentIdsWithChildren.contains(category.getId()) &&
+                    categoryHierarchy.stream().noneMatch(c -> c.getName().equals(category.getName()))) {
+                categoryHierarchy.add(new CategoryHierarchyDTO(category.getId(), category.getName()));
+            }
+        }
+
+        return categoryHierarchy;
+    }
+
+//    public List<String> getParentChildCategories() {
+//        Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent = getCategoriesGroupedByParent();
+//        List<String> categoryHierarchy = new ArrayList<>();
+//        Set<Integer> parentIdsWithChildren = new HashSet<>();
+//
+//        // Lưu trữ tất cả các danh mục vào tập hợp
+//        Set<CategoriesDTO> allCategories = new HashSet<>();
+//        for (List<CategoriesDTO> categories : categoriesGroupedByParent.values()) {
+//            for (CategoriesDTO category : categories) {
+//                if (category.getParent() == 0) {  // Chỉ thêm những danh mục có parentId khác 0
+//                    allCategories.add(category);
+//                }
+//            }
+//        }
+//
+//        // Duyệt qua các danh mục cha
+//        for (Map.Entry<Integer, List<CategoriesDTO>> entry : categoriesGroupedByParent.entrySet()) {
+//            int parentId = entry.getKey();
+//            List<CategoriesDTO> subCategories = entry.getValue();
+//
+//            // Tìm danh mục cha
+//            CategoriesDTO parentCategory = findParentCategory(parentId, categoriesGroupedByParent);
+//            if (parentCategory != null) {
+//                String parentCategoryName = parentCategory.getName();
+//                // Nếu danh mục cha có danh mục con
+//                if (subCategories != null && !subCategories.isEmpty()) {
+//                    parentIdsWithChildren.add(parentId); // Đánh dấu danh mục cha có con
+//                    categoryHierarchy.add(parentCategoryName); // Thêm danh mục cha
+//                    for (CategoriesDTO subCategory : subCategories) {
+//                        // Thêm cấu trúc "cha / con" vào danh sách
+//                        categoryHierarchy.add(parentCategoryName + " / " + subCategory.getName());
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Xử lý các danh mục không có con
+//        for (CategoriesDTO category : allCategories) {
+//            if (!parentIdsWithChildren.contains(category.getId()) &&
+//                    !categoryHierarchy.contains(category.getName())) {
+//                categoryHierarchy.add(category.getName());
+//            }
+//        }
+//        // Debug: In ra danh sách phân cấp cha/con trước khi trả về
+////        categoryHierarchy.forEach(System.out::println);
+//
+//        return categoryHierarchy;
+//    }
+
 
     // Phương thức tìm kiếm danh mục cha theo ID
     private CategoriesDTO findParentCategory(int parentId, Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent) {

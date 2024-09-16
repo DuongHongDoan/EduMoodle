@@ -92,6 +92,16 @@
 <script th:src="@{/assets/chart.js/Chart.min.js}"></script>
 <!--<script th:src="@{/js/chart-area-demo.js}"></script>-->
 <script>
+<!--    script active links group /admin/courses-->
+    document.addEventListener("DOMContentLoaded", function() {
+        var currentPath = window.location.pathname;
+        if (currentPath.includes('/admin/courses')) {
+            document.querySelector('a[href="/admin/courses"]').classList.add('active');
+        }
+    });
+</script>
+
+<script>
     // Set new default font family and font color to mimic Bootstrap's default styling
 Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#858796';

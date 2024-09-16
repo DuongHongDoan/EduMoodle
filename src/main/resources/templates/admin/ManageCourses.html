@@ -45,11 +45,20 @@
 <!--  search input and select category of courses-->
     <div class="row">
         <div class="col-xl-8">
-            <select class="form-select" id="coursesCategory">
-                <option th:each="category : ${categoriesHierarchy}"
-                        th:value="${category}"
-                        th:utext="${category}"></option>
-            </select>
+            <form method="post" action="">
+                <select th:if="${coursesList != null}" class="form-select" id="coursesCategory">
+                    <option th:each="category : ${categoriesHierarchy}"
+                            th:value="${category.id}"
+                            th:utext="${category.name}"></option>
+                </select>
+                <select th:if="${coursesOfParent != null}" class="form-select" id="coursesCategory2">
+                    <option th:each="category : ${categoriesHierarchy}"
+                            th:value="${category.id}"
+                            th:utext="${category.name}"
+                            th:selected="${category.id == categoryId}">
+                    </option>
+                </select>
+            </form>
         </div>
         <div class="col-xl-4 d-flex justify-content-end">
             <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;">
@@ -83,115 +92,41 @@
         </div>
     </div>
 <!--  list courses -->
-    <div class="row mt-3 mb-3">
-        <div class="col-xl-3 mt-3 mb-3">
+    <div th:if="${coursesList != null}" class="row mt-3 mb-3">
+        <div th:each="course : ${coursesList}" class="col-xl-3 mt-3 mb-3">
             <div class="card" style="width: 18rem;">
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
-                <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
+                <div class="card-img">
+                    <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                        <path></path>
+                    </svg>
                 </div>
-            </div>
-        </div>
-        <div class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
                 <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
+                    <a th:href="@{/admin/courses/detail-course}">
+                        <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                     </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
-                <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
-                <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
-                <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
-                <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-              <div class="card-img">
-                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                  <path></path>
-                </svg>
-              </div>
-                <div class="card-body">
-                    <a th:href="@{/courses/detail-course}">
-                        <h5 class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p class="card-text">Tên Khoa hoặc Bộ môn</p>
+                    <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
                 </div>
             </div>
         </div>
     </div>
-
+    <div th:if="${coursesOfParent != null}" class="row mt-3 mb-3">
+        <div th:each="course : ${coursesOfParent}" class="col-xl-3 mt-3 mb-3">
+            <div class="card" style="width: 18rem;">
+                <div class="card-img">
+                    <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                        <path></path>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <a th:href="@{/admin/courses/detail-course}">
+                        <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
+                    </a>
+                    <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                </div>
+            </div>
+        </div>
+    </div>
+<!--sẽ làm phân trang ở đây-->
 </div>
 </body>
 </html>
