@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Map;
@@ -46,8 +47,8 @@ public class CoursesController {
 
     @Operation(summary = "hiển thị courses từng category tương ứng", description = "Fetch a list of all courses")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
-    @GetMapping("/courses/categoryid/{categoryId}")
-    public String  getCoursesByParentCategory(@PathVariable int categoryId, Model model) {
+    @GetMapping("/courses/category")
+    public String  getCoursesByParentCategory(@RequestParam int categoryId, Model model) {
         List<CoursesDTO> coursesOfParent = coursesService.getCoursesByParentCategory(categoryId);
         model.addAttribute("coursesOfParent", coursesOfParent);
 

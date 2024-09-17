@@ -96,9 +96,11 @@
         <div th:each="course : ${coursesList}" class="col-xl-3 mt-3 mb-3">
             <div class="card" style="width: 18rem;">
                 <div class="card-img">
-                    <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                        <path></path>
-                    </svg>
+                    <a th:href="@{/admin/courses/detail-course}">
+                        <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                            <path></path>
+                        </svg>
+                    </a>
                 </div>
                 <div class="card-body">
                     <a th:href="@{/admin/courses/detail-course}">
@@ -113,9 +115,11 @@
         <div th:each="course : ${coursesOfParent}" class="col-xl-3 mt-3 mb-3">
             <div class="card" style="width: 18rem;">
                 <div class="card-img">
-                    <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                        <path></path>
-                    </svg>
+                    <a th:href="@{/admin/courses/detail-course}">
+                        <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                            <path></path>
+                        </svg>
+                    </a>
                 </div>
                 <div class="card-body">
                     <a th:href="@{/admin/courses/detail-course}">
