@@ -1,9 +1,10 @@
 package com.example.edumoodle.Service;
 
+import com.example.edumoodle.DTO.SectionsDTO;
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,6 +38,22 @@ public class CoursesService {
                 .collect(Collectors.toList());
     }
 
+    public CoursesDTO getCourseDetail(int courseId) {
+        String apiMoodleFunc = "core_course_get_courses";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&options[ids][0]=" + courseId;
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<CoursesDTO[]> response = restTemplate.getForEntity(url, CoursesDTO[].class);
+        CoursesDTO[] courses = response.getBody();
+
+        assert courses != null;
+        return courses.length > 0 ? courses[0] : null;
+    }
+
     // Lấy tất cả các danh mục
     public Map<Integer, String> getMapCategories() {
         String apiMoodleFunc = "core_course_get_categories";
@@ -67,13 +84,6 @@ public class CoursesService {
         return Arrays.asList(categoryArray);
     }
 
-//    public List<CoursesDTO> getCoursesByCategory(int categoryId) {
-//        List<CoursesDTO> allCourses = getAllCourses();
-//        return allCourses.stream()
-//                .filter(course -> course.getCategoryid() == categoryId)
-//                .collect(Collectors.toList());
-//    }
-
     public List<CoursesDTO> getCoursesByParentCategory(int parentCategoryId) {
         List<CategoriesDTO> allCategories = getAllCategories();
         List<Integer> categoryIds = allCategories.stream()
@@ -86,5 +96,22 @@ public class CoursesService {
         return allCourses.stream()
                 .filter(course -> categoryIds.contains(course.getCategoryid()))
                 .collect(Collectors.toList());
+    }
+
+//lấy nội dung từng khóa học
+    public List<SectionsDTO> getCourseContent(int courseId) {
+        String apiMoodleFunc = "core_course_get_contents";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&courseid=" + courseId;
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<SectionsDTO[]> response = restTemplate.getForEntity(url, SectionsDTO[].class);
+        SectionsDTO[] sections = response.getBody();
+
+        assert sections != null;
+        return Arrays.asList(sections);
     }
 }

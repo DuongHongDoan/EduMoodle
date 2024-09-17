@@ -5,7 +5,7 @@
       xmlns:sec="http://www.w3.org/1999/xhtml"
       layout:decorate="~{layout}">
 <head>
-  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">{Găn tên khóa học}</title>
+  <title th:utext="'Course: ' + ${courseDetails.fullname}" layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">{Găn tên khóa học}</title>
   <style>
     .courses-name {
         border-bottom: 2px solid #1f5ca9;
@@ -16,6 +16,27 @@
         padding: 1rem;
         border-radius: 0.25rem;
         border: 1px solid #dee2e6;
+    }
+
+    .topic-name {
+        font-size: 1.5rem;
+    }
+
+    .module-list li{
+        list-style: none;
+        font-size: 1.2rem;
+        border: 1px solid #e1e1e1;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
+    .module-list li a {
+        text-decoration: none;
+    }
+
+    .module-list li a:hover {
+        text-decoration: underline;
     }
 
     .btn-cate i {
@@ -35,6 +56,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid #e1e1e1;
     }
 
     .action-icons {
@@ -43,6 +65,7 @@
         align-items: center;
         gap: 11px;
         cursor: pointer;
+        justify-content: end;
     }
 
     .gv-sv {
@@ -54,7 +77,7 @@
 <div class="container mt-3 mb-3" layout:fragment="body">
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-between">
-            <h1 class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
+            <h1 th:utext="${courseDetails.fullname}" class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
         </div>
     </div>
 
@@ -75,26 +98,26 @@
               <!-- Tab Khóa học -->
                 <div class="tab-pane fade active show" id="khoahoc" role="tabpanel" aria-labelledby="khoahoc-tab">
                     <div class="accordion mt-3" id="accordionExample">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingOne">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                  Topic 1
+                        <div th:each="section : ${sections}" class="accordion-item">
+                            <h2 class="accordion-header" th:id="'heading'+${section.id}">
+                                <button class="accordion-button collapsed topic-name" type="button" data-bs-toggle="collapse"
+                                        th:data-bs-target="'#collapse' + ${section.id}" aria-expanded="false"
+                                        th:attr="aria-controls='collapse'+${section.id}">
+                                    <span th:utext="${section.name}">Topic Name</span>
                                 </button>
                             </h2>
-                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample" style="">
+                            <div th:id="'collapse' + ${section.id}" class="accordion-collapse collapse"
+                                 th:attr="aria-labelledby='heading'+${section.id}" data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
-                                  Nội dung của Topic 1.
+                                    <ul class="module-list">
+                                        <li th:each="module : ${section.modules}">
+                                            <a href="#">
+                                                <span th:utext="${module.name}">Module Name</span>
+                                                (<span th:utext="${module.modname}">Module Type</span>)
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingTwo">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                  Topic 2
-                                </button>
-                            </h2>
-                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample" style="">
-                                <div class="accordion-body">Nội dung của Topic 2.</div>
                             </div>
                         </div>
                     </div>
@@ -104,7 +127,7 @@
                 <div class="tab-pane fade" id="thanhvien" role="tabpanel" aria-labelledby="thanhvien-tab">
                     <div class="row">
                         <div class="col d-flex justify-content-end">
-                            <a class="link-cate" th:href="@{/courses/add-member}">
+                            <a class="link-cate" th:href="@{/admin/courses/add-member}">
                                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                                     <i class="bi bi-plus"></i>Thêm thành viên
                                 </button>
@@ -112,22 +135,17 @@
                         </div>
                     </div>
 
-                  <!-- Giáo viên -->
+                    <!-- Giáo viên -->
                     <div class="row">
                         <div class="col-12 d-sm-flex align-items-center gv-sv">
-                          <!--<h3 class="h3 courses-name mb-0 text-gray-800">Giảng viên</h3>-->
                             <h4 class="fw-bold">Giáo viên</h4>
                         </div>
                         <div class="col align-items-center">
-                            <ul class="listStudent">
-                                <li>Nguyễn Văn A 111111
-                                    <div class="action-icons">
-                                        <i class="bi bi-pencil-fill text-primary"></i>
-                                        <i class="bi bi-x-circle-fill text-danger"></i>
-                                    </div>
-                                </li>
-                                <li>Nguyễn Văn B 222222
-                                    <div class="action-icons">
+                            <ul th:each="user : ${enrolledUsers}" class="listStudent">
+                                <li th:each="role : ${user.roles}" th:if="${role.shortname == 'editingteacher'} and ${user.username != 'admin'}">
+                                    <div class="col"><span th:utext="${user.fullname}">Nguyễn Văn A 111111</span></div>
+                                    <div class="col d-flex justify-content-center"><span th:utext="${user.email}">email@gmail.com</span></div>
+                                    <div class="col action-icons">
                                         <i class="bi bi-pencil-fill text-primary"></i>
                                         <i class="bi bi-x-circle-fill text-danger"></i>
                                     </div>
@@ -136,28 +154,17 @@
                         </div>
                     </div>
 
-                  <!-- Học viên -->
+                    <!-- Học viên -->
                     <div class="row">
                         <div class="col-12 d-sm-flex align-items-center gv-sv">
-                          <!--<h3 class="h3 courses-name mb-0 text-gray-800">Giảng viên</h3>-->
-                            <h4 class="fw-bold mt-4">Sinh viên <span class="text-muted">(22)</span></h4>
+                            <h4 class="fw-bold mt-4">Sinh viên (<span th:text="${studentCount}" class="text-muted">(22)</span>)</h4>
                         </div>
                         <div class="col align-items-center">
-                            <ul class="listStudent">
-                                <li>Bùi Doãn Tùng Lâm B1807566
-                                    <div class="action-icons">
-                                        <i class="bi bi-pencil-fill text-primary"></i>
-                                        <i class="bi bi-x-circle-fill text-danger"></i>
-                                    </div>
-                                </li>
-                                <li>Bùi Doãn Tùng Lâm B1807566
-                                    <div class="action-icons">
-                                        <i class="bi bi-pencil-fill text-primary"></i>
-                                        <i class="bi bi-x-circle-fill text-danger"></i>
-                                    </div>
-                                </li>
-                                <li>Bùi Doãn Tùng Lâm B1807566
-                                    <div class="action-icons">
+                            <ul th:each="user : ${enrolledUsers}" class="listStudent">
+                                <li th:each="role : ${user.roles}" th:if="${role.shortname == 'student'}">
+                                    <div class="col"> <span th:text="${user.fullname}">Ds sinh viên</span></div>
+                                    <div class="col d-flex justify-content-center"> <span th:utext="${user.email}">email@gmail.com</span></div>
+                                    <div class="col action-icons">
                                         <i class="bi bi-pencil-fill text-primary"></i>
                                         <i class="bi bi-x-circle-fill text-danger"></i>
                                     </div>

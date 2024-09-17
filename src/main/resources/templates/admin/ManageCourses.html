@@ -96,14 +96,14 @@
         <div th:each="course : ${coursesList}" class="col-xl-3 mt-3 mb-3">
             <div class="card" style="width: 18rem;">
                 <div class="card-img">
-                    <a th:href="@{/admin/courses/detail-course}">
+                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                         <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
                             <path></path>
                         </svg>
                     </a>
                 </div>
                 <div class="card-body">
-                    <a th:href="@{/admin/courses/detail-course}">
+                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                         <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                     </a>
                     <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
@@ -115,14 +115,14 @@
         <div th:each="course : ${coursesOfParent}" class="col-xl-3 mt-3 mb-3">
             <div class="card" style="width: 18rem;">
                 <div class="card-img">
-                    <a th:href="@{/admin/courses/detail-course}">
+                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                         <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
                             <path></path>
                         </svg>
                     </a>
                 </div>
                 <div class="card-body">
-                    <a th:href="@{/admin/courses/detail-course}">
+                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                         <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                     </a>
                     <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
