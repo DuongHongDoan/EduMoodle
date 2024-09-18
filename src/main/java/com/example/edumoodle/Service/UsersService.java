@@ -4,6 +4,7 @@ import com.example.edumoodle.DTO.UsersDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -37,5 +38,20 @@ public class UsersService {
 
         assert enrolledUsers != null;
         return Arrays.asList(enrolledUsers);
+    }
+
+    //lấy danh sách tất cả user được thêm vào moodle (apiMoodleFunc là plugin import vào dự án moodle)
+    public List<UsersDTO> getAllUsers() {
+        String apiMoodleFunc = "local_getusers_get_users";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json";
+
+        ResponseEntity<UsersDTO[]> response = restTemplate.getForEntity(url, UsersDTO[].class);
+        UsersDTO[] usersList = response.getBody();
+
+        assert usersList != null;
+        return Arrays.asList(usersList);
     }
 }
