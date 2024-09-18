@@ -86,6 +86,12 @@ public class CoursesController {
                 .count();
         model.addAttribute("studentCount", studentCount);
 
+        List<UsersDTO> usersList = usersService.getAllUsers();
+        List<UsersDTO> usersListFilter = usersList.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2)
+                .toList();
+        model.addAttribute("usersList", usersListFilter);
+
         return "admin/DetailCourse";
     }
 
