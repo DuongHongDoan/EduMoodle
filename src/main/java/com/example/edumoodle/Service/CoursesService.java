@@ -114,4 +114,13 @@ public class CoursesService {
         assert sections != null;
         return Arrays.asList(sections);
     }
+
+//xử lý dữ liệu từ form ô tìm kiếm khóa học
+    public List<CoursesDTO> getSearchCourses(String keyword) {
+        List<CoursesDTO> courses = getAllCourses();
+
+        return courses.stream()
+                .filter(course -> course.getFullname().toLowerCase().contains(keyword.toLowerCase()))
+                .collect(Collectors.toList());
+    }
 }

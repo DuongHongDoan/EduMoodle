@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UsersService {
@@ -53,5 +54,24 @@ public class UsersService {
 
         assert usersList != null;
         return Arrays.asList(usersList);
+    }
+
+//xử lý dữ liệu từ form ô tìm kiếm người dùng
+    public List<UsersDTO> getSearchUser(String keyword) {
+        List<UsersDTO> users = getAllUsers();
+
+        return users.stream()
+                .filter(user -> {
+                    String firstname = user.getFirstname().toLowerCase();
+                    String lastname = user.getLastname().toLowerCase();
+                    String fullname = (firstname + " " + lastname).toLowerCase();
+                    String keywordLower = keyword.toLowerCase();
+
+                    // Kiểm tra nếu keyword có trong firstname, lastname, hoặc fullname
+                    return firstname.contains(keywordLower) ||
+                            lastname.contains(keywordLower) ||
+                            fullname.contains(keywordLower);
+                })
+                .collect(Collectors.toList());
     }
 }

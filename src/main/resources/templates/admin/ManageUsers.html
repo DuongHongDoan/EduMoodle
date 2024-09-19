@@ -36,15 +36,41 @@
     td i:hover {
         cursor: pointer;
     }
+
+    li .page-item {
+        margin: 0 5px;
+    }
+
+    a.page-link {
+        border: solid 1px #d7d7d7;
+        border-radius: 5px;
+        color: #7d7d7d;
+        text-decoration: none;
+        display: inline-block;
+        height: 35px;
+        width: 35px;
+        padding: 0 !important;
+        margin: 0 5px;
+        line-height: 33px;
+        text-align: center;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #1f5ca9;
+        border-color: #1f5ca9;
+        color: white;
+    }
   </style>
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
-  <!--  search input-->
+    <!--  search input-->
     <div class="d-flex justify-content-end">
-        <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;">
+        <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
+              th:action="@{/admin/users/search}" method="get">
             <div class="input-group mt-2 mb-3">
-                <input type="text" class="form-control small" placeholder="Tìm kiếm..." aria-label="Search" aria-describedby="basic-addon2">
+                <input name="keyword" type="text" class="form-control small" placeholder="Tìm kiếm người dùng..."
+                       th:value="${keyword != null ? keyword : ''}" aria-label="Search" aria-describedby="basic-addon2">
                 <div class="input-group-append">
                     <button class="btn btn-primary" type="button" style="border-radius: 0 5px 5px 0;">
                         <i class="fas fa-search fa-sm"></i>
@@ -54,7 +80,7 @@
         </form>
     </div>
 
- <!--  btn them người dùng và nút upload file danh sách người dùng-->
+    <!--  btn them người dùng và nút upload file danh sách người dùng-->
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-between">
             <h1 class="list-users h3 mb-0 text-gray-800">
@@ -62,7 +88,7 @@
             </h1>
         </div>
         <div class="col d-flex justify-content-end">
-<!--            nữa đổi lại /admin/add-user-->
+            <!--nữa đổi lại /admin/add-user-->
             <a class="link-cate" th:href="@{/admin/courses/add-member}">
                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                     <i class="bi bi-plus"></i>Thêm người dùng
@@ -76,26 +102,73 @@
         </div>
     </div>
 
-<!--  users list table-->
-    <table class="table table-striped table-hover mt-3">
-        <thead style="color: #0f6cbf;">
-          <tr>
-              <th>Họ và Tên</th>
-              <th>Email</th>
-              <th class="col d-flex justify-content-center">Sửa</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr th:each="user : ${usersList}">
-              <td th:utext="${user.firstname} + ' ' + ${user.lastname}">John</td>
-              <td th:utext="${user.email}">john@example.com</td>
-              <td class="col d-flex justify-content-center">
-                  <i class="bi bi-pencil-fill text-warning"></i><i class="bi bi-trash-fill text-danger"></i>
-              </td>
-          </tr>
-        </tbody>
-    </table>
+    <!--  users list table-->
+    <!--  có phân trang  -->
+    <div th:if="${coursePage != null}">
+        <table class="table table-striped table-hover mt-3">
+            <thead style="color: #0f6cbf;">
+                  <tr>
+                      <th style="width: 50%;">Họ và Tên</th>
+                      <th style="width: 50%;">Email</th>
+                      <th class="col d-flex justify-content-center">Sửa</th>
+                  </tr>
+            </thead>
+            <tbody>
+                  <tr th:each="user : ${coursePage.content}">
+                      <td th:utext="${user.firstname} + ' ' + ${user.lastname}"
+                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">John</td>
+                      <td th:utext="${user.email}"
+                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">john@example.com</td>
+                      <td class="col d-flex justify-content-center">
+                          <i class="bi bi-pencil-fill text-warning"></i><i class="bi bi-trash-fill text-danger"></i>
+                      </td>
+                  </tr>
+            </tbody>
+        </table>
 
+        <nav aria-label="Page navigation" class="pagination pagination-centered justify-content-center mt-3">
+            <ul class="pagination">
+                <li class="page-item" th:if="${coursePage.hasPrevious()}">
+                    <a class="page-link" th:href="@{/admin/users(page=${coursePage.number}, size=${coursePage.size})}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, coursePage.totalPages-1)}"
+                    th:classappend="${pageNum == coursePage.number ? ' active' : ''}">
+                    <a class="page-link" th:href="@{/admin/users(page=${pageNum+1}, size=${coursePage.size})}" th:text="${pageNum+1}"></a>
+                </li>
+                <li class="page-item" th:if="${coursePage.hasNext()}">
+                    <a class="page-link" th:href="@{/admin/users(page=${coursePage.number + 2}, size=${coursePage.size})}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!--  không phân trang  -->
+    <div th:if="${coursePage == null}">
+        <table class="table table-striped table-hover mt-3">
+            <thead style="color: #0f6cbf;">
+            <tr>
+                <th style="width: 50%;">Họ và Tên</th>
+                <th style="width: 50%;">Email</th>
+                <th class="col d-flex justify-content-center">Sửa</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${usersList}">
+                <td th:utext="${user.firstname} + ' ' + ${user.lastname}"
+                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">John</td>
+                <td th:utext="${user.email}"
+                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">john@example.com</td>
+                <td class="col d-flex justify-content-center">
+                    <i class="bi bi-pencil-fill text-warning"></i><i class="bi bi-trash-fill text-danger"></i>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 </body>
 </html>

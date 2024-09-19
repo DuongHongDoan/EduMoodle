@@ -38,6 +38,30 @@
     .card-text {
         color: #a1a1a1;
     }
+
+    li .page-item {
+        margin: 0 5px;
+    }
+
+    a.page-link {
+        border: solid 1px #d7d7d7;
+        border-radius: 5px;
+        color: #7d7d7d;
+        text-decoration: none;
+        display: inline-block;
+        height: 35px;
+        width: 35px;
+        padding: 0 !important;
+        margin: 0 5px;
+        line-height: 33px;
+        text-align: center;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #1f5ca9;
+        border-color: #1f5ca9;
+        color: white;
+    }
   </style>
 </head>
 <body>
@@ -45,13 +69,14 @@
 <!--  search input and select category of courses-->
     <div class="row">
         <div class="col-xl-8">
-            <form method="post" action="">
-                <select th:if="${coursesList != null}" class="form-select" id="coursesCategory">
+            <form method="get" th:action="@{/admin/courses/category}" th:object="${categoryId}">
+                <select name="categoryId" th:if="${coursesList != null}" class="form-select" id="coursesCategory" onchange="this.form.submit()">
                     <option th:each="category : ${categoriesHierarchy}"
                             th:value="${category.id}"
-                            th:utext="${category.name}"></option>
+                            th:utext="${category.name}"
+                            th:selected="${category.id == categoryId}"></option>
                 </select>
-                <select th:if="${coursesOfParent != null}" class="form-select" id="coursesCategory2">
+                <select name="categoryId" th:if="${coursesOfParent != null}" class="form-select" id="coursesCategory2" onchange="this.form.submit()">
                     <option th:each="category : ${categoriesHierarchy}"
                             th:value="${category.id}"
                             th:utext="${category.name}"
@@ -61,11 +86,13 @@
             </form>
         </div>
         <div class="col-xl-4 d-flex justify-content-end">
-            <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;">
+            <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
+                  th:action="@{/admin/courses/search}" method="get">
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control small" placeholder="Tìm kiếm..." aria-label="Search" aria-describedby="basic-addon2">
+                    <input name= "keyword" type="text" class="form-control small" placeholder="Tìm kiếm khóa học..."
+                           th:value="${keyword != null ? keyword : ''}" aria-label="Search" aria-describedby="basic-addon2">
                     <div class="input-group-append">
-                        <button class="btn btn-primary" type="button" style="border-radius: 0 5px 5px 0;">
+                        <button class="btn btn-primary" type="submit" style="border-radius: 0 5px 5px 0;">
                             <i class="fas fa-search fa-sm"></i>
                         </button>
                     </div>
@@ -92,45 +119,130 @@
         </div>
     </div>
 <!--  list courses -->
-    <div th:if="${coursesList != null}" class="row mt-3 mb-3">
-        <div th:each="course : ${coursesList}" class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-                <div class="card-img">
-                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
-                        <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                            <path></path>
-                        </svg>
-                    </a>
+    <!--có phân trang-->
+    <div th:if="${coursePage != null}">
+        <div th:if="${coursesList != null}">
+            <div class="row mt-3 mb-3">
+                <!--coursePage.content đã bao gồm các khóa học để hiển thị theo size-->
+                <div th:each="course : ${coursePage.content}" class="col-xl-3 mt-3 mb-3">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-img">
+                            <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                                    <path></path>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                                <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
+                            </a>
+                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
-                        <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+            </div>
+            <nav aria-label="Page navigation" class="pagination pagination-centered justify-content-center">
+                <ul class="pagination">
+                    <li class="page-item" th:if="${coursePage.hasPrevious()}">
+                        <a class="page-link" th:href="@{/admin/courses(page=${coursePage.number}, size=${coursePage.size})}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, coursePage.totalPages-1)}"
+                        th:classappend="${pageNum == coursePage.number ? ' active' : ''}">
+                        <a class="page-link" th:href="@{/admin/courses(page=${pageNum+1}, size=${coursePage.size})}" th:text="${pageNum+1}"></a>
+                    </li>
+                    <li class="page-item" th:if="${coursePage.hasNext()}">
+                        <a class="page-link" th:href="@{/admin/courses(page=${coursePage.number + 2}, size=${coursePage.size})}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div th:if="${coursesOfParent != null}">
+            <div class="row mt-3 mb-3">
+                <div th:each="course : ${coursePage.content}" class="col-xl-3 mt-3 mb-3">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-img">
+                            <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                                <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                                    <path></path>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                                <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
+                            </a>
+                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <nav aria-label="Page navigation" class="pagination pagination-centered justify-content-center">
+                <ul class="pagination">
+                    <li class="page-item" th:if="${coursePage.hasPrevious()}">
+                        <a class="page-link" th:href="@{/admin/courses/category(categoryId=${categoryId}, page=${coursePage.number}, size=${coursePage.size})}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, coursePage.totalPages - 1)}"
+                        th:classappend="${pageNum == coursePage.number ? ' active' : ''}">
+                        <a class="page-link" th:href="@{/admin/courses/category(categoryId=${categoryId}, page=${pageNum+1}, size=${coursePage.size})}" th:text="${pageNum + 1}"></a>
+                    </li>
+                    <li class="page-item" th:if="${coursePage.hasNext()}">
+                        <a class="page-link" th:href="@{/admin/courses/category(categoryId=${categoryId}, page=${coursePage.number + 2}, size=${coursePage.size})}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <!--không phân trang-->
+    <div th:if="${coursePage == null}">
+        <div th:if="${coursesList != null}" class="row mt-3 mb-3">
+            <div th:each="course : ${coursesList}" class="col-xl-3 mt-3 mb-3">
+                <div class="card" style="width: 18rem;">
+                    <div class="card-img">
+                        <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                            <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                                <path></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                            <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
+                        </a>
+                        <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:if="${coursesOfParent != null}" class="row mt-3 mb-3">
+            <div th:each="course : ${coursesOfParent}" class="col-xl-3 mt-3 mb-3">
+                <div class="card" style="width: 18rem;">
+                    <div class="card-img">
+                        <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                            <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+                                <path></path>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <a th:href="@{/admin/courses/view(courseId=${course.id})}">
+                            <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
+                        </a>
+                        <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div th:if="${coursesOfParent != null}" class="row mt-3 mb-3">
-        <div th:each="course : ${coursesOfParent}" class="col-xl-3 mt-3 mb-3">
-            <div class="card" style="width: 18rem;">
-                <div class="card-img">
-                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
-                        <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
-                            <path></path>
-                        </svg>
-                    </a>
-                </div>
-                <div class="card-body">
-                    <a th:href="@{/admin/courses/view(courseId=${course.id})}">
-                        <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
-                    </a>
-                    <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
-                </div>
-            </div>
-        </div>
-    </div>
-<!--sẽ làm phân trang ở đây-->
 </div>
 </body>
 </html>

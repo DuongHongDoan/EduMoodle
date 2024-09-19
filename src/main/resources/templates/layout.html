@@ -103,11 +103,14 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script th:src="@{/assets/chart.js/Chart.min.js}"></script>
 <script>
-<!--    script active links group /admin/courses-->
+    <!-- script active links group -->
     document.addEventListener("DOMContentLoaded", function() {
         var currentPath = window.location.pathname;
         if (currentPath.includes('/admin/courses')) {
             document.querySelector('a[href="/admin/courses"]').classList.add('active');
+        }
+        if (currentPath.includes('/admin/users')) {
+            document.querySelector('a[href="/admin/users"]').classList.add('active');
         }
     });
 </script>
