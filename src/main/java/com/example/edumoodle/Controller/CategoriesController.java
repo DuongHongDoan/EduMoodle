@@ -1,6 +1,8 @@
 package com.example.edumoodle.Controller;
 
 import com.example.edumoodle.DTO.CategoriesDTO;
+import com.example.edumoodle.DTO.CategoryHierarchyDTO;
+import com.example.edumoodle.DTO.CoursesDTO;
 import com.example.edumoodle.Service.CategoriesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -9,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +41,28 @@ public class CategoriesController {
             totalCoursesByParent = new HashMap<>();
         }
 
+        List<CategoriesDTO> cateTest = categoriesService.getAllCategory();
+        categoriesService.saveCategories(cateTest);
+        model.addAttribute("cateTest", cateTest);
+
         model.addAttribute("categories", categories);
         model.addAttribute("totalCoursesByParent", totalCoursesByParent);
         return "admin/ManageCategory";
+    }
+
+    @PostMapping("/categories/create")
+    public String createCategory(@ModelAttribute CategoriesDTO categoriesDTO) {
+        categoriesService.createCategory(categoriesDTO);
+        return "redirect:/admin/categories"; // Chuyển hướng sau khi tạo thành công
+    }
+
+    @Operation(summary = "Form create category", description = "Display categories list in select input")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved categories list in form create category")
+    @GetMapping("/categories/create-category")
+    public String getCategoriesList(Model model) {
+        List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+        model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+
+        return "admin/CreateCategory";
     }
 }
