@@ -50,14 +50,15 @@ public class CategoriesController {
         return "admin/ManageCategory";
     }
 
+    @Operation(summary = "handle form create category", description = "Handle create category")
+    @ApiResponse(responseCode = "200", description = "Successfully created category")
     @PostMapping("/categories/create")
     public String createCategory(@ModelAttribute CategoriesDTO categoriesDTO) {
         categoriesService.createCategory(categoriesDTO);
         return "redirect:/admin/categories"; // Chuyển hướng sau khi tạo thành công
     }
 
-    @Operation(summary = "Form create category", description = "Display categories list in select input")
-    @ApiResponse(responseCode = "200", description = "Successfully retrieved categories list in form create category")
+
     @GetMapping("/categories/create-category")
     public String getCategoriesList(Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();

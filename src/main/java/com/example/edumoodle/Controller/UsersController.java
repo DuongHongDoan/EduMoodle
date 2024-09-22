@@ -1,23 +1,26 @@
 package com.example.edumoodle.Controller;
 
+import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
+import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
+import com.example.edumoodle.Model.UsersEntity;
 import com.example.edumoodle.Service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin")
@@ -52,8 +55,53 @@ public class UsersController {
         }else {
             model.addAttribute("coursePage", null);
         }
+        //lưu tất cả users vào csdl web
+        usersService.saveUsers(usersList);
 
         return "admin/ManageUsers";
+    }
+
+    @Operation(summary = "Handle form create user", description = "handle form craete user")
+    @ApiResponse(responseCode = "200", description = "Successfully created user")
+    //    url = /admin/users/create
+    @PostMapping("users/create")
+    public String createUser(@Valid @ModelAttribute("usersDTO") UsersDTO usersDTO, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            // Nếu có lỗi, thêm đối tượng usersDTO vào model
+            model.addAttribute("usersDTO", usersDTO);
+            return "admin/AddNewUser";  // Trả về form nếu có lỗi
+        }
+        // Nếu không có lỗi, gọi service để tạo người dùng mới
+        usersService.createNewUser(usersDTO);
+        return "redirect:/admin/users";
+    }
+
+    //    url = /admin/users/add-user --> trả về view form tạo người dùng mới
+    @GetMapping("/users/add-user")
+    public String getFormAddNewUser(Model model) {
+        model.addAttribute("usersDTO", new UsersDTO());
+        return "admin/AddNewUser";
+    }
+
+    @Operation(summary = "Handle form edit user", description = "handle form edit user")
+    @ApiResponse(responseCode = "200", description = "Successfully edited user")
+    //    url = /admin/users/edit
+    @PostMapping("/users/edit")
+    public String editUser(@ModelAttribute("user") NguoiDungDTO usersDTO, BindingResult bindingResult, Model model) {
+        boolean success = usersService.editUser(usersDTO);
+        if (success) {
+            return "redirect:/admin/users";  // Điều hướng về trang quản lý người dùng sau khi cập nhật thành công
+        } else {
+            return "redirect:/admin/users/edit-user?userid=" + usersDTO.getId();  // Điều hướng về form với thông báo lỗi
+        }
+    }
+
+    //    url = /admin/users/edit-user?userid= --> trả về view form sửa người dùng tương ứng
+    @GetMapping("/users/edit-user")
+    public String getFormAddNewUserForEdit(@RequestParam("userid") Integer userid, Model model) {
+        UsersDTO user = usersService.getUserByID(userid);
+        model.addAttribute("user", user);
+        return "admin/EditUser";
     }
 
     @Operation(summary = "Display search user", description = "enter keyword in search input to search user")

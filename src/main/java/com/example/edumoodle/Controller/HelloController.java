@@ -44,6 +44,6 @@ public class HelloController {
     }
     @GetMapping("/courses/add-member")
     public String getAddMember() {
-        return "/admin/AddMemberCourse";
+        return "/admin/AddNewMember";
     }
 }

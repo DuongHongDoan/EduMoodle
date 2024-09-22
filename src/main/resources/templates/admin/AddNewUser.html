@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Thêm thành viên</title>
+  <style>
+    .btn-reset:hover {
+      background-color: #aeaeae !important;
+    }
+
+    .btn-save:hover {
+      background-color: #7ac7e3 !important;
+    }
+
+    input {
+      width: 48% !important;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body" >
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-center">
+            <h1 class="h3 mb-3 text-gray-800 text-uppercase">Thêm thành viên mới</h1>
+        </div>
+    </div>
+
+    <div class="row gx-4 gx-lg-5 align-items-center justify-content-center text-end">
+        <div class="col-lg-9 align-self-lg-center" style="height: 339.5px">
+            <form th:action="@{/admin/users/create}" th:object="${usersDTO}" method="post">
+                <input type="hidden" th:field="*{id}" id="id"/>
+
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label" for="username">Tên đăng nhập:</label>
+                    <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="username" th:field="*{username}" name="username" required>
+                        <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-danger"></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label" for="password">Mật khẩu:</label>
+                    <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input type="password" class="form-control" id="password" th:field="*{password}" name="password" required>
+                        <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger"></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label" for="firstname">Tên đệm và Tên:</label>
+                    <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="firstname" th:field="*{firstname}" name="firstname" required>
+                        <p th:if="${#fields.hasErrors('firstname')}" th:errors="*{firstname}" class="text-danger"></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label" for="lastname">Họ:</label>
+                    <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="lastname" th:field="*{lastname}" name="lastname" required>
+                        <p th:if="${#fields.hasErrors('lastname')}" th:errors="*{lastname}" class="text-danger"></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label" for="email">Email:</label>
+                    <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input type="email" class="form-control" id="email" th:field="*{email}" name="email" required>
+                        <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <div class="col-sm-2 d-grid">
+                        <button type="reset" class="btn btn-reset bg-secondary text-white">Đặt lại</button>
+                    </div>
+
+                    <div class="col-sm-2 d-grid">
+                        <button type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Tạo</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

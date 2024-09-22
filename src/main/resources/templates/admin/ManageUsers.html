@@ -89,7 +89,7 @@
         </div>
         <div class="col d-flex justify-content-end">
             <!--nữa đổi lại /admin/add-user-->
-            <a class="link-cate" th:href="@{/admin/courses/add-member}">
+            <a class="link-cate" th:href="@{/admin/users/add-user}">
                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                     <i class="bi bi-plus"></i>Thêm người dùng
                 </button>
@@ -163,7 +163,12 @@
                 <td th:utext="${user.email}"
                     style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">john@example.com</td>
                 <td class="col d-flex justify-content-center">
-                    <i class="bi bi-pencil-fill text-warning"></i><i class="bi bi-trash-fill text-danger"></i>
+                    <a th:href="@{/admin/users/edit-user(userid=${user.id})}">
+                        <i class="bi bi-pencil-fill text-warning"></i>
+                    </a>
+                    <a href="">
+                        <i class="bi bi-trash-fill text-danger"></i>
+                    </a>
                 </td>
             </tr>
             </tbody>
