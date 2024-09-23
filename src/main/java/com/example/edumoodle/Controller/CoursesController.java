@@ -1,9 +1,6 @@
 package com.example.edumoodle.Controller;
 
-import com.example.edumoodle.DTO.CategoryHierarchyDTO;
-import com.example.edumoodle.DTO.CoursesDTO;
-import com.example.edumoodle.DTO.SectionsDTO;
-import com.example.edumoodle.DTO.UsersDTO;
+import com.example.edumoodle.DTO.*;
 import com.example.edumoodle.Service.CategoriesService;
 import com.example.edumoodle.Service.CoursesService;
 import com.example.edumoodle.Service.UsersService;
@@ -16,9 +13,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -123,13 +118,37 @@ public class CoursesController {
         model.addAttribute("studentCount", studentCount);
 
         List<UsersDTO> usersList = usersService.getAllUsers();
-        List<UsersDTO> usersListFilter = usersList.stream()
-                .filter(user -> user.getId() != 1 && user.getId() != 2)
+        // Lọc ra những sinh viên chưa đăng ký khóa học
+        List<UsersDTO> usersListNotEnrolled = usersList.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2) // Loại bỏ các user ID không liên quan
+                .filter(user -> enrolledUsers.stream().noneMatch(enrolledUser -> enrolledUser.getId().equals(user.getId())))
                 .toList();
-        model.addAttribute("usersList", usersListFilter);
+        model.addAttribute("usersList", usersListNotEnrolled);
         model.addAttribute("course", courseId);
 
         return "admin/DetailCourse";
+    }
+
+    @Operation(summary = "Enrol users to course", description = "Enrol users to course")
+    @ApiResponse(responseCode = "200", description = "Successfully enrolled user")
+    //    url = /admin/courses/enrolUser
+    @PostMapping("/courses/enrolUser")
+//    public String enrolUsers(@ModelAttribute EnrolUserDTO enrolUserDTO, Model model) {
+//        String response = usersService.enrolUser(enrolUserDTO);
+//        model.addAttribute("response", response);
+//        return "redirect:/admin/courses/view?courseId=" + enrolUserDTO.getCourseid();
+//    }
+    public String enrolUser(@RequestParam("userIds") List<Integer> userIds,
+                            @RequestParam("roleId") Integer roleId,
+                            @RequestParam("courseId") Integer courseId) {
+        // Khởi tạo đối tượng DTO và gọi service để đăng ký
+        EnrolUserDTO enrolUserDTO = new EnrolUserDTO();
+        enrolUserDTO.setUserid(userIds);
+        enrolUserDTO.setRoleid(roleId);
+        enrolUserDTO.setCourseid(courseId);
+
+        usersService.enrolUser(enrolUserDTO);
+        return "redirect:/admin/courses/view?courseId=" + enrolUserDTO.getCourseid();
     }
 
     @Operation(summary = "Unenrol user from course", description = "Unenrol user from course")

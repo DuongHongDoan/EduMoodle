@@ -228,10 +228,11 @@
                     </div>
                     <div class="row">
                         <div class="col-xl-6">
-                            <form id="enrolForm">
+                            <form id="enrolForm" th:action="@{/admin/courses/enrolUser}" method="post">
+                                <input type="hidden" name="courseId" th:value="${course}" id="e-id"/>
                                 <div class="mb-3">
                                     <label for="selectUsers" class="form-label">Chọn người dùng</label>
-                                    <select multiple class="form-select" id="selectUsers">
+                                    <select multiple class="form-select" id="selectUsers" name="userIds" required>
                                         <option th:each="user : ${usersList}"
                                                 th:value="${user.id}"
                                                 th:utext="${user.firstname} + ' ' + ${user.lastname}"></option>
@@ -239,16 +240,13 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="selectRole" class="form-label">Chọn vai trò</label>
-                                    <select class="form-select" id="selectRole" style="display: inline;width: 28%; margin-left: 38px;">
-                                        <option value="student">Student</option>
-                                        <option value="teacher">Teacher</option>
+                                    <select class="form-select" id="selectRole" name="roleId" required
+                                            style="display: inline;width: 28%; margin-left: 38px;">
+                                        <option value="5">Student</option>
+                                        <option value="3">Teacher</option>
                                     </select>
                                 </div>
                                 <div class="row mb-3 justify-content-start">
-                                    <div class="col-sm-2 d-grid">
-                                        <button class="btn btn-reset bg-secondary text-white">Đặt lại</button>
-                                    </div>
-
                                     <div class="col-sm-3 d-grid">
                                         <button type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Đăng ký</button>
                                     </div>

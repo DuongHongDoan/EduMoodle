@@ -1,6 +1,7 @@
 package com.example.edumoodle.Service;
 
 import com.example.edumoodle.Configuration.HashPassword;
+import com.example.edumoodle.DTO.EnrolUserDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.DTO.UsersResponseDTO;
@@ -54,6 +55,24 @@ public class UsersService {
 
         assert enrolledUsers != null;
         return Arrays.asList(enrolledUsers);
+    }
+
+    //Đăng ký người dùng vào khóa học
+    public void enrolUser(EnrolUserDTO enrolUserDTO) {
+        String apiMoodleFunc = "enrol_manual_enrol_users";
+        StringBuilder url = new StringBuilder(domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json");
+
+        for(int i=0; i<enrolUserDTO.getUserid().size(); i++) {
+            Integer userid = enrolUserDTO.getUserid().get(i);
+            url.append("&enrolments[").append(i).append("][roleid]=").append(enrolUserDTO.getRoleid())
+                    .append("&enrolments[").append(i).append("][userid]=").append(userid)
+                    .append("&enrolments[").append(i).append("][courseid]=").append(enrolUserDTO.getCourseid());
+        }
+
+        restTemplate.postForObject(url.toString(), null, String.class);
     }
 
     //Hủy đăng ký khóa học cho người dùng
