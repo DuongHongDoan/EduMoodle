@@ -19,6 +19,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -108,7 +109,7 @@ public class CoursesController {
     @ApiResponse(responseCode = "200", description = "Successfully retrieved course detail")
 //    url = /admin/courses/view?courseId
     @GetMapping("/courses/view")
-    public String getCourseDetail(@RequestParam int courseId, Model model) {
+    public String getCourseDetail(@RequestParam Integer courseId, Model model) {
         List<SectionsDTO> sections = coursesService.getCourseContent(courseId);
         model.addAttribute("sections", sections);
 
@@ -126,8 +127,25 @@ public class CoursesController {
                 .filter(user -> user.getId() != 1 && user.getId() != 2)
                 .toList();
         model.addAttribute("usersList", usersListFilter);
+        model.addAttribute("course", courseId);
 
         return "admin/DetailCourse";
+    }
+
+    @Operation(summary = "Unenrol user from course", description = "Unenrol user from course")
+    @ApiResponse(responseCode = "200", description = "Successfully unenrolled user")
+    //    url = /admin/courses/unenrol
+    @GetMapping("/courses/unenrol")
+    public String unEnrolUser(@RequestParam("userid") Integer userid,
+                             @RequestParam("courseid") Integer courseid,
+                             RedirectAttributes redirectAttributes) {
+        try {
+            usersService.unEnrolUser(userid, courseid);
+            redirectAttributes.addFlashAttribute("successMessage", "Người dùng đã bị xóa khỏi khóa học.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi xóa người dùng khỏi khóa học.");
+        }
+        return "redirect:/admin/courses/view?courseId=" + courseid;
     }
 
     @Operation(summary = "Display search course", description = "enter keyword in search input to search course")

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public class UsersController {
 
     @Operation(summary = "Display users list", description = "display all users")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved users list")
-//    url = /admin/users
+    //    url = /admin/users
     @GetMapping("/users")
     public String getAllUsers(@RequestParam(value = "page", defaultValue = "1") int page,
                               @RequestParam(value = "size", defaultValue = "50") int size, Model model) {
@@ -61,15 +62,15 @@ public class UsersController {
         return "admin/ManageUsers";
     }
 
-    @Operation(summary = "Handle form create user", description = "handle form craete user")
+    @Operation(summary = "Handle form create user", description = "handle form create user")
     @ApiResponse(responseCode = "200", description = "Successfully created user")
     //    url = /admin/users/create
     @PostMapping("users/create")
     public String createUser(@Valid @ModelAttribute("usersDTO") UsersDTO usersDTO, BindingResult result, Model model) {
         if (result.hasErrors()) {
-            // Nếu có lỗi, thêm đối tượng usersDTO vào model
+            // Nếu có lỗi, thêm đối tượng usersDTO vào model, Trả về form nếu có lỗi
             model.addAttribute("usersDTO", usersDTO);
-            return "admin/AddNewUser";  // Trả về form nếu có lỗi
+            return "admin/AddNewUser";
         }
         // Nếu không có lỗi, gọi service để tạo người dùng mới
         usersService.createNewUser(usersDTO);
@@ -90,9 +91,9 @@ public class UsersController {
     public String editUser(@ModelAttribute("user") NguoiDungDTO usersDTO, BindingResult bindingResult, Model model) {
         boolean success = usersService.editUser(usersDTO);
         if (success) {
-            return "redirect:/admin/users";  // Điều hướng về trang quản lý người dùng sau khi cập nhật thành công
+            return "redirect:/admin/users";
         } else {
-            return "redirect:/admin/users/edit-user?userid=" + usersDTO.getId();  // Điều hướng về form với thông báo lỗi
+            return "redirect:/admin/users/edit-user?userid=" + usersDTO.getId();
         }
     }
 
@@ -104,9 +105,23 @@ public class UsersController {
         return "admin/EditUser";
     }
 
+    @Operation(summary = "Delete user by id", description = "Delete user by id")
+    @ApiResponse(responseCode = "200", description = "Successfully deleted user")
+    //    url = /admin/users/delete
+    @GetMapping("/users/delete")
+    public String deleteUser(@RequestParam("userid") Integer userId, RedirectAttributes redirectAttributes) {
+        try {
+            usersService.deleteUser(userId);
+            redirectAttributes.addFlashAttribute("successMessage", "Người dùng đã được xóa thành công.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi xóa người dùng.");
+        }
+        return "redirect:/admin/users";  // Điều hướng lại trang danh sách người dùng
+    }
+
     @Operation(summary = "Display search user", description = "enter keyword in search input to search user")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved user list for search")
-//    url = /admin/users/search
+    //    url = /admin/users/search
     @GetMapping("users/search")
     public String searchUsers(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
         List<UsersDTO> users;

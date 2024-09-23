@@ -64,6 +64,16 @@
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
+    <!-- phần thông báo chỉ xuất hiện khi nhấn nút xóa người dùng -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
     <!--  search input-->
     <div class="d-flex justify-content-end">
         <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
@@ -120,8 +130,35 @@
                       <td th:utext="${user.email}"
                           style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">john@example.com</td>
                       <td class="col d-flex justify-content-center">
-                          <i class="bi bi-pencil-fill text-warning"></i><i class="bi bi-trash-fill text-danger"></i>
+                          <a th:href="@{/admin/users/edit-user(userid=${user.id})}">
+                              <i class="bi bi-pencil-fill text-warning"></i>
+                          </a>
+                          <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
+                              <i class="bi bi-trash-fill text-danger"></i>
+                          </a>
                       </td>
+                      <!-- The Modal -->
+                      <div class="modal fade" th:id="'deleteModal' + ${user.id}">
+                          <div class="modal-dialog">
+                              <div class="modal-content">
+                                  <!-- Modal Header -->
+                                  <div class="modal-header">
+                                      <h4 class="modal-title">Thông báo</h4>
+                                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                  </div>
+                                  <!-- Modal body -->
+                                  <div class="modal-body">
+                                      <span th:text="'Bạn có chắc muốn xóa người dùng ' + ${user.firstname} + ' ' + ${user.lastname} + ' không?'"></span>
+                                  </div>
+                                  <!-- Modal footer -->
+                                  <div class="modal-footer">
+                                      <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                      <a th:href="@{/admin/users/delete(userid=${user.id})}" class="btn btn-danger">Xóa</a>
+                                  </div>
+
+                              </div>
+                          </div>
+                      </div>
                   </tr>
             </tbody>
         </table>
@@ -157,23 +194,56 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="user : ${usersList}">
-                <td th:utext="${user.firstname} + ' ' + ${user.lastname}"
-                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">John</td>
-                <td th:utext="${user.email}"
-                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">john@example.com</td>
-                <td class="col d-flex justify-content-center">
-                    <a th:href="@{/admin/users/edit-user(userid=${user.id})}">
-                        <i class="bi bi-pencil-fill text-warning"></i>
-                    </a>
-                    <a href="">
-                        <i class="bi bi-trash-fill text-danger"></i>
-                    </a>
-                </td>
-            </tr>
+                <tr th:each="user : ${usersList}">
+                    <td th:utext="${user.firstname} + ' ' + ${user.lastname}"
+                        style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">John</td>
+                    <td th:utext="${user.email}"
+                        style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">john@example.com</td>
+                    <td class="col d-flex justify-content-center">
+                        <a th:href="@{/admin/users/edit-user(userid=${user.id})}">
+                            <i class="bi bi-pencil-fill text-warning"></i>
+                        </a>
+                        <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
+                            <i class="bi bi-trash-fill text-danger"></i>
+                        </a>
+                    </td>
+                    <!-- The Modal -->
+                    <div class="modal fade" th:id="'deleteModal' + ${user.id}">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <!-- Modal Header -->
+                                <div class="modal-header">
+                                    <h4 class="modal-title">Thông báo</h4>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <!-- Modal body -->
+                                <div class="modal-body">
+                                    <span th:text="'Bạn có chắc muốn xóa người dùng ' + ${user.firstname} + ' ' + ${user.lastname} + ' không?'"></span>
+                                </div>
+                                <!-- Modal footer -->
+                                <div class="modal-footer">
+                                    <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                    <a th:href="@{/admin/users/delete(userid=${user.id})}" class="btn btn-danger">Xóa</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
+<script>
+    var myModal = document.getElementById('myModal');
+    myModal.addEventListener('show.bs.modal', function (event) {
+        // Lấy đối tượng nút nhấn mở modal
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-userid'); // Lấy userId từ thuộc tính data
+
+        // Cập nhật href cho nút xóa
+        var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        confirmDeleteBtn.href = "/admin/users/delete-user?userid=" + userId;
+    });
+</script>
 </body>
 </html>

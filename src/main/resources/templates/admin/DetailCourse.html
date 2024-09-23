@@ -75,6 +75,17 @@
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
+    <!-- phần thông báo chỉ xuất hiện khi nhấn nút xóa người dùng -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-between">
             <h1 th:utext="${courseDetails.fullname}" class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
@@ -139,10 +150,32 @@
                                     <div class="col"><span th:utext="${user.fullname}">Nguyễn Văn A 111111</span></div>
                                     <div class="col d-flex justify-content-center"><span th:utext="${user.email}">email@gmail.com</span></div>
                                     <div class="col action-icons">
-                                        <i class="bi bi-pencil-fill text-primary"></i>
-                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                        <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </a>
                                     </div>
                                 </li>
+                                <!-- The Modal -->
+                                <div class="modal fade" th:id="'deleteModal' + ${user.id}">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <!-- Modal Header -->
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">Thông báo</h4>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <!-- Modal body -->
+                                            <div class="modal-body">
+                                                <span th:text="'Bạn có chắc muốn hủy ghi danh người dùng ' + ${user.fullname} + ' ra khỏi khóa học không?'"></span>
+                                            </div>
+                                            <!-- Modal footer -->
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                <a th:href="@{/admin/courses/unenrol(userid=${user.id}, courseid=${course})}" class="btn btn-danger">Xóa</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </ul>
                         </div>
                     </div>
@@ -158,10 +191,32 @@
                                     <div class="col"> <span th:text="${user.fullname}">Ds sinh viên</span></div>
                                     <div class="col d-flex justify-content-center"> <span th:utext="${user.email}">email@gmail.com</span></div>
                                     <div class="col action-icons">
-                                        <i class="bi bi-pencil-fill text-primary"></i>
-                                        <i class="bi bi-x-circle-fill text-danger"></i>
+                                        <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </a>
                                     </div>
                                 </li>
+                                <!-- The Modal -->
+                                <div class="modal fade" th:id="'deleteModal' + ${user.id}">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <!-- Modal Header -->
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">Thông báo</h4>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <!-- Modal body -->
+                                            <div class="modal-body">
+                                                <span th:text="'Bạn có chắc muốn hủy ghi danh người dùng ' + ${user.fullname} + ' ra khỏi khóa học không?'"></span>
+                                            </div>
+                                            <!-- Modal footer -->
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                <a th:href="@{/admin/courses/unenrol(userid=${user.id}, courseid=${course})}" class="btn btn-danger">Xóa</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </ul>
                         </div>
                     </div>

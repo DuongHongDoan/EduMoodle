@@ -41,7 +41,7 @@ public class UsersService {
     private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
 
     // Lấy danh sách giảng viên và sinh viên của khóa học
-    public List<UsersDTO> getEnrolledUsers(int courseId) {
+    public List<UsersDTO> getEnrolledUsers(Integer courseId) {
         String apiMoodleFunc = "core_enrol_get_enrolled_users";
         String url = domainName + "/webservice/rest/server.php"
                 + "?wstoken=" + token
@@ -54,6 +54,19 @@ public class UsersService {
 
         assert enrolledUsers != null;
         return Arrays.asList(enrolledUsers);
+    }
+
+    //Hủy đăng ký khóa học cho người dùng
+    public void unEnrolUser(Integer userid, Integer courseId) {
+        String apiMoodleFunc = "enrol_manual_unenrol_users";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&enrolments[0][userid]=" + userid
+                + "&enrolments[0][courseid]=" + courseId;
+
+        restTemplate.getForEntity(url, String.class);
     }
 
     //lấy danh sách tất cả user được thêm vào moodle (apiMoodleFunc là plugin import vào dự án moodle)
@@ -244,5 +257,17 @@ public class UsersService {
             System.err.println("Error updating user: " + e.getMessage());
         }
         return false;
+    }
+
+    //xóa người dùng
+    public void deleteUser(Integer userId) {
+        String apiMoodleFunc = "core_user_delete_users";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&userids[0]=" + userId;
+
+        restTemplate.getForEntity(url, String.class);
     }
 }

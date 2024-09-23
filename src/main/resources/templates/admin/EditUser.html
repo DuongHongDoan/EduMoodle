@@ -36,46 +36,46 @@
 
           <div class="row mb-3 justify-content-center">
             <label class="col-sm-3 col-form-label" for="e-username">Tên đăng nhập:</label>
-            <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+            <div class="col-sm-1 text-danger">*</div>
             <div class="col-sm-8">
               <input type="text" class="form-control" id="e-username" th:field="*{username}" name="username" required>
-              <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-danger"></p>
+              <p th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="text-danger d-flex align-items-center"></p>
             </div>
           </div>
 
           <div class="row mb-3 justify-content-center">
             <label class="col-sm-3 col-form-label" for="e-password">Mật khẩu:</label>
-            <div class="col-sm-1 d-flex align-items-center text-danger"></div>
+            <div class="col-sm-1 text-danger"></div>
             <div class="col-sm-8">
               <input type="password" class="form-control" id="e-password" name="password">
-              <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger"></p>
+              <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger d-flex align-items-center"></p>
             </div>
           </div>
 
           <div class="row mb-3 justify-content-center">
             <label class="col-sm-3 col-form-label" for="e-firstname">Tên đệm và Tên:</label>
-            <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+            <div class="col-sm-1 text-danger">*</div>
             <div class="col-sm-8">
               <input type="text" class="form-control" id="e-firstname" th:field="*{firstname}" name="firstname" required>
-              <p th:if="${#fields.hasErrors('firstname')}" th:errors="*{firstname}" class="text-danger"></p>
+              <p th:if="${#fields.hasErrors('firstname')}" th:errors="*{firstname}" class="text-danger d-flex align-items-center"></p>
             </div>
           </div>
 
           <div class="row mb-3 justify-content-center">
             <label class="col-sm-3 col-form-label" for="e-lastname">Họ:</label>
-            <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+            <div class="col-sm-1 text-danger">*</div>
             <div class="col-sm-8">
               <input type="text" class="form-control" id="e-lastname" th:field="*{lastname}" name="lastname" required>
-              <p th:if="${#fields.hasErrors('lastname')}" th:errors="*{lastname}" class="text-danger"></p>
+              <p th:if="${#fields.hasErrors('lastname')}" th:errors="*{lastname}" class="text-danger d-flex align-items-center"></p>
             </div>
           </div>
 
           <div class="row mb-3 justify-content-center">
             <label class="col-sm-3 col-form-label" for="e-email">Email:</label>
-            <div class="col-sm-1 d-flex align-items-center text-danger">*</div>
+            <div class="col-sm-1 text-danger">*</div>
             <div class="col-sm-8">
               <input type="email" class="form-control" id="e-email" th:field="*{email}" name="email" required>
-              <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></p>
+              <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger d-flex align-items-center"></p>
             </div>
           </div>
 

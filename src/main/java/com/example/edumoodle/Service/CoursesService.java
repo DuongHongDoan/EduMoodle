@@ -38,7 +38,7 @@ public class CoursesService {
                 .collect(Collectors.toList());
     }
 
-    public CoursesDTO getCourseDetail(int courseId) {
+    public CoursesDTO getCourseDetail(Integer courseId) {
         String apiMoodleFunc = "core_course_get_courses";
         String url = domainName + "/webservice/rest/server.php"
                 + "?wstoken=" + token
@@ -99,7 +99,7 @@ public class CoursesService {
     }
 
 //lấy nội dung từng khóa học
-    public List<SectionsDTO> getCourseContent(int courseId) {
+    public List<SectionsDTO> getCourseContent(Integer courseId) {
         String apiMoodleFunc = "core_course_get_contents";
         String url = domainName + "/webservice/rest/server.php"
                 + "?wstoken=" + token
