@@ -133,11 +133,6 @@ public class CoursesController {
     @ApiResponse(responseCode = "200", description = "Successfully enrolled user")
     //    url = /admin/courses/enrolUser
     @PostMapping("/courses/enrolUser")
-//    public String enrolUsers(@ModelAttribute EnrolUserDTO enrolUserDTO, Model model) {
-//        String response = usersService.enrolUser(enrolUserDTO);
-//        model.addAttribute("response", response);
-//        return "redirect:/admin/courses/view?courseId=" + enrolUserDTO.getCourseid();
-//    }
     public String enrolUser(@RequestParam("userIds") List<Integer> userIds,
                             @RequestParam("roleId") Integer roleId,
                             @RequestParam("courseId") Integer courseId) {
