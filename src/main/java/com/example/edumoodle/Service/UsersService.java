@@ -235,15 +235,13 @@ public class UsersService {
         String url;
         //băm mật khẩu
         if(!usersDTO.getPassword().isEmpty() && usersDTO.getPassword() != null) {
-            String hashedPassword = HashPassword.hashPassword(usersDTO.getPassword());
             url = domainName + "/webservice/rest/server.php"
                     + "?wstoken=" + token
                     + "&wsfunction=" + apiMoodleFunc
                     + "&moodlewsrestformat=json"
                     + "&users[0][id]=" + usersDTO.getId()
                     + "&users[0][username]=" + usersDTO.getUsername()
-                    + "&users[0][auth]=manual"
-                    + "&users[0][password]=" + hashedPassword
+                    + "&users[0][password]=" + usersDTO.getPassword()
                     + "&users[0][firstname]=" + usersDTO.getFirstname()
                     + "&users[0][lastname]=" + usersDTO.getLastname()
                     + "&users[0][email]=" + usersDTO.getEmail();
@@ -254,7 +252,6 @@ public class UsersService {
                     + "&moodlewsrestformat=json"
                     + "&users[0][id]=" + usersDTO.getId()
                     + "&users[0][username]=" + usersDTO.getUsername()
-                    + "&users[0][auth]=manual"
                     + "&users[0][firstname]=" + usersDTO.getFirstname()
                     + "&users[0][lastname]=" + usersDTO.getLastname()
                     + "&users[0][email]=" + usersDTO.getEmail();
