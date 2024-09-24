@@ -12,6 +12,11 @@ public class HelloController {
         return "/admin/Dashboard";
     }
 
+    @GetMapping("/login")
+    public String getLogin() {
+        return "/common/Login";
+    }
+
     @GetMapping("/category")
     public String getCategory() {
         return "/admin/ManageCategory";

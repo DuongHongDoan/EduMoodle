@@ -10,14 +10,11 @@ public class UsersEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_user;
-
+    @Column(unique = true)
     private Integer moodleId;
 
     @NotNull (message = "Không bỏ trống username")
     private String username;
-
-    @NotNull (message = "Không bỏ trống auth")
-    private String auth;
 
     @NotNull (message = "Không bỏ trống firstname")
     private String firstname;
@@ -30,6 +27,17 @@ public class UsersEntity {
 
     @NotNull (message = "Không bỏ trống email")
     private String email;
+
+    public UsersEntity(){}
+
+    public UsersEntity(Integer moodleId, String username, String firstname, String lastname, String password, String email) {
+        this.moodleId = moodleId;
+        this.username = username;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.password = password;
+        this.email = email;
+    }
 
     public Integer getId_user() {
         return id_user;
@@ -53,14 +61,6 @@ public class UsersEntity {
 
     public void setUsername(@NotNull String username) {
         this.username = username;
-    }
-
-    public @NotNull String getAuth() {
-        return auth;
-    }
-
-    public void setAuth(@NotNull String auth) {
-        this.auth = auth;
     }
 
     public @NotNull String getFirstname() {
