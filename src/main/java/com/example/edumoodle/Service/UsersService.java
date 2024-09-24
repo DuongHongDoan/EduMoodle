@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -193,15 +194,12 @@ public class UsersService {
 //thêm thành viên mới
     public void createNewUser(UsersDTO usersDTO) {
         String apiMoodleFunc = "core_user_create_users";
-        //băm mật khẩu
-        String hashedPassword = HashPassword.hashPassword(usersDTO.getPassword());
         String url = domainName + "/webservice/rest/server.php"
                 + "?wstoken=" + token
                 + "&wsfunction=" + apiMoodleFunc
                 + "&moodlewsrestformat=json"
                 + "&users[0][username]=" + usersDTO.getUsername()
-                + "&users[0][auth]=manual"
-                + "&users[0][password]=" + hashedPassword
+                + "&users[0][password]=" + usersDTO.getPassword()
                 + "&users[0][firstname]=" + usersDTO.getFirstname()
                 + "&users[0][lastname]=" + usersDTO.getLastname()
                 + "&users[0][email]=" + usersDTO.getEmail();
