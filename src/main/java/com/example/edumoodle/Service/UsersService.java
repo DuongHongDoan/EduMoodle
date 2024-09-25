@@ -162,10 +162,10 @@ public class UsersService {
                     user.setEmail(dto.getEmail());
                     updated = true;
                 }
-                if(!user.getPassword().equals(dto.getPassword())) {
-                    user.setPassword(dto.getPassword());
-                    updated = true;
-                }
+//                if(!user.getPassword().equals(dto.getPassword())) {
+//                    user.setPassword(dto.getPassword());
+//                    updated = true;
+//                }
 
                 // Lưu nếu có thay đổi
                 if (updated) {

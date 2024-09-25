@@ -22,43 +22,45 @@ public class SecurityConfig {
     @Bean
     public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+//        return new Sha512PasswordEncoder();
     }
 
-    // Cho phép tất cả các yêu cầu không cần xác thực
-    @SuppressWarnings("removal")
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable().authorizeHttpRequests().anyRequest().permitAll();  // Cho phép tất cả các yêu cầu không cần xác thực
-        return http.build();
-    }
+//    // Cho phép tất cả các yêu cầu không cần xác thực
 //    @SuppressWarnings("removal")
 //    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception {
-//
-//        http.csrf().disable().authorizeHttpRequests()
-//
-//                .requestMatchers("/create_course", "/layout_course", "/edit_course", "/delete_course","/my-courses-student",
-//                        "/students-and-courses", "/student-tests/{testId}", "/student-tests","/delete_moodle_course","/course-details/{courseId}",
-//                        "/student-attempts", "//student-attempts/{quizId}", "/categories", "/admin/dashboard").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
-//                .requestMatchers("/student-test").permitAll()
-//                .requestMatchers("/register").permitAll()
-//                .requestMatchers("/imgs/**", "/images/**","/home", "/css/**", "/js/**").permitAll().and()
-//                .formLogin()
-//                .loginPage("/login")
-//                .loginProcessingUrl("/login")
-//                .defaultSuccessUrl("/admin/dashboard", true)
-//                .failureUrl("/login?error=true").permitAll()
-//                .and()
-//                .logout()
-//                .invalidateHttpSession(true)
-//                .clearAuthentication(true)
-//                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-//
-//                .logoutSuccessUrl("/login?logout").permitAll();
-//
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http.csrf().disable().authorizeHttpRequests().anyRequest().permitAll();  // Cho phép tất cả các yêu cầu không cần xác thực
 //        return http.build();
-//
 //    }
+    @SuppressWarnings("removal")
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception {
+
+        http.csrf().disable().authorizeHttpRequests()
+
+                .requestMatchers("/admin/dashboard", "/admin/users", "/admin/users/create", "/admin/users/add-user",
+                        "/admin/users/edit", "/admin/users/edit-user", "/admin/users/delete", "users/search", "/admin/categories",
+                        "/admin/categories/create", "/admin/categories/create-category", "/admin/courses", "/admin/courses/category",
+                        "/admin/courses/view", "/admin/courses/enrolUser", "/admin/courses/unenrol", "/admin/courses/search").authenticated() // Chỉ yêu cầu người dùng đã xác thực truy cập /signature
+                .requestMatchers("/student-test").permitAll()
+                .requestMatchers("/register").permitAll()
+                .requestMatchers("/imgs/**", "/images/**","/home", "/css/**", "/js/**", "/assets/**").permitAll().and()
+                .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/admin/dashboard", true)
+                .failureUrl("/login?error=true").permitAll()
+                .and()
+                .logout()
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+
+                .logoutSuccessUrl("/login?logout").permitAll();
+
+        return http.build();
+
+    }
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
