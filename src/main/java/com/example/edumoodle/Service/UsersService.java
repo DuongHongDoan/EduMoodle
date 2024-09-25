@@ -1,6 +1,5 @@
 package com.example.edumoodle.Service;
 
-import com.example.edumoodle.Configuration.HashPassword;
 import com.example.edumoodle.DTO.EnrolUserDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
@@ -14,9 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -109,7 +106,7 @@ public class UsersService {
         return Arrays.asList(usersList);
     }
 
-//xử lý dữ liệu từ form ô tìm kiếm người dùng
+    //xử lý dữ liệu từ form ô tìm kiếm người dùng
     public List<UsersDTO> getSearchUser(String keyword) {
         List<UsersDTO> users = getAllUsers();
 
@@ -128,7 +125,7 @@ public class UsersService {
                 .collect(Collectors.toList());
     }
 
-//    lưu tất cả người dùng được thêm vào csdl web
+    //    lưu tất cả người dùng được thêm vào csdl web
     public void saveUsers(List<UsersDTO> users) {
         // Lấy tất cả users hiện có từ cơ sở dữ liệu web
         List<UsersEntity> existingUsers = usersRepository.findAll();
@@ -195,7 +192,7 @@ public class UsersService {
         }
     }
 
-//thêm thành viên mới
+    //thêm thành viên mới
     public String createNewUser(UsersDTO usersDTO) {
         String apiMoodleFunc = "core_user_create_users";
         String url = domainName + "/webservice/rest/server.php"
@@ -263,7 +260,7 @@ public class UsersService {
 
         return null; // Không có lỗi
     }
-    //lấy người dùng trong csdl web bằng moodleId
+    //lấy người dùng trong csdl web bằng moodleId chuyển về dữ liệu DTO tương tác moodle
     public UsersDTO getUserByMoodleID(Integer moodleId) {
         Optional<UsersEntity> userOption = usersRepository.findByMoodleId(moodleId);
         if (userOption.isPresent()) {
@@ -276,6 +273,14 @@ public class UsersService {
             userDTO.setLastname(userEntity.getLastname());
             userDTO.setEmail(userEntity.getEmail());
             return userDTO;
+        }
+        return null;
+    }
+    //lấy người dùng trong csdl web bằng moodleId
+    public UsersEntity getUserByMoodleIDWeb(Integer moodleId) {
+        Optional<UsersEntity> userOption = usersRepository.findByMoodleId(moodleId);
+        if (userOption.isPresent()) {
+            return userOption.get();
         }
         return null;
     }
@@ -297,7 +302,7 @@ public class UsersService {
     }
 
     //    cập nhật người dùng
-    public String editUser(NguoiDungDTO usersDTO) {
+    public boolean editUser(NguoiDungDTO usersDTO) {
         String apiMoodleFunc = "core_user_update_users";
         String url;
         if(!usersDTO.getPassword().isEmpty() && usersDTO.getPassword() != null) {
@@ -322,24 +327,21 @@ public class UsersService {
                     + "&users[0][lastname]=" + usersDTO.getLastname()
                     + "&users[0][email]=" + usersDTO.getEmail();
         }
+        // Log URL yêu cầu
+//        System.out.println("Sending request to Moodle API: " + url);
 
+        // Gửi yêu cầu cập nhật
         try {
-            String response = restTemplate.postForObject(url, null, String.class);
-
-            // Kiểm tra phản hồi từ Moodle
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode root = objectMapper.readTree(response);
-            if (root.isArray() && !root.isEmpty()) {
-                JsonNode firstUser = root.get(0);
-                return firstUser.get("id").asText(); // Trả về user ID nếu thành công
-            } else if (root.isObject()) {
-                return root.get("id").asText(); // Nếu phản hồi là object, trả về user ID
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Log phản hồi
+//            System.out.println("Response from Moodle API: " + response.getBody());
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return true;  // Cập nhật thành công
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error updating user: " + e.getMessage());
         }
-
-        return null;
+        return false;
     }
 
     //xóa người dùng

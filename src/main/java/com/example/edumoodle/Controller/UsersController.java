@@ -1,7 +1,5 @@
 package com.example.edumoodle.Controller;
 
-import com.example.edumoodle.DTO.CategoriesDTO;
-import com.example.edumoodle.DTO.CoursesDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.Model.UsersEntity;
@@ -16,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -29,6 +28,8 @@ import java.util.Optional;
 @RequestMapping("/admin")
 @Tag(name = "Users Management", description = "APIs for managing users")
 public class UsersController {
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     private UsersService usersService;
@@ -65,7 +66,7 @@ public class UsersController {
             model.addAttribute("coursePage", null);
         }
         //lưu tất cả users vào csdl web
-//        usersService.saveUsers(usersList);
+        usersService.saveUsers(usersList);
 
         return "admin/ManageUsers";
     }
@@ -117,61 +118,48 @@ public class UsersController {
         return "admin/AddNewUser";
     }
 
-//    @Operation(summary = "Handle form edit user", description = "handle form edit user")
-//    @ApiResponse(responseCode = "200", description = "Successfully edited user")
-//    //    url = /admin/users/edit
-//    @PostMapping("/users/edit")
-//    public String editUser(@ModelAttribute("user") NguoiDungDTO usersDTO, BindingResult bindingResult,
-//                           RedirectAttributes redirectAttributes, Model model) {
-//        // Tìm người dùng theo moodle_id
-//        Optional<UsersEntity> userOptional = usersRepository.findByMoodleId(usersDTO.getId());
-//
-//        if (userOptional.isEmpty()) {
-//            redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại.");
-//            return "redirect:/admin/users"; // Nếu không tìm thấy, chuyển hướng về danh sách người dùng
-//        }
-//
-//        UsersEntity existingUser = userOptional.get();
-//
-//        // Cập nhật thông tin cho người dùng từ DTO
-//        existingUser.setUsername(usersDTO.getUsername());
-//        existingUser.setFirstname(usersDTO.getFirstname());
-//        existingUser.setLastname(usersDTO.getLastname());
-//        existingUser.setEmail(usersDTO.getEmail());
-//
-//        // Nếu có cần thay đổi mật khẩu, thêm vào đây
-//        if (usersDTO.getPassword() != null && !usersDTO.getPassword().isEmpty()) {
-//            existingUser.setPassword(usersDTO.getPassword()); // Chỉ thay đổi mật khẩu nếu có mật khẩu mới
-//        }
-//
-//        // Lưu cập nhật vào cơ sở dữ liệu
-//        // Chuyển đổi UsersEntity sang NguoiDungDTO trước khi gọi saveEdit
-//        NguoiDungDTO updatedUserDTO = new NguoiDungDTO();
-//        updatedUserDTO.setId(existingUser.getMoodleId());
-//        updatedUserDTO.setUsername(existingUser.getUsername());
-//        updatedUserDTO.setFirstname(existingUser.getFirstname());
-//        updatedUserDTO.setLastname(existingUser.getLastname());
-//        updatedUserDTO.setEmail(existingUser.getEmail());
-//
-//        userInterface.saveEdit(updatedUserDTO); // Gọi phương thức saveEdit với DTO
-//
-//        redirectAttributes.addFlashAttribute("successMessage", "Chỉnh sửa người dùng thành công.");
-//        return "redirect:/admin/users";
-//    }
+    @Operation(summary = "Handle form edit user", description = "handle form edit user")
+    @ApiResponse(responseCode = "200", description = "Successfully edited user")
+    //    url = /admin/users/edit
+    @PostMapping("/users/edit")
+    public String editUser(@ModelAttribute("user") NguoiDungDTO usersDTO, BindingResult bindingResult,
+                           RedirectAttributes redirectAttributes,
+                           @RequestParam("useridweb") Integer useridweb, Model model) {
+        // Tìm người dùng theo moodle_id
+        Optional<UsersEntity> userOpt = usersRepository.findById(useridweb);
+        if(userOpt.isPresent()) {
+            UsersEntity usersEntity = userOpt.get();
+            if(!usersDTO.getPassword().isEmpty() || usersDTO.getPassword() != null) {
+                usersEntity.setUsername(usersDTO.getUsername());
+                usersEntity.setFirstname(usersDTO.getFirstname());
+                usersEntity.setLastname(usersDTO.getLastname());
+                usersEntity.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
+                usersEntity.setEmail(usersDTO.getEmail());
+                usersRepository.save(usersEntity);
+            } else {
+                usersEntity.setUsername(usersDTO.getUsername());
+                usersEntity.setFirstname(usersDTO.getFirstname());
+                usersEntity.setLastname(usersDTO.getLastname());
+                usersEntity.setEmail(usersDTO.getEmail());
+                usersRepository.save(usersEntity);
+            }
+        }
+
+        boolean moodleUserId = usersService.editUser(usersDTO); //update csdl moodle
+        if (moodleUserId) {
+            redirectAttributes.addFlashAttribute("successMessage", "Chỉnh sửa người dùng thành công.");
+            return "redirect:/admin/users";
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉnh sửa người dùng không thành công.");
+            return "redirect:/admin/users/edit-user?userid=" + usersDTO.getId();
+        }
+    }
 
     //    url = /admin/users/edit-user?userid= --> trả về view form sửa người dùng tương ứng
     @GetMapping("/users/edit-user")
     public String getFormAddNewUserForEdit(@RequestParam("userid") Integer userid, RedirectAttributes redirectAttributes, Model model) {
-//        Optional<UsersEntity> userOption = userInterface.findById(userid);
-//        if (userOption.isEmpty()) {
-//            redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại.");
-//            return "redirect:/admin/users";
-//        }
-//
-//        UsersDTO user = usersService.getUserByID(userid);
-//        model.addAttribute("user", user);
-//        return "admin/EditUser";
         UsersDTO user = usersService.getUserByMoodleID(userid);
+        UsersEntity usersEntity = usersService.getUserByMoodleIDWeb(userid);
 
         if (user == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại.");
@@ -179,6 +167,7 @@ public class UsersController {
         }
 
         model.addAttribute("user", user);
+        model.addAttribute("useridweb", usersEntity != null ? usersEntity.getId_user() : null);
         return "admin/EditUser";
 
     }

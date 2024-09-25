@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface UserInterface {
     UsersEntity findByUsername(String username);
     UsersEntity save(UsersDTO usersDTO);
-    void saveEdit(NguoiDungDTO usersDTO);
+    UsersEntity saveEdit(NguoiDungDTO usersDTO);
     void delete(int id);
     UsersEntity update(UsersEntity user);
 }

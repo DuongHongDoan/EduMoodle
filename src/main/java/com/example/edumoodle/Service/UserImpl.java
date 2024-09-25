@@ -33,9 +33,9 @@ public class UserImpl implements UserInterface{
     }
 
     @Override
-    public void saveEdit(NguoiDungDTO userDto) {
+    public UsersEntity saveEdit(NguoiDungDTO userDto) {
         UsersEntity user = new UsersEntity(userDto.getId(), userDto.getUsername(), userDto.getFirstname(), userDto.getLastname(), passwordEncoder.encode(userDto.getPassword()), userDto.getEmail());
-        userRepo.save(user);
+        return userRepo.save(user);
     }
 
     @Override

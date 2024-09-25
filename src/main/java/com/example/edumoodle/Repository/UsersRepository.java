@@ -11,7 +11,6 @@ import java.util.Optional;
 public interface UsersRepository extends JpaRepository<UsersEntity, Integer> {
 
     boolean existsByMoodleId(Integer moodleId);
-//    CategoriesEntity findByMoodleId(Integer moodleId);
     Optional<UsersEntity> findByMoodleId(Integer moodleId);
     UsersEntity findByUsername(String username);
     void deleteById(int id);
