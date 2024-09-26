@@ -1,5 +1,6 @@
 package com.example.edumoodle.Service;
 
+import com.example.edumoodle.Model.UserRoleEntity;
 import com.example.edumoodle.Model.UsersEntity;
 import com.example.edumoodle.Repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,30 +13,35 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 //kiem tra trung email
 @Service
 public class CustomerUserDetailsServices implements UserDetailsService {
+
     @Autowired
     private UsersRepository userRepository;
+
+    @Autowired
+    private UserInterface userInterface;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        UsersEntity user = userRepository.findByUsername(username);
+        UsersEntity user = userInterface.findByUsername(username);
         if(user == null) {
             throw new UsernameNotFoundException("Username or Password not found");
 
         }
-        return new CustomUserDetails(
-                user.getUsername(),
-                user.getPassword(),
-                authorities(),
-                user.getEmail(),
-                user.getFirstname(),
-                user.getLastname()
-        );
-    }
-    public Collection<? extends GrantedAuthority> authorities(){
-        return Arrays.asList(new SimpleGrantedAuthority("USER"));
+
+        Collection<GrantedAuthority> grantedAuthorities = new HashSet<>();
+        Set<UserRoleEntity> roles = user.getUserRole();
+
+        for(UserRoleEntity userRole : roles) {
+            grantedAuthorities.add(new SimpleGrantedAuthority(userRole.getRolesEntity().getName()));
+        }
+
+        return new CustomUserDetails(user, grantedAuthorities);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.edumoodle.Service;
 
+import com.example.edumoodle.Model.UsersEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -7,20 +8,26 @@ import java.util.Collection;
 
 
 public class CustomUserDetails implements UserDetails {
-    private String username;
-    private String password;
+    private UsersEntity usersEntity;
     private Collection<? extends GrantedAuthority> authorities;
-    private String email;
-    private String firstname;
-    private String lastname;
 
-    public CustomUserDetails(String username, String password, Collection<? extends GrantedAuthority> authorities, String email, String firstname, String lastname) {
-        this.username = username;
-        this.password = password;
+    public CustomUserDetails() {}
+
+    public CustomUserDetails(UsersEntity usersEntity, Collection<? extends GrantedAuthority> authorities) {
+        this.usersEntity = usersEntity;
         this.authorities = authorities;
-        this.email = email;
-        this.firstname = firstname;
-        this.lastname = lastname;
+    }
+
+    public String getFirstname() {
+        return usersEntity.getFirstname();
+    }
+
+    public String getLastname() {
+        return usersEntity.getLastname();
+    }
+
+    public String getEmail() {
+        return usersEntity.getEmail();
     }
 
     @Override
@@ -31,12 +38,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return password;
+        return usersEntity.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return username;
+        return usersEntity.getUsername();
     }
 
 
