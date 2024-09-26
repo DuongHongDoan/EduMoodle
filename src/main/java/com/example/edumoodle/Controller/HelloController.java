@@ -35,10 +35,10 @@ public class HelloController {
 //    public String getListCourses() {
 //        return "/admin/ManageCourses";
 //    }
-    @GetMapping("/courses/create-course")
-    public String getCreateCourse() {
-        return "/admin/CreateCourse";
-    }
+//    @GetMapping("/courses/create-course")
+//    public String getCreateCourse() {
+//        return "/admin/CreateCourse";
+//    }
     @GetMapping("/courses/edit-course")
     public String getEditCourse() {
         return "/admin/EditCourse";

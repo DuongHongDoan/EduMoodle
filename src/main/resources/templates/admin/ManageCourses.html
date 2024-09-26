@@ -66,7 +66,12 @@
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
-<!--  search input and select category of courses-->
+    <!-- phần thông báo chỉ xuất hiện khi tạo khóa học thành công -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <!--  search input and select category of courses-->
     <div class="row">
         <div class="col-xl-8">
             <form method="get" th:action="@{/admin/courses/category}" th:object="${categoryId}">
@@ -100,7 +105,7 @@
             </form>
         </div>
     </div>
-<!--  btn edit and create course-->
+    <!--  btn edit and create course-->
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-between">
             <h1 class="list-courses-name h3 mb-0 text-gray-800">Danh sách các khóa học</h1>
@@ -123,7 +128,7 @@
     <div th:if="${coursePage != null}">
         <div th:if="${coursesList != null}">
             <div class="row mt-3 mb-3">
-                <!--coursePage.content đã bao gồm các khóa học để hiển thị theo size-->
+                <!--coursePage.content đã bao gồm các khóa học để hiển thị theo size phân trang-->
                 <div th:each="course : ${coursePage.content}" class="col-xl-3 mt-3 mb-3">
                     <div class="card" style="width: 18rem;">
                         <div class="card-img">

@@ -1,23 +1,30 @@
 package com.example.edumoodle.Controller;
 
 import com.example.edumoodle.DTO.*;
+import com.example.edumoodle.Model.CategoriesEntity;
+import com.example.edumoodle.Model.CoursesEntity;
+import com.example.edumoodle.Repository.CategoriesRepository;
+import com.example.edumoodle.Repository.CoursesRepository;
 import com.example.edumoodle.Service.CategoriesService;
 import com.example.edumoodle.Service.CoursesService;
 import com.example.edumoodle.Service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin")
@@ -32,9 +39,14 @@ public class CoursesController {
     @Autowired
     private UsersService usersService;
 
+    @Autowired
+    private CoursesRepository coursesRepository;
+    @Autowired
+    private CategoriesRepository categoriesRepository;
+
     @Operation(summary = "Get all categories for select input", description = "Fetch a list of all categories")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
-//    url = /admin/courses
+    //    url = /admin/courses
     @GetMapping("/courses")
     public String getCategoriesForSelect(@RequestParam(value = "page", defaultValue = "1") int page,
                                          @RequestParam(value = "size", defaultValue = "3") int size,Model model) {
@@ -58,13 +70,15 @@ public class CoursesController {
         }else {
             model.addAttribute("coursePage", null);
         }
+        //đồng bộ dữ liệu course web-moodle
+        coursesService.synchronizeCourses(coursesList);
 
         return "admin/ManageCourses";
     }
 
     @Operation(summary = "hiển thị courses từng category tương ứng", description = "Fetch a list of all courses")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
-//   url = /admin/courses/category?categoryId=2
+    //   url = /admin/courses/category?categoryId=2
     @GetMapping("/courses/category")
     public String  getCoursesByParentCategory(@RequestParam(value = "categoryId", required = false) Integer categoryId,
                                               @RequestParam(value = "page", defaultValue = "1") int page,
@@ -102,7 +116,7 @@ public class CoursesController {
 
     @Operation(summary = "Display course detail", description = "click a course then display course detail")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved course detail")
-//    url = /admin/courses/view?courseId
+    //    url = /admin/courses/view?courseId=
     @GetMapping("/courses/view")
     public String getCourseDetail(@RequestParam Integer courseId, Model model) {
         List<SectionsDTO> sections = coursesService.getCourseContent(courseId);
@@ -164,7 +178,7 @@ public class CoursesController {
 
     @Operation(summary = "Display search course", description = "enter keyword in search input to search course")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved course list for search")
-//    url = /admin/courses/search
+    //    url = /admin/courses/search
     @GetMapping("/courses/search")
     public String searchCourses(@RequestParam(value = "keyword", required = false) String keyword, Model model) {
         List<CoursesDTO> courses;
@@ -187,4 +201,60 @@ public class CoursesController {
         return "admin/ManageCourses";
     }
 
+    //url = /admin/courses/create-course
+    @GetMapping("/courses/create-course")
+    public String showFormCreateCourse(Model model) {
+        List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+        model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+
+        CoursesDTO coursesDTO = new CoursesDTO();
+        model.addAttribute("coursesDTO", coursesDTO);
+
+        return "admin/CreateCourse";
+    }
+
+    @Operation(summary = "Create course", description = "create course")
+    @ApiResponse(responseCode = "200", description = "Successfully created course")
+    //    url = /admin/courses/create-course
+    @PostMapping("/courses/create-course")
+    public String createCourse(@Valid @ModelAttribute CoursesDTO coursesDTO, BindingResult bindingResult,
+                               RedirectAttributes redirectAttributes, Model model) {
+        if(bindingResult.hasErrors()) {
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("coursesDTO", coursesDTO);
+            return "admin/CreateCourse";
+        }
+
+        // Tạo khóa học trên Moodle
+        String moodleResponse = coursesService.createCourse(coursesDTO);
+
+        if (moodleResponse != null && moodleResponse.contains("id")) {
+            Integer moodleCourseId = coursesService.extractMoodleCourseId(moodleResponse);
+            CategoriesEntity category = categoriesRepository.findByMoodleId(coursesDTO.getCategoryid());
+            if (category == null) {
+                // Xử lý lỗi nếu category không tồn tại
+                model.addAttribute("error", "Category không tồn tại.");
+                return "admin/CreateCourse";
+            }
+
+            CoursesEntity newCourse = new CoursesEntity();
+            newCourse.setMoodleId(moodleCourseId);
+            newCourse.setFullname(coursesDTO.getFullname());
+            newCourse.setShortname(coursesDTO.getShortname());
+            newCourse.setSummary(coursesDTO.getSummary());
+            newCourse.setCategoriesEntity(category);
+            coursesRepository.save(newCourse);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo khóa học thành công!");
+            return "redirect:/admin/courses";
+        } else {
+            // Nếu tạo khóa học thất bại, trả về thông báo lỗi
+            model.addAttribute("errorMessage", "Failed to create the course on Moodle. Please try again.");
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("coursesDTO", coursesDTO);
+            return "admin/CreateCourse";
+        }
+    }
 }

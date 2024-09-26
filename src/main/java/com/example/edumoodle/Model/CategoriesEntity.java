@@ -3,6 +3,8 @@ package com.example.edumoodle.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 @Entity
 @Table(name = "tbl_categories")
 public class CategoriesEntity {
@@ -28,6 +30,29 @@ public class CategoriesEntity {
 
     @Column(nullable = false, columnDefinition = "integer default 0")
     private Integer coursecount = 0;
+
+    @OneToMany(mappedBy = "categoriesEntity", fetch = FetchType.EAGER)
+    private List<CoursesEntity> courses;
+
+    public CategoriesEntity(){}
+
+    public CategoriesEntity(Integer id, Integer moodleId, String name, String description, Integer parent, Integer coursecount, List<CoursesEntity> courses) {
+        this.id = id;
+        this.moodleId = moodleId;
+        this.name = name;
+        this.description = description;
+        this.parent = parent;
+        this.coursecount = coursecount;
+        this.courses = courses;
+    }
+
+    public List<CoursesEntity> getCourses() {
+        return courses;
+    }
+
+    public void setCourses(List<CoursesEntity> courses) {
+        this.courses = courses;
+    }
 
     public Integer getId() {
         return id;
