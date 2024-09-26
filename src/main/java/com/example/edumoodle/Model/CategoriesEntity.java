@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@Table(name = "tbl_DanhMuc")
+@Table(name = "tbl_categories")
 public class CategoriesEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotNull
+    @Column(unique = true)
     private Integer moodleId;
 
     @NotNull(message = "Tên danh mục không được để trống.")

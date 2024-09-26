@@ -2,16 +2,17 @@ package com.example.edumoodle.Controller;
 
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CategoryHierarchyDTO;
-import com.example.edumoodle.DTO.CoursesDTO;
 import com.example.edumoodle.Service.CategoriesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,8 +54,14 @@ public class CategoriesController {
     @Operation(summary = "handle form create category", description = "Handle create category")
     @ApiResponse(responseCode = "200", description = "Successfully created category")
     @PostMapping("/categories/create")
-    public String createCategory(@ModelAttribute CategoriesDTO categoriesDTO) {
+    public String createCategory(@Valid @ModelAttribute CategoriesDTO categoriesDTO, BindingResult bindingResult,
+                                 RedirectAttributes redirectAttributes, Model model) {
+        if(bindingResult.hasErrors()) {
+            return "admin/CreateCategory";
+        }
+
         categoriesService.createCategory(categoriesDTO);
+        redirectAttributes.addFlashAttribute("successMessage", "Thêm danh mục thành công!");
         return "redirect:/admin/categories"; // Chuyển hướng sau khi tạo thành công
     }
 
@@ -63,6 +70,9 @@ public class CategoriesController {
     public String getCategoriesList(Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+
+        CategoriesDTO categoriesDTO = new CategoriesDTO();
+        model.addAttribute("categoriesDTO", categoriesDTO);
 
         return "admin/CreateCategory";
     }

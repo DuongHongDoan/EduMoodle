@@ -50,6 +50,11 @@
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
+    <!-- phần thông báo chỉ xuất hiện khi tạo danh mục thành công -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 <!--  search input-->
     <div class="d-flex justify-content-end">
         <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
