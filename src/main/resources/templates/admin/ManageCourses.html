@@ -62,13 +62,30 @@
         border-color: #1f5ca9;
         color: white;
     }
+
+    .action-buttons {
+      display: none; /* Ẩn các nút sửa/xóa ban đầu */
+      margin-left: 12px;
+    }
   </style>
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
-    <!-- phần thông báo chỉ xuất hiện khi tạo khóa học thành công -->
+    <!-- phần thông báo chỉ xuất hiện khi tạo/sửa/xóa khóa học thành công -->
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <!--  search input and select category of courses-->
@@ -111,16 +128,14 @@
             <h1 class="list-courses-name h3 mb-0 text-gray-800">Danh sách các khóa học</h1>
         </div>
         <div class="col d-flex justify-content-end">
-            <a class="link-cate" th:href="@{/admin/courses/edit-course}">
-                <button type="submit" class="btn btn-cate btn-edit text-white bg-warning" style="margin-right: 5px;">
-                    <i class="bi bi-pencil-fill "></i>Sửa
-                </button>
-            </a>
             <a class="link-cate" th:href="@{/admin/courses/create-course}">
                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                     <i class="bi bi-plus"></i>Tạo khóa học
                 </button>
             </a>
+            <button id="toggleEdit" class="btn btn-primary" style="margin-left: 5px;">
+                <i class="bi bi-gear"></i>
+            </button>
         </div>
     </div>
 <!--  list courses -->
@@ -142,7 +157,38 @@
                             <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                                 <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                             </a>
-                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                            <div class="d-flex justify-content-between">
+                                <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                                <span class="action-buttons">
+                                    <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                        <i class="bi bi-pencil-fill text-warning"></i>
+                                    </a>
+                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                        <i class="bi bi-trash text-danger"></i>
+                                    </a>
+                                </span>
+                            </div>
+                            <!-- The Modal -->
+                            <div class="modal fade" th:id="'deleteModal' + ${course.id}">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- Modal Header -->
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Thông báo</h4>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <!-- Modal body -->
+                                        <div class="modal-body">
+                                            <span th:text="'Bạn có chắc muốn xóa khóa học ' + ${course.fullname} + ' không?'"></span>
+                                        </div>
+                                        <!-- Modal footer -->
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                            <a th:href="@{/admin/courses/delete(courseId=${course.id})}" class="btn btn-danger">Xóa</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -182,7 +228,38 @@
                             <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                                 <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                             </a>
-                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                            <div class="d-flex justify-content-between">
+                                <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                                <span class="action-buttons">
+                                    <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                        <i class="bi bi-pencil-fill text-warning"></i>
+                                    </a>
+                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                        <i class="bi bi-trash text-danger"></i>
+                                    </a>
+                                </span>
+                            </div>
+                            <!-- The Modal -->
+                            <div class="modal fade" th:id="'deleteModal' + ${course.id}">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- Modal Header -->
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Thông báo</h4>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <!-- Modal body -->
+                                        <div class="modal-body">
+                                            <span th:text="'Bạn có chắc muốn xóa khóa học ' + ${course.fullname} + ' không?'"></span>
+                                        </div>
+                                        <!-- Modal footer -->
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                            <a th:href="@{/admin/courses/delete(courseId=${course.id})}" class="btn btn-danger">Xóa</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -223,7 +300,38 @@
                         <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                             <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                         </a>
-                        <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                        <div class="d-flex justify-content-between">
+                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                            <span class="action-buttons">
+                                <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                    <i class="bi bi-pencil-fill text-warning"></i>
+                                </a>
+                                <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                        <i class="bi bi-trash text-danger"></i>
+                                </a>
+                            </span>
+                        </div>
+                        <!-- The Modal -->
+                        <div class="modal fade" th:id="'deleteModal' + ${course.id}">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <!-- Modal Header -->
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">Thông báo</h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <!-- Modal body -->
+                                    <div class="modal-body">
+                                        <span th:text="'Bạn có chắc muốn xóa khóa học ' + ${course.fullname} + ' không?'"></span>
+                                    </div>
+                                    <!-- Modal footer -->
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                        <a th:href="@{/admin/courses/delete(courseId=${course.id})}" class="btn btn-danger">Xóa</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -242,12 +350,55 @@
                         <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                             <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                         </a>
-                        <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                        <div class="d-flex justify-content-between">
+                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                            <span class="action-buttons">
+                                <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                    <i class="bi bi-pencil-fill text-warning"></i>
+                                </a>
+                                <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                        <i class="bi bi-trash text-danger"></i>
+                                </a>
+                            </span>
+                        </div>
+                        <!-- The Modal -->
+                        <div class="modal fade" th:id="'deleteModal' + ${course.id}">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <!-- Modal Header -->
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">Thông báo</h4>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <!-- Modal body -->
+                                    <div class="modal-body">
+                                        <span th:text="'Bạn có chắc muốn xóa khóa học ' + ${course.fullname} + ' không?'"></span>
+                                    </div>
+                                    <!-- Modal footer -->
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                        <a th:href="@{/admin/courses/delete(courseId=${course.id})}" class="btn btn-danger">Xóa</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+    var myModal = document.getElementById('myModal');
+    myModal.addEventListener('show.bs.modal', function (event) {
+        // Lấy đối tượng nút nhấn mở modal
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-userid'); // Lấy userId từ thuộc tính data
+
+        // Cập nhật href cho nút xóa
+        var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        confirmDeleteBtn.href = "/admin/users/delete-user?userid=" + userId;
+    });
+</script>
 </body>
 </html>

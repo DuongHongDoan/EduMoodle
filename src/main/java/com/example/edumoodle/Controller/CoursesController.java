@@ -257,4 +257,91 @@ public class CoursesController {
             return "admin/CreateCourse";
         }
     }
+
+    //    url = /admin/courses/edit-course?courseId= --> trả về view form sửa khóa học tương ứng
+    @GetMapping("/courses/edit-course")
+    public String showFormEditCourse(@RequestParam("courseId") Integer courseId, RedirectAttributes redirectAttributes, Model model) {
+        Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(courseId);
+        if (courseOpt.isPresent()) {
+            CoursesEntity course = courseOpt.get();
+            CoursesDTO coursesDto = new CoursesDTO();
+            coursesDto.setId(course.getMoodleId());
+            coursesDto.setFullname(course.getFullname());
+            coursesDto.setShortname(course.getShortname());
+            coursesDto.setCategoryid(course.getCategoriesEntity().getMoodleId());
+            coursesDto.setSummary(course.getSummary());
+
+            model.addAttribute("coursesDto", coursesDto);
+
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("courseIdWeb", course.getId_courses());
+
+        } else {
+            model.addAttribute("errorMessage", "Course not found.");
+        }
+        return "admin/EditCourse";
+    }
+
+    @Operation(summary = "Edit course", description = "edit course")
+    @ApiResponse(responseCode = "200", description = "Successfully edited course")
+    //    url = /admin/courses/edit-course
+    @PostMapping("/courses/edit-course")
+    public String editCourse(@Valid @ModelAttribute CoursesDTO coursesDto, @RequestParam("courseIdWeb") Integer courseIdWeb,
+                             BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+        if (bindingResult.hasErrors()) {
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("coursesDto", coursesDto);
+            model.addAttribute("courseIdWeb", courseIdWeb);
+            return "admin/EditCourse";
+        }
+
+        Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(coursesDto.getId());
+        CategoriesEntity category = categoriesRepository.findByMoodleId(coursesDto.getCategoryid());
+        if (courseOpt.isPresent()) {
+            CoursesEntity course = courseOpt.get();
+            course.setMoodleId(coursesDto.getId());
+            course.setFullname(coursesDto.getFullname());
+            course.setShortname(coursesDto.getShortname());
+            course.setCategoriesEntity(category); // Sử dụng Integer trực tiếp
+            course.setSummary(coursesDto.getSummary());
+            coursesRepository.save(course);
+
+            boolean moodleUpdated = coursesService.updateMoodleCourse(coursesDto);
+            if (moodleUpdated) {
+                redirectAttributes.addFlashAttribute("successMessage", "Sửa khóa học thành công!");
+                return "redirect:/admin/courses";
+            } else {
+                model.addAttribute("errorMessage", "Cập nhật không thành công. Vui lòng thử lại!");
+                List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+                model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+                model.addAttribute("coursesDto", coursesDto);
+                model.addAttribute("courseIdWeb", courseIdWeb);
+                return "admin/EditCourse";
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Course not found.");
+            return "redirect:/admin/courses";
+        }
+    }
+
+    @Operation(summary = "Delete course", description = "delete course")
+    @ApiResponse(responseCode = "200", description = "Successfully deleted course")
+    //    url = /admin/courses/delete
+    @GetMapping("/courses/delete")
+    public String deleteMoodleCourse(@RequestParam("courseId") int courseId, RedirectAttributes redirectAttributes) {
+        boolean moodleSuccess = coursesService.deleteCourseFromMoodle(courseId);
+        if (moodleSuccess) {
+            boolean dbSuccess = coursesService.deleteCourseFromDatabase(courseId);
+            if (dbSuccess) {
+                redirectAttributes.addFlashAttribute("message", "Course deleted successfully.");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Failed to delete course from the database.");
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Failed to delete course from Moodle.");
+        }
+        return "redirect:/admin/courses";
+    }
 }

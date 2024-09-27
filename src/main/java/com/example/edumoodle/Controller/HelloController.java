@@ -39,16 +39,16 @@ public class HelloController {
 //    public String getCreateCourse() {
 //        return "/admin/CreateCourse";
 //    }
-    @GetMapping("/courses/edit-course")
-    public String getEditCourse() {
-        return "/admin/EditCourse";
-    }
-    @GetMapping("/courses/detail-course")
-    public String getDetailCourse() {
-        return "/admin/DetailCourse";
-    }
-    @GetMapping("/courses/add-member")
-    public String getAddMember() {
-        return "/admin/AddNewMember";
-    }
+//    @GetMapping("/courses/edit-course")
+//    public String getEditCourse() {
+//        return "/admin/EditCourse";
+//    }
+//    @GetMapping("/courses/detail-course")
+//    public String getDetailCourse() {
+//        return "/admin/DetailCourse";
+//    }
+//    @GetMapping("/courses/add-member")
+//    public String getAddMember() {
+//        return "/admin/AddNewMember";
+//    }
 }

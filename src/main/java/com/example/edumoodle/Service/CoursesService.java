@@ -230,4 +230,88 @@ public class CoursesService {
 
         }
     }
+
+    //cập nhật khóa học
+    public boolean updateMoodleCourse(CoursesDTO coursesDto) {
+        String functionName = "core_course_update_courses";
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("courses[0][id]", String.valueOf(coursesDto.getId()));
+        parameters.add("courses[0][categoryid]", String.valueOf(coursesDto.getCategoryid()));
+        parameters.add("courses[0][fullname]", coursesDto.getFullname());
+        parameters.add("courses[0][shortname]", coursesDto.getShortname()); // Chuyển đổi Integer thành String nếu cần
+        parameters.add("courses[0][summary]", coursesDto.getSummary());
+        parameters.add("moodlewsrestformat", "json");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
+
+        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
+
+        RestTemplate restTemplate = new RestTemplate();
+        String response = restTemplate.postForObject(serverUrl, request, String.class);
+
+        System.out.println("Moodle Response: " + response);
+        System.out.println(serverUrl);
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(response);
+            // Kiểm tra phản hồi từ Moodle để xác định xem việc cập nhật có thành công hay không
+            if (rootNode.has("warnings")) {
+                for (JsonNode warning : rootNode.get("warnings")) {
+                    System.out.println("Warning: " + warning.get("message").asText());
+                }
+            }
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //xóa khóa học trên csdl web
+    public boolean deleteCourseFromDatabase(int courseId) {
+        try {
+            if (coursesRepository.existsById(courseId)) {
+                coursesRepository.deleteById(courseId);
+                return true;
+            } else {
+                System.out.println("Course with ID " + courseId + " does not exist in the database.");
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //xóa khóa học trên moodle
+    public boolean deleteCourseFromMoodle(int courseId) {
+
+        String functionName = "core_course_delete_courses";
+
+        MultiValueMap<String, String> parameters = new LinkedMultiValueMap<>();
+        parameters.add("moodlewsrestformat", "json");
+        parameters.add("courseids[0]", String.valueOf(courseId));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(parameters, headers);
+        String serverUrl = domainName + "/webservice/rest/server.php" + "?wstoken=" + token + "&wsfunction=" + functionName;
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            String response = restTemplate.postForObject(serverUrl, request, String.class);
+            System.out.println("Moodle Response: " + response); // Kiểm tra phản hồi từ Moodle
+
+            return true;  // Hoặc điều chỉnh kiểm tra phản hồi cho phù hợp
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
