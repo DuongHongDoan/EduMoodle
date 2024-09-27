@@ -4,7 +4,10 @@ import com.example.edumoodle.DTO.EnrolUserDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.DTO.UsersResponseDTO;
+import com.example.edumoodle.Model.RolesEntity;
 import com.example.edumoodle.Model.UsersEntity;
+import com.example.edumoodle.Repository.RolesRepository;
+import com.example.edumoodle.Repository.UserRoleRepository;
 import com.example.edumoodle.Repository.UsersRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -33,6 +37,10 @@ public class UsersService {
 
     @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    @Autowired
+    private RolesRepository rolesRepository;
 
     @Autowired
     private UserInterface userInterface;
@@ -104,6 +112,31 @@ public class UsersService {
 
         assert usersList != null;
         return Arrays.asList(usersList);
+    }
+
+    //lấy danh sách người dùng role=admin trong csdl web
+    public List<UsersEntity> getUserByRoleAdmin(String roleName) {
+        return usersRepository.findUsersByRoleName(roleName);
+    }
+
+    // Xóa vai trò ADMIN của người dùng
+    @Transactional
+    public void removeAdminRole(Integer userId) throws Exception {
+        // Lấy người dùng dựa trên userId
+        UsersEntity user = usersRepository.findById(userId)
+                .orElseThrow(() -> new Exception("Người dùng không tồn tại"));
+
+        // Tìm role ADMIN
+        RolesEntity adminRole = rolesRepository.findRoleByName("ADMIN")
+                .orElseThrow(() -> new Exception("Vai trò ADMIN không tồn tại"));
+
+        // Kiểm tra xem người dùng có vai trò ADMIN không
+        if (user.getUserRole().stream().anyMatch(ur -> ur.getRolesEntity().equals(adminRole))) {
+            // Xóa vai trò admin khỏi userRole
+            userRoleRepository.deleteByUsersEntityAndRolesEntity(user, adminRole);
+        } else {
+            throw new Exception("Người dùng không có vai trò ADMIN");
+        }
     }
 
     //xử lý dữ liệu từ form ô tìm kiếm người dùng

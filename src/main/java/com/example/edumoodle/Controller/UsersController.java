@@ -2,7 +2,11 @@ package com.example.edumoodle.Controller;
 
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
+import com.example.edumoodle.Model.RolesEntity;
+import com.example.edumoodle.Model.UserRoleEntity;
 import com.example.edumoodle.Model.UsersEntity;
+import com.example.edumoodle.Repository.RolesRepository;
+import com.example.edumoodle.Repository.UserRoleRepository;
 import com.example.edumoodle.Repository.UsersRepository;
 import com.example.edumoodle.Service.UserInterface;
 import com.example.edumoodle.Service.UsersService;
@@ -39,6 +43,10 @@ public class UsersController {
 
     @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    private RolesRepository rolesRepository;
+    @Autowired
+    private UserRoleRepository userRoleRepository;
 
     @Operation(summary = "Display users list", description = "display all users")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved users list")
@@ -69,6 +77,67 @@ public class UsersController {
         usersService.saveUsers(usersList);
 
         return "admin/ManageUsers";
+    }
+
+    //url = /admin/users/manage-role --> hiển thị trang qua lý admin role
+    @GetMapping("/users/manage-role")
+    public String getManageAdminRole(Model model) {
+        // Lấy danh sách người dùng không có vai trò ADMIN
+        List<UsersEntity> usersWithoutAdmin = usersRepository.findUsersWithoutAdminRole();
+        model.addAttribute("usersList", usersWithoutAdmin);
+
+        // Gửi vai trò "ADMIN" vào form (chỉ hiển thị role ADMIN)
+        String adminRole = "ADMIN";
+        model.addAttribute("adminRole", adminRole);
+
+        model.addAttribute("adminList", usersService.getUserByRoleAdmin("ADMIN"));
+
+        return "admin/ManageAdminUserRole";
+    }
+
+    @Operation(summary = "Assignment role", description = "Assignment admin role")
+    @ApiResponse(responseCode = "200", description = "Successfully assignment admin role")
+    //đăng ký tài khoản admin: /admin/users/assignment-admin
+    @PostMapping("/users/assignment-admin")
+    public String assignmentAdminRole(@RequestParam("userId") Integer userId,
+                                     @RequestParam("roleName") String roleName,
+                                     RedirectAttributes redirectAttributes) {
+
+        // Lấy user dựa trên ID
+        UsersEntity user = usersRepository.findById(userId).orElse(null);
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại.");
+            return "redirect:/admin/users/manage-role";
+        }
+
+        // Lấy role ADMIN từ database
+        RolesEntity adminRole = rolesRepository.findByName(roleName);
+        if (adminRole == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vai trò không tồn tại.");
+            return "redirect:/admin/users/manage-role";
+        }
+
+        // Tạo quan hệ giữa user và role
+        UserRoleEntity userRole = new UserRoleEntity();
+        userRole.setUsersEntity(user);
+        userRole.setRolesEntity(adminRole);
+        userRoleRepository.save(userRole);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Đăng ký Admin thành công!");
+        return "redirect:/admin/users/manage-role";
+    }
+
+    //xóa admin
+    @GetMapping("/users/delete-admin")
+    public String deleteAdmin(@RequestParam("userid") Integer userid, RedirectAttributes redirectAttributes) {
+        try {
+            // Xóa vai trò admin của người dùng theo userId
+            usersService.removeAdminRole(userid);
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa quyền admin thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi xóa quyền admin!");
+        }
+        return "redirect:/admin/users/manage-role"; // Quay lại trang danh sách admin
     }
 
     @Operation(summary = "Handle form create user", description = "handle form create user")
