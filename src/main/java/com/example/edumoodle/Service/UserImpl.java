@@ -47,7 +47,7 @@ public class UserImpl implements UserInterface{
     public UsersEntity update(UsersEntity user) {
         // Có thể mã hóa lại mật khẩu nếu cần thiết
         if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setPassword(user.getPassword());
         }
         return userRepo.save(user); // Cập nhật thông tin người dùng
     }
