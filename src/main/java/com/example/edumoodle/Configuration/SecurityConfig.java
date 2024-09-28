@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -37,14 +38,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception {
 
         http.csrf().disable().authorizeHttpRequests()
-                .requestMatchers("/").permitAll()
+                .requestMatchers("/user/home", "/user/courses/search", "/user/courses", "/user/courses/category").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/user/**").hasAnyAuthority("editingteach", "student")
                 .anyRequest().authenticated().and()
                 .formLogin()
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .usernameParameter("username").passwordParameter("password")
-                .defaultSuccessUrl("/admin/dashboard", true)
+                .successHandler(customAuthenticationSuccessHandler())
                 .failureUrl("/login?error=true").permitAll()
                 .and()
                 .logout()
@@ -62,6 +64,11 @@ public class SecurityConfig {
     WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.debug(true).ignoring()
                 .requestMatchers("/imgs/**", "/images/**","/home", "/css/**", "/js/**", "/assets/**");
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler customAuthenticationSuccessHandler() {
+        return new CustomAuthenticationSuccessHandler();
     }
 
     @Autowired

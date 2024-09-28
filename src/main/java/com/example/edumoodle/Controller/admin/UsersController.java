@@ -1,4 +1,4 @@
-package com.example.edumoodle.Controller;
+package com.example.edumoodle.Controller.admin;
 
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
@@ -53,7 +53,7 @@ public class UsersController {
     //    url = /admin/users
     @GetMapping("/users")
     public String getAllUsers(@RequestParam(value = "page", defaultValue = "1") int page,
-                              @RequestParam(value = "size", defaultValue = "50") int size, Model model) {
+                              @RequestParam(value = "size", defaultValue = "30") int size, Model model) {
         List<UsersDTO> usersList = usersService.getAllUsers();
         List<UsersDTO> usersListFilter = usersList.stream()
                 .filter(user -> user.getId() != 1 && user.getId() != 2)

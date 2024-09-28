@@ -1,4 +1,4 @@
-package com.example.edumoodle.Controller;
+package com.example.edumoodle.Controller.admin;
 
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CategoryHierarchyDTO;

@@ -1,10 +1,8 @@
-package com.example.edumoodle.Controller;
+package com.example.edumoodle.Controller.admin;
 
 import com.example.edumoodle.DTO.*;
-import com.example.edumoodle.Model.CategoriesEntity;
-import com.example.edumoodle.Model.CoursesEntity;
-import com.example.edumoodle.Repository.CategoriesRepository;
-import com.example.edumoodle.Repository.CoursesRepository;
+import com.example.edumoodle.Model.*;
+import com.example.edumoodle.Repository.*;
 import com.example.edumoodle.Service.CategoriesService;
 import com.example.edumoodle.Service.CoursesService;
 import com.example.edumoodle.Service.UsersService;
@@ -44,6 +42,13 @@ public class CoursesController {
     @Autowired
     private CategoriesRepository categoriesRepository;
 
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private RolesRepository rolesRepository;
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+
     @Operation(summary = "Get all categories for select input", description = "Fetch a list of all categories")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     //    url = /admin/courses
@@ -59,7 +64,7 @@ public class CoursesController {
         Map<Integer, String> categoryMap = coursesService.getMapCategories();
         model.addAttribute("categoryMap", categoryMap);
 
-        if (coursesList.size() >= size) {
+        if (coursesList.size() > size) {
             // Phân trang
             int pageIndex = page - 1;
             int start = pageIndex * size;
@@ -99,7 +104,7 @@ public class CoursesController {
 
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
-        if(coursesOfParent.size() >= size) {
+        if(coursesOfParent.size() > size) {
             // Phân trang
             int pageIndex = page - 1;
             int start = pageIndex * size;
@@ -149,14 +154,37 @@ public class CoursesController {
     @PostMapping("/courses/enrolUser")
     public String enrolUser(@RequestParam("userIds") List<Integer> userIds,
                             @RequestParam("roleId") Integer roleId,
-                            @RequestParam("courseId") Integer courseId) {
-        // Khởi tạo đối tượng DTO và gọi service để đăng ký
+                            @RequestParam("courseId") Integer courseId, RedirectAttributes redirectAttributes) {
+        // Khởi tạo đối tượng DTO và gọi service để đăng ký người dun vào khóa học với role tương ứng
         EnrolUserDTO enrolUserDTO = new EnrolUserDTO();
         enrolUserDTO.setUserid(userIds);
         enrolUserDTO.setRoleid(roleId);
         enrolUserDTO.setCourseid(courseId);
-
         usersService.enrolUser(enrolUserDTO);
+
+        //đăng ký vai trò student-teacher cho việc xác định role để đăng nhập
+        for(Integer userId : userIds) {
+            UsersEntity user = usersRepository.findByMoodleId(userId).orElse(null);
+            if (user == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại.");
+                return "redirect:/admin/users/manage-role";
+            }
+
+            RolesEntity roleName = rolesRepository.findByMoodleId(roleId).orElse(null);
+            assert roleName != null;
+            RolesEntity role = rolesRepository.findByName(roleName.getName());
+            if (role == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Vai trò không tồn tại.");
+                return "redirect:/admin/users/manage-role";
+            }
+
+            // Tạo quan hệ giữa user và role
+            UserRoleEntity userRole = new UserRoleEntity();
+            userRole.setUsersEntity(user);
+            userRole.setRolesEntity(role);
+            userRoleRepository.save(userRole);
+        }
+
         return "redirect:/admin/courses/view?courseId=" + enrolUserDTO.getCourseid();
     }
 

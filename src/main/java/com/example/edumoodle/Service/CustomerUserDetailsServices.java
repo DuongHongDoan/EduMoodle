@@ -38,10 +38,11 @@ public class CustomerUserDetailsServices implements UserDetailsService {
         Collection<GrantedAuthority> grantedAuthorities = new HashSet<>();
         Set<UserRoleEntity> roles = user.getUserRole();
 
-        for(UserRoleEntity userRole : roles) {
-            grantedAuthorities.add(new SimpleGrantedAuthority(userRole.getRolesEntity().getName()));
+        if (roles != null && !roles.isEmpty()) {
+            for (UserRoleEntity userRole : roles) {
+                grantedAuthorities.add(new SimpleGrantedAuthority(userRole.getRolesEntity().getName()));
+            }
         }
-
         return new CustomUserDetails(user, grantedAuthorities);
     }
 }
