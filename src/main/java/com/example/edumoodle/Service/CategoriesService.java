@@ -35,7 +35,7 @@ public class CategoriesService {
 
     private static final Logger logger = LoggerFactory.getLogger(CategoriesService.class);
 
-//lấy all categories
+    //lấy all categories
     public List<CategoriesDTO> getAllCategory() {
         String apiMoodleFunc = "core_course_get_categories";
         String url = domainName + "/webservice/rest/server.php"
@@ -50,7 +50,7 @@ public class CategoriesService {
         return List.of(categories);
     }
 
-//lưu tất cả categories lấy đc lưu vào csdl web + update again
+    //lưu tất cả categories lấy đc lưu vào csdl web + update again
     public void saveCategories(List<CategoriesDTO> categories) {
         // Lấy tất cả danh mục hiện có từ cơ sở dữ liệu web
         List<CategoriesEntity> existingCategories = categoriesRepository.findAll();
@@ -112,7 +112,7 @@ public class CategoriesService {
         }
     }
 
-//tạo danh mục
+    //tạo danh mục
     public void createCategory(CategoriesDTO categoriesDTO) {
         String apiMoodleFunc = "core_course_create_categories";
         String url = domainName + "/webservice/rest/server.php"
@@ -134,7 +134,7 @@ public class CategoriesService {
         }
     }
 
-
+    //lấy ra nhóm danh mục cha và danh mục cha có con
     public Map<Integer, List<CategoriesDTO>> getCategoriesGroupedByParent() {
         String apiMoodleFunc = "core_course_get_categories";
         String url = domainName + "/webservice/rest/server.php"
@@ -171,7 +171,8 @@ public class CategoriesService {
 
         return categoryMap;
     }
-//tính tổng số khóa học cho danh mục cha
+
+    //tính tổng số khóa học cho danh mục cha
     public Map<Integer, Integer> getTotalCoursesByParent() {
         Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent = getCategoriesGroupedByParent();
         Map<Integer, Integer> totalCoursesByParent = new HashMap<>();
@@ -211,6 +212,8 @@ public class CategoriesService {
 
         return totalCoursesByParent;
     }
+
+    //lấy danh sách cha - con dạng "cha / con" trong ô select
     public List<CategoryHierarchyDTO> getParentChildCategories() {
         Map<Integer, List<CategoriesDTO>> categoriesGroupedByParent = getCategoriesGroupedByParent();
         List<CategoryHierarchyDTO> categoryHierarchy = new ArrayList<>();
@@ -273,6 +276,4 @@ public class CategoriesService {
         }
         return null;
     }
-
-
 }

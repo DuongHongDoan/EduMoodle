@@ -2,7 +2,7 @@
 <html lang="en"
       xmlns:th="http://thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.w3.org/1999/xhtml">
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security6">
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" sizes="24x24"  href="/imgs/favicon.png">
@@ -37,6 +37,11 @@
         .select2-container .select2-selection--multiple {
             height: auto; /* Để container auto-fit nội dung */
         }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            margin-top: 0;
+        }
     </style>
 </head>
 <!--logo and login-->
@@ -48,11 +53,13 @@
         <div>
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: black;font-size: 24px;">Tên đăng nhập</a>
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown"
+                       th:text="${#authentication.getPrincipal().getFirstname()+ ' ' +#authentication.getPrincipal().getLastname()}"
+                       aria-expanded="false" style="color: black;font-size: 24px;">Tên đăng nhập</a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="#">Hồ sơ</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right" style="margin-right: 5px;"></i>Đăng xuất</a></li>
+                        <li><a class="dropdown-item" sec:authorize="isAuthenticated" th:href="@{/logout}"><i class="bi bi-box-arrow-right" style="margin-right: 5px;"></i>Đăng xuất</a></li>
                     </ul>
                 </li>
             </ul>
@@ -65,10 +72,55 @@
         <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
         <div class="navbar-collapse collapse" id="navbarSupportedContent" style="">
             <ul class="navbar-nav mb-2 mb-lg-0 d-flex justify-content-center w-100">
-                <li class="nav-item mx-3"><a class="nav-link" aria-current="page" th:href="@{/admin/dashboard}">Tổng quan</a></li>
-                <li class="nav-item mx-3"><a class="nav-link" th:href="@{/admin/categories}">Quản lý danh mục</a></li>
-                <li class="nav-item mx-3"><a class="nav-link" th:href="@{/admin/courses}">Quản lý khóa học</a></li>
-                <li class="nav-item mx-3"><a class="nav-link" th:href="@{/admin/users}">Quản lý người dùng</a></li>
+                <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3"><a class="nav-link" aria-current="page" th:href="@{/admin/dashboard}">Tổng quan</a></li>
+                <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
+                    <div class="dropdown">
+                        <a class="nav-link" th:href="@{/admin/categories}" role="button" id="QLCourse" aria-expanded="false">
+                            Danh mục - Khóa học
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" th:href="@{/admin/courses}">Xem danh sách khóa học</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/categories/create-category}">Thêm danh mục</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/courses/create-course}">Thêm khóa học</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
+                    <div class="dropdown">
+                        <a class="nav-link" th:href="@{/admin/users}" role="button" id="QLMember" aria-expanded="false">
+                            Thành viên
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" th:href="@{/admin/users/add-user}">Thêm thành viên</a></li>
+                            <li><a class="dropdown-item" href="#">Nhập danh sách thành viên</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/users/manage-role}">Quản lý vai trò</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
+                    <div class="dropdown">
+                        <a class="nav-link" href="#" role="button" id="dropdownMenuLink" aria-expanded="false">
+                            Bài thi
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" href="#">Action 1</a></li>
+                            <li><a class="dropdown-item" href="#">Action 2</a></li>
+                            <li><a class="dropdown-item" href="#">Action 3</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li sec:authorize="hasAuthority('student') or hasAuthority('editingteach') or isAuthenticated() and !hasAuthority('ADMIN')"  class="nav-item mx-3">
+                    <a class="nav-link" aria-current="page" th:href="@{/user/home}">Trang chủ</a>
+                </li>
+                <li sec:authorize="hasAuthority('student') or isAuthenticated() and !hasAuthority('ADMIN') and !hasAuthority('editingteach')"  class="nav-item mx-3">
+                    <a class="nav-link" aria-current="page" th:href="@{/user/}">Trang cá nhân</a>
+                </li>
+                <li sec:authorize="hasAuthority('student') or hasAuthority('editingteach')"  class="nav-item mx-3">
+                    <a class="nav-link" aria-current="page" th:href="@{/user/}">Các khóa học của tui</a>
+                </li>
             </ul>
         </div>
     </div>
@@ -102,6 +154,13 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script th:src="@{/assets/chart.js/Chart.min.js}"></script>
+
+<script>
+    // Sự kiện click để hiển thị hoặc ẩn các nút sửa/xóa trong category
+    $('#toggleEdit').click(function() {
+      $('.action-buttons').toggle(); // Hiển thị hoặc ẩn các nút sửa/xóa
+    });
+</script>
 <script>
     <!-- script active links group -->
     document.addEventListener("DOMContentLoaded", function() {

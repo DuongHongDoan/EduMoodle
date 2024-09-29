@@ -22,6 +22,16 @@
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body" >
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <span th:text="${successMessage}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${errorMessage}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div class="row">
       <div class="col d-sm-flex align-items-center justify-content-center">
         <h1 class="h3 mb-3 text-gray-800 text-uppercase">Sửa thông tin người dùng</h1>
@@ -32,6 +42,7 @@
       <div class="col-lg-9 align-self-lg-center" style="height: 339.5px">
         <form th:action="@{/admin/users/edit}" th:object="${user}" method="post">
           <input type="hidden" th:field="*{id}" id="e-id"/>
+          <input type="hidden" th:value="${useridweb}" name="useridweb" id="e-id-web"/>
           <input type="hidden" name = "isCreating" value="true"/>
 
           <div class="row mb-3 justify-content-center">

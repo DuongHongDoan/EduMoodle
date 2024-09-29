@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Trang chủ</title>
+
+  <style>
+    .list-category {
+        border-bottom: 2px solid #0056b3;
+    }
+
+    .accordion-header .accordion-button a,
+    .accordion-body a{
+        text-decoration: none;
+        color: #555555;
+        font-size: 1.23rem;
+        line-height: 1;
+    }
+
+    .btn-cate i {
+        margin-right: 5px;
+    }
+
+    .link-cate {
+        text-decoration: none;
+        font-size: 1.1rem;
+        color: #eba600;
+    }
+
+    .link-cate:hover {
+        color: #000;
+    }
+
+    .btn-edit:hover {
+        background-color: #e9ce7d !important;
+    }
+
+    .btn-create:hover {
+        background-color: #7ac7e3 !important;
+    }
+
+    .categories li {
+        list-style:none;
+        border-bottom: 1px solid #e1e1e1;
+    }
+
+    .btn-load,
+    .btn-load i{
+        margin-left: 5px;
+    }
+
+    .action-buttons {
+      display: none; /* Ẩn các nút sửa/xóa ban đầu */
+      margin-left: 12px;
+    }
+
+    span i {
+        font-size: 1.23rem;
+        margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body">
+    <!--  search input-->
+    <div class="d-flex justify-content-end">
+        <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
+              th:action="@{/user/courses/search}" method="get">
+            <div class="input-group mb-3">
+                <input name= "keyword" type="text" class="form-control small" placeholder="Tìm kiếm khóa học..."
+                       th:value="${keyword != null ? keyword : ''}" aria-label="Search" aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit" style="border-radius: 0 5px 5px 0;">
+                        <i class="fas fa-search fa-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 class="h3 list-category mb-0 text-gray-800">Danh mục các khóa học</h1>
+        </div>
+        <div class="col d-flex justify-content-end">
+            <button class="btn" >
+                <a class="link-cate" th:href="@{/user/courses}">Xem toàn bộ khóa học...</a>
+            </button>
+        </div>
+    </div>
+
+    <!-- List parent categories -->
+    <div class="accordion mt-2" id="courseAccordion2"  th:if="${categories != null}">
+        <div th:each="parentCategory : ${categories.get(0)}" class="accordion-item">
+            <h2 class="accordion-header" th:attr="id='heading' + ${parentCategory.id}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        th:data-bs-target="'#collapse' + ${parentCategory.id}" aria-expanded="false"
+                        th:attr="aria-controls='collapse' + ${parentCategory.id}">
+                    <a th:href="@{/user/courses/category(categoryId=${parentCategory.id})}">
+                        <span th:utext="${parentCategory.name}"></span>
+                        <span th:text="('(' + ${totalCoursesByParent[parentCategory.id]} + ')')"></span>
+                    </a>
+                </button>
+            </h2>
+            <ul th:id="'collapse' + ${parentCategory.id}" th:attr="aria-labelledby='heading' + ${parentCategory.id}" class="accordion-collapse collapse categories" data-bs-parent="#courseAccordion">
+                <!-- List child categories -->
+                <li class="accordion-body" th:each="childCategory : ${categories.get(parentCategory.id)}">
+                    <a th:href="@{/user/courses/category(categoryId=${childCategory.id})}">
+                        <span th:utext="${childCategory.name}"></span>
+                        <span th:text="('(' + ${childCategory.coursecount} + ')')"></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div th:if="${categories == null}">
+        <p>No categories found.</p>
+    </div>
+</div>
+</body>
+</html>

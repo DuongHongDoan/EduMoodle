@@ -30,6 +30,17 @@ public class UsersDTO {
     private String fullname;
     private List<Users_RolesDTO> roles;
 
+    public UsersDTO(){}
+
+    public UsersDTO(Integer id, String username, String firstname, String lastname, String email, String password, String fullname) {
+        this.id = id;
+        this.username = username;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.email = email;
+        this.password = password;
+    }
+
     public Integer getId() {
         return id;
     }

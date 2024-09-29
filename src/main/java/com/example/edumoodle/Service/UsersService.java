@@ -1,20 +1,24 @@
 package com.example.edumoodle.Service;
 
-import com.example.edumoodle.Configuration.HashPassword;
 import com.example.edumoodle.DTO.EnrolUserDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.DTO.UsersResponseDTO;
+import com.example.edumoodle.Model.RolesEntity;
 import com.example.edumoodle.Model.UsersEntity;
+import com.example.edumoodle.Repository.RolesRepository;
+import com.example.edumoodle.Repository.UserRoleRepository;
 import com.example.edumoodle.Repository.UsersRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
@@ -33,7 +37,17 @@ public class UsersService {
     private String domainName;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private UsersRepository usersRepository;
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    @Autowired
+    private RolesRepository rolesRepository;
+
+    @Autowired
+    private UserInterface userInterface;
 
     private final RestTemplate restTemplate;
     public UsersService() {
@@ -104,7 +118,32 @@ public class UsersService {
         return Arrays.asList(usersList);
     }
 
-//xử lý dữ liệu từ form ô tìm kiếm người dùng
+    //lấy danh sách người dùng role=admin trong csdl web
+    public List<UsersEntity> getUserByRoleAdmin(String roleName) {
+        return usersRepository.findUsersByRoleName(roleName);
+    }
+
+    // Xóa vai trò ADMIN của người dùng
+    @Transactional
+    public void removeAdminRole(Integer userId) throws Exception {
+        // Lấy người dùng dựa trên userId
+        UsersEntity user = usersRepository.findById(userId)
+                .orElseThrow(() -> new Exception("Người dùng không tồn tại"));
+
+        // Tìm role ADMIN
+        RolesEntity adminRole = rolesRepository.findRoleByName("ADMIN")
+                .orElseThrow(() -> new Exception("Vai trò ADMIN không tồn tại"));
+
+        // Kiểm tra xem người dùng có vai trò ADMIN không
+        if (user.getUserRole().stream().anyMatch(ur -> ur.getRolesEntity().equals(adminRole))) {
+            // Xóa vai trò admin khỏi userRole
+            userRoleRepository.deleteByUsersEntityAndRolesEntity(user, adminRole);
+        } else {
+            throw new Exception("Người dùng không có vai trò ADMIN");
+        }
+    }
+
+    //xử lý dữ liệu từ form ô tìm kiếm người dùng
     public List<UsersDTO> getSearchUser(String keyword) {
         List<UsersDTO> users = getAllUsers();
 
@@ -123,7 +162,7 @@ public class UsersService {
                 .collect(Collectors.toList());
     }
 
-//    lưu tất cả người dùng được thêm vào csdl web
+    //    lưu tất cả người dùng được thêm vào csdl web
     public void saveUsers(List<UsersDTO> users) {
         // Lấy tất cả users hiện có từ cơ sở dữ liệu web
         List<UsersEntity> existingUsers = usersRepository.findAll();
@@ -160,10 +199,10 @@ public class UsersService {
                     user.setEmail(dto.getEmail());
                     updated = true;
                 }
-                if(!user.getPassword().equals(dto.getPassword())) {
-                    user.setPassword(dto.getPassword());
-                    updated = true;
-                }
+//                if(!user.getPassword().equals(dto.getPassword())) {
+//                    user.setPassword(dto.getPassword());
+//                    updated = true;
+//                }
 
                 // Lưu nếu có thay đổi
                 if (updated) {
@@ -173,7 +212,6 @@ public class UsersService {
                 // Nếu danh mục không tồn tại, tạo mới
                 UsersEntity newUser = new UsersEntity();
                 newUser.setMoodleId(dto.getId());
-                newUser.setAuth("manual");
                 newUser.setUsername(dto.getUsername());
                 newUser.setPassword(dto.getPassword());
                 newUser.setFirstname(dto.getFirstname());
@@ -191,8 +229,8 @@ public class UsersService {
         }
     }
 
-//thêm thành viên mới
-    public void createNewUser(UsersDTO usersDTO) {
+    //thêm thành viên mới
+    public String createNewUser(UsersDTO usersDTO) {
         String apiMoodleFunc = "core_user_create_users";
         String url = domainName + "/webservice/rest/server.php"
                 + "?wstoken=" + token
@@ -204,16 +242,87 @@ public class UsersService {
                 + "&users[0][lastname]=" + usersDTO.getLastname()
                 + "&users[0][email]=" + usersDTO.getEmail();
 
+        String response = restTemplate.postForObject(url, null, String.class);
+
+        // Phân tích JSON để lấy user ID từ Moodle
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
-            // Xử lý phản hồi từ Moodle
-            System.out.println("Response create user: " + response.getBody());
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode root = objectMapper.readTree(response);
+
+            // Kiểm tra nếu phản hồi là mảng JSON
+            if (root.isArray() && !root.isEmpty()) {
+                JsonNode firstUser = root.get(0); // Lấy phần tử đầu tiên của mảng
+                // Lấy user ID
+                return firstUser.get("id").asText();
+            }
+            // Kiểm tra nếu phản hồi là object JSON (không phải mảng)
+            else if (root.isObject()) {
+                // Lấy user ID từ object
+                return root.get("id").asText();
+            }
         } catch (Exception e) {
-            // Xử lý ngoại lệ
             e.printStackTrace();
         }
+
+        return null;
     }
-//    lấy người dùng theo id
+
+    //kiểm tra các input tạo người dùng
+    public String validateCreateUser(UsersDTO userDto) {
+        // Kiểm tra username đã tồn tại
+        UsersEntity existingUser = userInterface.findByUsername(userDto.getUsername());
+        if (existingUser != null) {
+            return "Username đã tồn tại.";
+        }
+
+        // Kiểm tra mật khẩu rỗng
+        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
+            return "Password không được để trống.";
+        }
+
+        // Kiểm tra mật khẩu có chứa ký tự đặc biệt
+        if (!userDto.getPassword().matches(".*[!@#$%^&*(),.?\":{}|<>].*")) {
+            return "Password phải chứa ít nhất một ký tự đặc biệt.";
+        }
+
+        // Kiểm tra mật khẩu có chứa ít nhất một chữ cái viết hoa
+        if (!userDto.getPassword().matches(".*[A-Z].*")) {
+            return "Password phải chứa ít nhất một chữ cái viết hoa.";
+        }
+
+        // Kiểm tra mật khẩu có chứa ít nhất một chữ cái viết thường
+        if (!userDto.getPassword().matches(".*[a-z].*")) {
+            return "Password phải chứa ít nhất một chữ cái viết thường.";
+        }
+
+        return null; // Không có lỗi
+    }
+    //lấy người dùng trong csdl web bằng moodleId chuyển về dữ liệu DTO tương tác moodle
+    public UsersDTO getUserByMoodleID(Integer moodleId) {
+        Optional<UsersEntity> userOption = usersRepository.findByMoodleId(moodleId);
+        if (userOption.isPresent()) {
+            UsersEntity userEntity = userOption.get();
+            // Chuyển đổi từ UsersEntity sang UsersDTO
+            UsersDTO userDTO = new UsersDTO();
+            userDTO.setId(userEntity.getMoodleId());
+            userDTO.setUsername(userEntity.getUsername());
+            userDTO.setFirstname(userEntity.getFirstname());
+            userDTO.setLastname(userEntity.getLastname());
+            userDTO.setEmail(userEntity.getEmail());
+            return userDTO;
+        }
+        return null;
+    }
+    //lấy người dùng trong csdl web bằng moodleId
+    public UsersEntity getUserByMoodleIDWeb(Integer moodleId) {
+        Optional<UsersEntity> userOption = usersRepository.findByMoodleId(moodleId);
+        if (userOption.isPresent()) {
+            return userOption.get();
+        }
+        return null;
+    }
+
+    //    lấy người dùng theo id
     public UsersDTO getUserByID(Integer userid) {
         String apiMoodleFunc = "core_user_get_users";
         String url = domainName + "/webservice/rest/server.php"
@@ -233,7 +342,6 @@ public class UsersService {
     public boolean editUser(NguoiDungDTO usersDTO) {
         String apiMoodleFunc = "core_user_update_users";
         String url;
-        //băm mật khẩu
         if(!usersDTO.getPassword().isEmpty() && usersDTO.getPassword() != null) {
             url = domainName + "/webservice/rest/server.php"
                     + "?wstoken=" + token

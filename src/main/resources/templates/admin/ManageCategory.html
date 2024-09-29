@@ -46,10 +46,25 @@
     .btn-load i{
         margin-left: 5px;
     }
+
+    .action-buttons {
+      display: none; /* Ẩn các nút sửa/xóa ban đầu */
+      margin-left: 12px;
+    }
+
+    span i {
+        font-size: 1.23rem;
+        margin-right: 8px;
+    }
   </style>
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
+    <!-- phần thông báo chỉ xuất hiện khi tạo danh mục thành công -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 <!--  search input-->
     <div class="d-flex justify-content-end">
         <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
@@ -71,16 +86,14 @@
             <h1 class="h3 list-category mb-0 text-gray-800">Danh mục các khóa học</h1>
         </div>
         <div class="col d-flex justify-content-end">
-            <a class="link-cate" th:href="@{/admin/category/edit-category}">
-                <button type="submit" class="btn btn-cate btn-edit text-white bg-warning" style="margin-right: 5px;">
-                <i class="bi bi-pencil-fill "></i>Sửa
-                </button>
-            </a>
             <a class="link-cate" th:href="@{/admin/categories/create-category}">
                 <button type="submit" class="btn btn-cate btn-create text-white" style="background-color: #00afef;">
                     <i class="bi bi-plus"></i>Tạo danh mục
                 </button>
             </a>
+            <button id="toggleEdit" class="btn btn-primary" style="margin-left: 5px;">
+                <i class="bi bi-gear"></i>
+            </button>
         </div>
     </div>
 
@@ -94,6 +107,14 @@
                             <span th:utext="${parentCategory.name}"></span>
                             <span th:text="('(' + ${totalCoursesByParent[parentCategory.id]} + ')')"></span>
                         </a>
+                        <span class="action-buttons">
+                            <a class="link-cate" th:href="@{/admin/category/edit-category}">
+                                <i class="bi bi-pencil-fill text-warning"></i>
+                            </a>
+                            <a class="link-cate" th:href="@{/admin/category/edit-category}">
+                                <i class="bi bi-trash text-danger"></i>
+                            </a>
+                        </span>
                 </button>
             </h2>
             <ul th:id="'collapse' + ${parentCategory.id}" th:attr="aria-labelledby='heading' + ${parentCategory.id}" class="accordion-collapse collapse categories" data-bs-parent="#courseAccordion">
@@ -103,6 +124,14 @@
                         <span th:utext="${childCategory.name}"></span>
                         <span th:text="('(' + ${childCategory.coursecount} + ')')"></span>
                     </a>
+                    <span class="action-buttons">
+                        <a class="link-cate" th:href="@{/admin/category/edit-category}">
+                            <i class="bi bi-pencil-fill text-warning"></i>
+                        </a>
+                        <a class="link-cate" th:href="@{/admin/category/edit-category}">
+                            <i class="bi bi-trash text-danger"></i>
+                        </a>
+                    </span>
                 </li>
             </ul>
         </div>
