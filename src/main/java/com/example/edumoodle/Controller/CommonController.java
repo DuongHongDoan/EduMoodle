@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+//controller chung cho vai trò student, teacher và những người dùng không có vai trò
 @Controller
 public class CommonController {
 
