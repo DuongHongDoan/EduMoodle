@@ -41,6 +41,14 @@ public class UsersDTO {
         this.password = password;
     }
 
+    public UsersDTO(String username, String firstname, String lastname, String email, String password) {
+        this.username = username;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.email = email;
+        this.password = password;
+    }
+
     public Integer getId() {
         return id;
     }

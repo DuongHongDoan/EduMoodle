@@ -21,7 +21,7 @@
     }
 
     .btn-edit:hover {
-        background-color: #e9ce7d !important;
+        background-color: #7ac7e3 !important;
     }
 
     .btn-create:hover {
@@ -94,7 +94,7 @@
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-between">
             <h1 class="list-users h3 mb-0 text-gray-800">
-                Danh sách người dùng (<span th:text="${userCount}" class="text-muted" style="font-size: 1.4rem"></span>)
+                Danh sách thành viên (<span th:text="${userCount}" class="text-muted" style="font-size: 1.4rem"></span>)
             </h1>
         </div>
         <div class="col d-flex justify-content-end">
@@ -104,7 +104,7 @@
                     <i class="bi bi-plus"></i>Thêm người dùng
                 </button>
             </a>
-            <a class="link-cate" th:href="@{/admin/add-users}">
+            <a class="link-cate" th:href="@{/admin/users/upload-users}">
                 <button type="submit" class="btn btn-cate btn-edit text-white" style="margin-left: 5px; background-color: #00afef;">
                     <i class="bi bi-upload"></i>Tải danh sách người dùng
                 </button>

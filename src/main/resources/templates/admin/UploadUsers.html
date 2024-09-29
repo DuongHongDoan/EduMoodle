@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Thêm thành viên</title>
+    <style>
+        .btn-reset:hover {
+          background-color: #aeaeae !important;
+        }
+
+        .btn-save:hover {
+          background-color: #7ac7e3 !important;
+        }
+
+        input {
+          width: 48% !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body" >
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-center">
+            <h1 class="h3 mb-3 text-gray-800 text-uppercase">Nhập danh sách người dùng</h1>
+        </div>
+    </div>
+
+    <div class="row gx-4 gx-lg-5 align-items-center justify-content-center">
+        <div class="col-lg-9 align-self-lg-center">
+            <form th:action="@{/admin/users/upload-users}" method="post" enctype="multipart/form-data">
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label text-end" for="file">File CSV mẫu :</label>
+                    <div class="col-sm-1 text-danger"></div>
+                    <div class="col-sm-8">
+                        <a th:href="@{/example.csv}">example.csv</a>
+                        <span class="text-danger fst-italic">(các cột là các thông tin bắt buộc phải có khi tạo người dùng)</span>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center text-end">
+                    <label class="col-sm-3 col-form-label" for="file">Chọn file CSV:</label>
+                    <div class="col-sm-1 text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input class="form-control" type="file" id="file" name="file" accept=".csv" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <div class="col-sm-2 d-grid">
+                        <button type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Nhập</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

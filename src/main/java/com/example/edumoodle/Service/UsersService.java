@@ -20,11 +20,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -227,6 +229,67 @@ public class UsersService {
                 usersRepository.delete(existingUser);
             }
         }
+    }
+
+    private static final Set<String> VALID_FIELDS = Set.of(
+            "username", "password", "firstname", "lastname", "email"
+    );
+    public List<UsersDTO> parseCSVFile(MultipartFile file) throws IOException {
+        List<UsersDTO> users = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine(); //đọc dòng đầu tiên của file (đây là các trường dùng để tạo user)
+            if (headerLine == null) {
+                throw new IllegalArgumentException("File CSV không có nội dung");
+            }
+
+            String[] headers = headerLine.split(",");
+            for (String header : headers) {
+                if (!VALID_FIELDS.contains(header.trim().toLowerCase())) {
+                    throw new IllegalArgumentException("Trường " + header + " không hợp lệ!");
+                }
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+
+                Map<String, String> userMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    userMap.put(headers[i].trim().toLowerCase(), fields[i].trim());
+                }
+
+                if (userMap.get("username") == null || userMap.get("username").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'username' không được để trống");
+                }
+                if (userMap.get("firstname") == null || userMap.get("firstname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'firstname' không được để trống");
+                }
+                if (userMap.get("lastname") == null || userMap.get("lastname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'lastname' không được để trống");
+                }
+                if (userMap.get("email") == null || userMap.get("email").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'email' không được để trống");
+                }
+                if (userMap.get("email") != null && !userMap.get("email").matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                    throw new IllegalArgumentException("Định dạng email không hợp lệ: " + userMap.get("email"));
+                }
+                if (userMap.get("password") == null || userMap.get("password").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'password' không được để trống");
+                }
+
+                UsersDTO user = new UsersDTO(
+                        userMap.getOrDefault("username", ""),
+                        userMap.getOrDefault("firstname", ""),
+                        userMap.getOrDefault("lastname", ""),
+                        userMap.getOrDefault("email", ""),
+                        userMap.getOrDefault("password", "")
+                );
+
+                users.add(user);
+            }
+        }
+        return users;
     }
 
     //thêm thành viên mới
