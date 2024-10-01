@@ -48,6 +48,10 @@ public class CoursesController {
     private RolesRepository rolesRepository;
     @Autowired
     private UserRoleRepository userRoleRepository;
+    @Autowired
+    private SchoolYearSemesterRepository schoolYearSemesterRepository;
+    @Autowired
+    private CourseGroupsRepository courseGroupsRepository;
 
     @Operation(summary = "Get all categories for select input", description = "Fetch a list of all categories")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
@@ -238,6 +242,12 @@ public class CoursesController {
         CoursesDTO coursesDTO = new CoursesDTO();
         model.addAttribute("coursesDTO", coursesDTO);
 
+        List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+        model.addAttribute("schoolYears", schoolYearsEntities);
+
+        List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+        model.addAttribute("semesters", semestersEntities);
+
         return "admin/CreateCourse";
     }
 
@@ -245,7 +255,12 @@ public class CoursesController {
     @ApiResponse(responseCode = "200", description = "Successfully created course")
     //    url = /admin/courses/create-course
     @PostMapping("/courses/create-course")
-    public String createCourse(@Valid @ModelAttribute CoursesDTO coursesDTO, BindingResult bindingResult,
+    public String createCourse(@Valid @ModelAttribute CoursesDTO coursesDTO,
+                               @RequestParam("schoolYearName") Integer schoolYearName,
+                               @RequestParam("semesterName") Integer semesterName,
+                               @RequestParam("courseCode") String courseCode,
+                               @RequestParam("groupName") String groupName,
+                               BindingResult bindingResult,
                                RedirectAttributes redirectAttributes, Model model) {
         if(bindingResult.hasErrors()) {
             List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
@@ -266,6 +281,7 @@ public class CoursesController {
                 return "admin/CreateCourse";
             }
 
+            //lưu in4 của khóa học vào các bảng trong csdl web
             CoursesEntity newCourse = new CoursesEntity();
             newCourse.setMoodleId(moodleCourseId);
             newCourse.setFullname(coursesDTO.getFullname());
@@ -273,6 +289,23 @@ public class CoursesController {
             newCourse.setSummary(coursesDTO.getSummary());
             newCourse.setCategoriesEntity(category);
             coursesRepository.save(newCourse);
+
+            SchoolYearSemesterEntity schoolYearSemesterEntity = new SchoolYearSemesterEntity();
+            schoolYearSemesterEntity.setSchoolYearsEntity(coursesService.getSchoolYearName(schoolYearName));
+            schoolYearSemesterEntity.setSemestersEntity(coursesService.getSemesterName(semesterName));
+            schoolYearSemesterRepository.save(schoolYearSemesterEntity);
+
+            SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getSchoolYearSemester(schoolYearName, semesterName);
+            if (getSchoolYearSemesterEntity == null) {
+                model.addAttribute("error", "Năm học hoặc học kỳ không tồn tại.");
+                return "admin/CreateCourse";
+            }
+            CourseGroupsEntity courseGroupsEntity = new CourseGroupsEntity();
+            courseGroupsEntity.setCourseCode(courseCode);
+            courseGroupsEntity.setGroupName(groupName);
+            courseGroupsEntity.setCoursesEntity(newCourse);
+            courseGroupsEntity.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+            courseGroupsRepository.save(courseGroupsEntity);
 
             redirectAttributes.addFlashAttribute("successMessage", "Tạo khóa học thành công!");
             return "redirect:/admin/courses";

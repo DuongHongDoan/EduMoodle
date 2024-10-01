@@ -3,13 +3,12 @@ package com.example.edumoodle.Service;
 import com.example.edumoodle.DTO.SectionsDTO;
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
-import com.example.edumoodle.Model.CategoriesEntity;
-import com.example.edumoodle.Model.CoursesEntity;
-import com.example.edumoodle.Repository.CategoriesRepository;
-import com.example.edumoodle.Repository.CoursesRepository;
+import com.example.edumoodle.Model.*;
+import com.example.edumoodle.Repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -39,7 +38,15 @@ public class CoursesService {
     @Autowired
     private CategoriesRepository categoriesRepository;
     @Autowired
+    private SchoolYearRepository schoolYearRepository;
+    @Autowired
+    private SemesterRepository semesterRepository;
+    @Autowired
+    private SchoolYearSemesterRepository schoolYearSemesterRepository;
+
+    @Autowired
     private CategoriesService categoriesService;
+
 
     //lấy tất cả khóa học
     public List<CoursesDTO> getAllCourses() {
@@ -312,6 +319,35 @@ public class CoursesService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    //get ds năm học
+    public List<SchoolYearsEntity> getAllSchoolYear() {
+        return schoolYearRepository.findAll();
+    }
+    //tìm kiếm năm học
+    public SchoolYearsEntity getSchoolYearName(Integer schoolYearName) {
+        return schoolYearRepository.findById(schoolYearName).get();
+    }
+
+    //get ds học kì
+    public List<SemestersEntity> getAllSemester() {
+        return semesterRepository.findAll();
+    }
+    public SemestersEntity getSemesterName(Integer semesterName) {
+        return semesterRepository.findById(semesterName).get();
+    }
+
+    //tìm kiếm
+    public SchoolYearSemesterEntity getSchoolYearSemester(Integer schoolYearName, Integer semesterName) {
+        SchoolYearsEntity schoolYear = getSchoolYearName(schoolYearName);
+        SemestersEntity semester = getSemesterName(semesterName);
+
+        if (schoolYear != null && semester != null) {
+            return schoolYearSemesterRepository.findBySchoolYearsEntityAndSemestersEntity(schoolYear, semester);
+        } else {
+            return null;
         }
     }
 }
