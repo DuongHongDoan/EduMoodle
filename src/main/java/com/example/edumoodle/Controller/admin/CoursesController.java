@@ -290,12 +290,7 @@ public class CoursesController {
             newCourse.setCategoriesEntity(category);
             coursesRepository.save(newCourse);
 
-            SchoolYearSemesterEntity schoolYearSemesterEntity = new SchoolYearSemesterEntity();
-            schoolYearSemesterEntity.setSchoolYearsEntity(coursesService.getSchoolYearName(schoolYearName));
-            schoolYearSemesterEntity.setSemestersEntity(coursesService.getSemesterName(semesterName));
-            schoolYearSemesterRepository.save(schoolYearSemesterEntity);
-
-            SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getSchoolYearSemester(schoolYearName, semesterName);
+            SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getOrCreateSchoolYearSemester(schoolYearName, semesterName);
             if (getSchoolYearSemesterEntity == null) {
                 model.addAttribute("error", "Năm học hoặc học kỳ không tồn tại.");
                 return "admin/CreateCourse";
@@ -331,13 +326,29 @@ public class CoursesController {
             coursesDto.setShortname(course.getShortname());
             coursesDto.setCategoryid(course.getCategoriesEntity().getMoodleId());
             coursesDto.setSummary(course.getSummary());
-
             model.addAttribute("coursesDto", coursesDto);
 
             List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
             model.addAttribute("categoriesHierarchy", categoriesHierarchy);
             model.addAttribute("courseIdWeb", course.getId_courses());
 
+            List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+            model.addAttribute("schoolYears", schoolYearsEntities);
+
+            List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+            model.addAttribute("semesters", semestersEntities);
+
+            CourseGroupsEntity courseGroup = coursesService.findByCoursesId(course);
+            if(courseGroup != null) {
+                System.out.println("tìm nhóm HP đc: " + courseGroup.getCourseCode());
+                model.addAttribute("courseCode", courseGroup.getCourseCode());
+                model.addAttribute("groupName", courseGroup.getGroupName());
+
+                SchoolYearSemesterEntity schoolYearSemester = coursesService.findByIdSchoolYearSemester(courseGroup.getSchoolYearSemesterEntity().getId_schoolYear_semester());
+                System.out.println("tìm NH_HK: " + schoolYearSemester.getId_schoolYear_semester());
+                model.addAttribute("schoolYearId", schoolYearSemester.getSchoolYearsEntity().getId_school_year());
+                model.addAttribute("semesterId", schoolYearSemester.getSemestersEntity().getId_semester());
+            }
         } else {
             model.addAttribute("errorMessage", "Course not found.");
         }
@@ -349,6 +360,10 @@ public class CoursesController {
     //    url = /admin/courses/edit-course
     @PostMapping("/courses/edit-course")
     public String editCourse(@Valid @ModelAttribute CoursesDTO coursesDto, @RequestParam("courseIdWeb") Integer courseIdWeb,
+                             @RequestParam("schoolYearName") Integer schoolYearName,
+                             @RequestParam("semesterName") Integer semesterName,
+                             @RequestParam("courseCode") String courseCode,
+                             @RequestParam("groupName") String groupName,
                              BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
         if (bindingResult.hasErrors()) {
             List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
@@ -368,6 +383,24 @@ public class CoursesController {
             course.setCategoriesEntity(category); // Sử dụng Integer trực tiếp
             course.setSummary(coursesDto.getSummary());
             coursesRepository.save(course);
+
+            CourseGroupsEntity courseGroup = coursesService.findByCoursesId(course);
+            SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getOrCreateSchoolYearSemester(schoolYearName, semesterName);
+            if(courseGroup != null) { //tìm thấy course đã có nhóm học phan thì cập nhật lại nhóm học phần đó thoi
+                courseGroup.setCourseCode(courseCode);
+                courseGroup.setGroupName(groupName);
+                courseGroup.setCoursesEntity(course);
+                courseGroup.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+                courseGroupsRepository.save(courseGroup);
+            }
+            else {//sửa các khóa học đc tạo trên moodle đồng bộ về web
+                CourseGroupsEntity courseGroupsEntity = new CourseGroupsEntity();
+                courseGroupsEntity.setCourseCode(courseCode);
+                courseGroupsEntity.setGroupName(groupName);
+                courseGroupsEntity.setCoursesEntity(course);
+                courseGroupsEntity.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+                courseGroupsRepository.save(courseGroupsEntity);
+            }
 
             boolean moodleUpdated = coursesService.updateMoodleCourse(coursesDto);
             if (moodleUpdated) {
@@ -391,7 +424,7 @@ public class CoursesController {
     @ApiResponse(responseCode = "200", description = "Successfully deleted course")
     //    url = /admin/courses/delete
     @GetMapping("/courses/delete")
-    public String deleteMoodleCourse(@RequestParam("courseId") int courseId, RedirectAttributes redirectAttributes) {
+    public String deleteMoodleCourse(@RequestParam("courseId") Integer courseId, RedirectAttributes redirectAttributes) {
         boolean moodleSuccess = coursesService.deleteCourseFromMoodle(courseId);
         if (moodleSuccess) {
             boolean dbSuccess = coursesService.deleteCourseFromDatabase(courseId);

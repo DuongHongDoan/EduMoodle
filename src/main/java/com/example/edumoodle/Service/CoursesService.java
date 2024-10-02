@@ -280,10 +280,16 @@ public class CoursesService {
     }
 
     //xóa khóa học trên csdl web
-    public boolean deleteCourseFromDatabase(int courseId) {
+    public boolean deleteCourseFromDatabase(Integer courseId) {
         try {
-            if (coursesRepository.existsById(courseId)) {
-                coursesRepository.deleteById(courseId);
+            Optional<CoursesEntity> coursesEntity = coursesRepository.findByMoodleId(courseId);
+            if (coursesEntity.isPresent()) {
+                CoursesEntity course = coursesEntity.get();
+                List<CourseGroupsEntity> courseGroups = courseGroupsRepository.findAllByCoursesEntity(course);
+                for (CourseGroupsEntity courseGroup : courseGroups) {
+                    courseGroupsRepository.deleteById(courseGroup.getId_course_group());
+                }
+                coursesRepository.deleteById(course.getId_courses());
                 return true;
             } else {
                 System.out.println("Course with ID " + courseId + " does not exist in the database.");
@@ -322,6 +328,30 @@ public class CoursesService {
         }
     }
 
+    @Autowired
+    private CourseGroupsRepository courseGroupsRepository;
+
+    public CourseGroupsEntity findByCoursesId(CoursesEntity courseId) {
+        CourseGroupsEntity courseGroupsEntity = courseGroupsRepository.findByCoursesEntity(courseId);
+        if (courseGroupsEntity != null) {
+            System.out.println("Tìm nhóm HP đc service: " + courseGroupsEntity.getCourseCode());
+        } else {
+            System.out.println("Không tìm thấy nhóm HP cho khóa học này.");
+        }
+        return courseGroupsEntity;
+    }
+
+    public SchoolYearSemesterEntity findByIdSchoolYearSemester(Integer schoolYearSemesterId) {
+        Optional<SchoolYearSemesterEntity> schoolYearSemesterEntity = schoolYearSemesterRepository.findById(schoolYearSemesterId);
+        if (schoolYearSemesterEntity.isPresent()) {
+            System.out.println("Tìm NH_HK đc service: " + schoolYearSemesterEntity.get().getId_schoolYear_semester());
+            return schoolYearSemesterEntity.get();
+        } else {
+            System.out.println("Không tìm thấy NH_HK với ID này.");
+            return null; // Có thể xử lý thêm nếu cần
+        }
+    }
+
     //get ds năm học
     public List<SchoolYearsEntity> getAllSchoolYear() {
         return schoolYearRepository.findAll();
@@ -339,13 +369,20 @@ public class CoursesService {
         return semesterRepository.findById(semesterName).get();
     }
 
-    //tìm kiếm
-    public SchoolYearSemesterEntity getSchoolYearSemester(Integer schoolYearName, Integer semesterName) {
+    //tìm kiếm, nếu thấy thì trả về NH_HK, ngược lại thì tạo mới nó
+    public SchoolYearSemesterEntity getOrCreateSchoolYearSemester(Integer schoolYearName, Integer semesterName) {
         SchoolYearsEntity schoolYear = getSchoolYearName(schoolYearName);
         SemestersEntity semester = getSemesterName(semesterName);
 
         if (schoolYear != null && semester != null) {
-            return schoolYearSemesterRepository.findBySchoolYearsEntityAndSemestersEntity(schoolYear, semester);
+            SchoolYearSemesterEntity schoolYearSemesterEntity = schoolYearSemesterRepository.findBySchoolYearsEntityAndSemestersEntity(schoolYear, semester);
+            if(schoolYearSemesterEntity != null) {
+                return schoolYearSemesterEntity;
+            }
+            SchoolYearSemesterEntity newSchoolYearSemesterEntity = new SchoolYearSemesterEntity();
+            newSchoolYearSemesterEntity.setSchoolYearsEntity(getSchoolYearName(schoolYearName));
+            newSchoolYearSemesterEntity.setSemestersEntity(getSemesterName(semesterName));
+            return schoolYearSemesterRepository.save(newSchoolYearSemesterEntity);
         } else {
             return null;
         }

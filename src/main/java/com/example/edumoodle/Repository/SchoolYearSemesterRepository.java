@@ -12,5 +12,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface SchoolYearSemesterRepository extends JpaRepository<SchoolYearSemesterEntity, Integer> {
     SchoolYearSemesterEntity findBySchoolYearsEntityAndSemestersEntity(SchoolYearsEntity schoolYearName, SemestersEntity semesterName);
-
+//    SchoolYearSemesterEntity findByIdSchoolYearSemester(Integer x);
 }
