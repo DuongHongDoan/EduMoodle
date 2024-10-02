@@ -52,6 +52,8 @@ public class CoursesController {
     private SchoolYearSemesterRepository schoolYearSemesterRepository;
     @Autowired
     private CourseGroupsRepository courseGroupsRepository;
+    @Autowired
+    private CourseAssignmentRepository courseAssignmentRepository;
 
     @Operation(summary = "Get all categories for select input", description = "Fetch a list of all categories")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
@@ -187,6 +189,18 @@ public class CoursesController {
             userRole.setUsersEntity(user);
             userRole.setRolesEntity(role);
             userRoleRepository.save(userRole);
+
+            //đăng ký người dùng với khóa học tương ứng
+            Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(courseId);
+            if(courseOpt.isPresent()) {
+                CoursesEntity course = courseOpt.get();
+                CourseGroupsEntity courseGroup = courseGroupsRepository.findByCoursesEntity(course);
+
+                CourseAssignmentEntity courseAssignment = new CourseAssignmentEntity();
+                courseAssignment.setUserRoleEntity(userRole);
+                courseAssignment.setCourseGroupsEntity(courseGroup);
+                courseAssignmentRepository.save(courseAssignment);
+            }
         }
 
         return "redirect:/admin/courses/view?courseId=" + enrolUserDTO.getCourseid();
@@ -201,6 +215,9 @@ public class CoursesController {
                              RedirectAttributes redirectAttributes) {
         try {
             usersService.unEnrolUser(userid, courseid);
+
+            usersService.unEnrolUserWeb(userid, courseid);
+
             redirectAttributes.addFlashAttribute("successMessage", "Người dùng đã bị xóa khỏi khóa học.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi xóa người dùng khỏi khóa học.");

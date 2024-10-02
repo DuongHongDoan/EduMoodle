@@ -4,11 +4,8 @@ import com.example.edumoodle.DTO.EnrolUserDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.DTO.UsersResponseDTO;
-import com.example.edumoodle.Model.RolesEntity;
-import com.example.edumoodle.Model.UsersEntity;
-import com.example.edumoodle.Repository.RolesRepository;
-import com.example.edumoodle.Repository.UserRoleRepository;
-import com.example.edumoodle.Repository.UsersRepository;
+import com.example.edumoodle.Model.*;
+import com.example.edumoodle.Repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -47,6 +44,12 @@ public class UsersService {
     private UserRoleRepository userRoleRepository;
     @Autowired
     private RolesRepository rolesRepository;
+    @Autowired
+    private CoursesRepository coursesRepository;
+    @Autowired
+    private CourseGroupsRepository courseGroupsRepository;
+    @Autowired
+    private CourseAssignmentRepository courseAssignmentRepository;
 
     @Autowired
     private UserInterface userInterface;
@@ -103,6 +106,36 @@ public class UsersService {
                 + "&enrolments[0][courseid]=" + courseId;
 
         restTemplate.getForEntity(url, String.class);
+    }
+
+    //hủy đăng ký khóa học csdl web
+    public void unEnrolUserWeb(Integer userId, Integer courseId) {
+        Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(courseId);
+        if(courseOpt.isPresent()) {
+            CourseGroupsEntity courseGroup = courseGroupsRepository.findByCoursesEntity(courseOpt.get());
+            if(courseGroup != null) {
+                Optional<UsersEntity> userOpt = usersRepository.findByMoodleId(userId);
+                if(userOpt.isPresent()) {
+                    List<UserRoleEntity> userRoles = userRoleRepository.findByUsersEntity(userOpt.get());
+                    for(UserRoleEntity userRole : userRoles) {
+                        CourseAssignmentEntity courseAssignment =
+                                courseAssignmentRepository.findByCourseGroupsEntityAndUserRoleEntity(courseGroup, userRole);
+                        if(courseAssignment != null) {
+                            courseAssignmentRepository.deleteById(courseAssignment.getId_course_assign());
+                            userRoleRepository.deleteById(userRole.getId());
+                        }else {
+                            System.out.println("No course assignment found for role: " + userRole.getId());
+                        }
+                    }
+                } else {
+                    System.out.println("User not found.");
+                }
+            } else {
+                System.out.println("Course group not found.");
+            }
+        } else {
+            System.out.println("Course not found.");
+        }
     }
 
     //lấy danh sách tất cả user được thêm vào moodle (apiMoodleFunc là plugin import vào dự án moodle)
