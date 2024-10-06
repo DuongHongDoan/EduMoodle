@@ -11,4 +11,5 @@ import java.util.List;
 public interface CourseGroupsRepository extends JpaRepository<CourseGroupsEntity, Integer> {
     CourseGroupsEntity findByCoursesEntity(CoursesEntity coursesEntity);
     List<CourseGroupsEntity> findAllByCoursesEntity(CoursesEntity coursesEntity);
+    CourseGroupsEntity findByGroupName(String groupName);
 }

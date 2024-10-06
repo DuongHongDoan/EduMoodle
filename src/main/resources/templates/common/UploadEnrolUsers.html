@@ -5,7 +5,7 @@
       xmlns:sec="http://www.w3.org/1999/xhtml"
       layout:decorate="~{layout}">
 <head>
-    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Thêm thành viên</title>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Nhập danh sách đăng ký học phần</title>
     <style>
         .btn-reset:hover {
           background-color: #aeaeae !important;
@@ -26,21 +26,36 @@
         <span th:text="${errorMessage}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
     <div class="row">
         <div class="col d-sm-flex align-items-center justify-content-center">
-            <h1 class="h3 mb-3 text-gray-800 text-uppercase">Nhập danh sách người dùng</h1>
+            <h1 class="h3 mb-3 text-gray-800 text-uppercase">Nhập danh sách đăng ký học phần</h1>
         </div>
     </div>
 
     <div class="row gx-4 gx-lg-5 align-items-center justify-content-center">
         <div class="col-lg-9 align-self-lg-center">
-            <form th:action="@{/admin/users/upload-users}" method="post" enctype="multipart/form-data">
+            <form th:action="@{/manage/courses/enrol-users}" method="post" enctype="multipart/form-data">
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3 col-form-label text-end" for="selectType">Chọn loại file:</label>
+                    <div class="col-sm-1 text-danger"></div>
+                    <div class="col-sm-8">
+                        <select class="form-select" id="selectType" name="type" required style="width: 48%;">
+                            <option value="basic">Cơ bản</option>
+                            <option value="DHCT">Form Trường ĐHCT</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="row mb-3 justify-content-center">
                     <label class="col-sm-3 col-form-label text-end" for="file">File CSV mẫu :</label>
                     <div class="col-sm-1 text-danger"></div>
                     <div class="col-sm-8">
-                        <a th:href="@{/example.csv}">example.csv</a>
+                        <a id="fileLink" th:href="@{/danhsachdangky.csv}">danhsachdangky.csv</a>
                         <span class="text-danger fst-italic">(các cột là các thông tin bắt buộc phải có!)</span>
                     </div>
                 </div>

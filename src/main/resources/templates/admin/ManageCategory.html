@@ -65,6 +65,10 @@
         <span th:text="${successMessage}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 <!--  search input-->
     <div class="d-flex justify-content-end">
         <form class="d-none d-sm-inline-block form-inline my-2 my-md-0 mw-100 navbar-search" style="width: 25rem;"
@@ -111,12 +115,33 @@
                             <a class="link-cate" th:href="@{/admin/category/edit-category}">
                                 <i class="bi bi-pencil-fill text-warning"></i>
                             </a>
-                            <a class="link-cate" th:href="@{/admin/category/edit-category}">
+                            <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${parentCategory.id}">
                                 <i class="bi bi-trash text-danger"></i>
                             </a>
                         </span>
                 </button>
             </h2>
+            <!-- The Modal -->
+            <div class="modal fade" th:id="'deleteModal' + ${parentCategory.id}">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <h4 class="modal-title">Thông báo</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <!-- Modal body -->
+                        <div class="modal-body">
+                            <span th:text="'Bạn có chắc muốn xóa danh mục ' + ${parentCategory.name} + ' không?'"></span>
+                        </div>
+                        <!-- Modal footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                            <a th:href="@{/admin/categories/delete(categoryId=${parentCategory.id})}" class="btn btn-danger">Xóa</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <ul th:id="'collapse' + ${parentCategory.id}" th:attr="aria-labelledby='heading' + ${parentCategory.id}" class="accordion-collapse collapse categories" data-bs-parent="#courseAccordion">
                 <!-- List child categories -->
                 <li class="accordion-body" th:each="childCategory : ${categories.get(parentCategory.id)}">
@@ -128,10 +153,31 @@
                         <a class="link-cate" th:href="@{/admin/category/edit-category}">
                             <i class="bi bi-pencil-fill text-warning"></i>
                         </a>
-                        <a class="link-cate" th:href="@{/admin/category/edit-category}">
+                        <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${childCategory.id}">
                             <i class="bi bi-trash text-danger"></i>
                         </a>
                     </span>
+                    <!-- The Modal -->
+                    <div class="modal fade" th:id="'deleteModal' + ${childCategory.id}">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <!-- Modal Header -->
+                                <div class="modal-header">
+                                    <h4 class="modal-title">Thông báo</h4>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <!-- Modal body -->
+                                <div class="modal-body">
+                                    <span th:text="'Bạn có chắc muốn xóa danh mục ' + ${childCategory.name} + ' không?'"></span>
+                                </div>
+                                <!-- Modal footer -->
+                                <div class="modal-footer">
+                                    <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                    <a th:href="@{/admin/categories/delete(categoryId=${childCategory.id})}" class="btn btn-danger">Xóa</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </li>
             </ul>
         </div>

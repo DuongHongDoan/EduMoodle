@@ -213,7 +213,7 @@ public class UsersController {
 
         try {
             // Đọc và xử lý file CSV
-            List<UsersDTO> users = usersService.parseCSVFile(file);
+            List<UsersDTO> users = usersService.parseCSVFileCreateUser(file);
 
             for (UsersDTO user : users) {
                 // Lưu thông tin người dùng vào cơ sở dữ liệu của ứng dụng web

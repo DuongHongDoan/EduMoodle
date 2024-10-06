@@ -146,7 +146,7 @@
                         </div>
                         <div class="col align-items-center">
                             <ul th:each="user : ${enrolledUsers}" class="listStudent">
-                                <li th:each="role : ${user.roles}" th:if="${role.shortname == 'editingteacher'} and ${user.username != 'admin'}">
+                                <li th:each="role : ${user.roles}" th:if="(${role.shortname == 'editingteacher'} or ${role.shortname == 'teacher'}) and ${user.username != 'admin'}">
                                     <div class="col"><span th:utext="${user.fullname}">Nguyễn Văn A 111111</span></div>
                                     <div class="col d-flex justify-content-center"><span th:utext="${user.email}">email@gmail.com</span></div>
                                     <div class="col action-icons">
@@ -242,8 +242,9 @@
                                     <label for="selectRole" class="form-label">Chọn vai trò</label>
                                     <select class="form-select" id="selectRole" name="roleId" required
                                             style="display: inline;width: 28%; margin-left: 38px;">
-                                        <option value="5">Student</option>
-                                        <option value="3">Teacher</option>
+                                        <option value="5">Học viên</option>
+                                        <option value="3">Giáo viên</option>
+                                        <option value="4">Giáo viên trợ giảng</option>
                                     </select>
                                 </div>
                                 <div class="row mb-3 justify-content-start">
