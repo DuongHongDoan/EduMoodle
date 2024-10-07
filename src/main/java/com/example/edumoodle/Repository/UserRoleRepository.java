@@ -16,6 +16,7 @@ import java.util.Optional;
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRoleEntity, Integer> {
     List<UserRoleEntity> findByUsersEntity(UsersEntity usersEntity);
+    List<UserRoleEntity> findByUsersEntityAndRolesEntity(UsersEntity usersEntity, RolesEntity rolesEntity);
     // Xóa vai trò của người dùng
     @Modifying
     @Transactional

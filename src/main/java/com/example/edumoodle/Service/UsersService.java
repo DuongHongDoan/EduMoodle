@@ -158,31 +158,52 @@ public class UsersService {
                 }
 
                 List<Integer> userIds = new ArrayList<>(List.of());
-                userIds.add(getUserByUsername(userMap.getOrDefault("username", "")).getId());
+                UsersDTO usersDTO = getUserByUsername(userMap.getOrDefault("username", ""));
+                UsersEntity usersEntity = usersRepository.findByUsername(userMap.getOrDefault("username", ""));
+                if(usersDTO != null) {
+                    userIds.add(usersDTO.getId());
 
-                String groupName = userMap.getOrDefault("course_group_code", "");
-                CourseGroupsEntity courseGroupsEntity = courseGroupsRepository.findByGroupName(groupName);
-                Optional<CoursesEntity> coursesOpt = coursesRepository.findById(courseGroupsEntity.getCoursesEntity().getId_courses());
-                if(coursesOpt.isPresent()) {
-                    CoursesEntity coursesEntity = coursesOpt.get();
-                    if(Objects.equals(userMap.get("role"), "sv")) {
-                        userMap.put("role", "student");
-                    }
-                    if(Objects.equals(userMap.get("role"), "gv")) {
-                        userMap.put("role", "editingteacher");
-                    }
-                    Optional<RolesEntity> rolesOpt = rolesRepository.findRoleByName(userMap.get("role"));
-                    if(rolesOpt.isPresent()) {
-                        RolesEntity rolesEntity = rolesOpt.get();
+                    String groupName = userMap.getOrDefault("course_group_code", "");
+                    CourseGroupsEntity courseGroupsEntity = courseGroupsRepository.findByGroupName(groupName);
+                    if(courseGroupsEntity != null) {
+                        Optional<CoursesEntity> coursesOpt = coursesRepository.findById(courseGroupsEntity.getCoursesEntity().getId_courses());
+                        CoursesEntity coursesEntity = coursesOpt.get();
+                        if(Objects.equals(userMap.get("role"), "sv")) {
+                            userMap.put("role", "student");
+                        }
+                        if(Objects.equals(userMap.get("role"), "gv")) {
+                            userMap.put("role", "editingteacher");
+                        }
 
-                        EnrolUserDTO enrolUser = new EnrolUserDTO(userIds, coursesEntity.getMoodleId(), rolesEntity.getMoodleId());
-                        enrolUsers.add(enrolUser);
-                    }
-                    else {
-                        System.out.println("Lỗi findRoleByName " + userMap.get("role"));
+                        Optional<RolesEntity> rolesOpt = rolesRepository.findRoleByName(userMap.get("role"));
+                        if(rolesOpt.isPresent()) {
+                            RolesEntity rolesEntity = rolesOpt.get();
+
+                            //kiểm tra người dùng có đăng ký vào khóa học chưa?
+                            List<UserRoleEntity> userRoles = userRoleRepository.findByUsersEntityAndRolesEntity(usersEntity, rolesEntity);
+                            int cnt = 0;
+                            for(UserRoleEntity userRole : userRoles){
+                                CourseAssignmentEntity courseAssignment = courseAssignmentRepository.findByCourseGroupsEntityAndUserRoleEntity(courseGroupsEntity, userRole);
+                                if(courseAssignment == null) {
+                                    cnt++;
+                                }else {
+                                    break;
+                                }
+                            }
+                            if(cnt == userRoles.size()) {
+                                EnrolUserDTO enrolUser = new EnrolUserDTO(userIds, coursesEntity.getMoodleId(), rolesEntity.getMoodleId());
+                                enrolUsers.add(enrolUser);
+                            }else {
+                                throw new IllegalArgumentException("Người dùng '" + userMap.get("username") + "' đã được đăng ký vào khóa học '" + userMap.get("course_group_code") + "'!");
+                            }
+                        }else {
+                            throw new IllegalArgumentException("Cột role không hợp lệ, không phải '" + userMap.get("role") + "' mà nó phải là hoặc 'gv' hoặc 'sv'!");
+                        }
+                    }else {
+                        throw new IllegalArgumentException("Cột course_group_code không hợp lệ, vì khóa học'" + userMap.get("course_group_code") + "' chưa được tạo!");
                     }
                 }else {
-                    System.out.println("Lỗi findById của CoursesEntity");
+                    throw new IllegalArgumentException("Cột username không hợp lệ, vì người dùng'" + userMap.get("username") + "' chưa được tạo!");
                 }
             }
         }
