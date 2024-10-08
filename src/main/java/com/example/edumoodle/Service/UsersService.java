@@ -117,9 +117,9 @@ public class UsersService {
         Set<String> validFields;
 
         // Kiểm tra loại file đường dùng để nhập
-        if ("basic".equalsIgnoreCase(fileType)) {
+        if ("basicEnrol".equalsIgnoreCase(fileType)) {
             validFields = Set.of("username", "course_group_code", "role");
-        } else if ("DHCT".equalsIgnoreCase(fileType)) {
+        } else if ("DHCTEnrol".equalsIgnoreCase(fileType)) {
             validFields = Set.of("coursename");
         } else {
             throw new IllegalArgumentException("Loại file không hợp lệ: " + fileType);

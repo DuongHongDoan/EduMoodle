@@ -83,6 +83,7 @@
                             <li><a class="dropdown-item" th:href="@{/admin/courses}">Xem danh sách khóa học</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/categories/create-category}">Thêm danh mục</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/courses/create-course}">Thêm khóa học</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/courses/create-course-list}">Nhập danh sách khóa học</a></li>
                             <li><a class="dropdown-item" th:href="@{/manage/courses/enrol-users}">Nhập danh sách đăng ký học phần</a></li>
                         </ul>
                     </div>
@@ -167,12 +168,18 @@
         var fileLink = document.getElementById('fileLink');
 
         // Kiểm tra giá trị được chọn và thay đổi liên kết tương ứng
-        if (selectedValue === 'basic') {
-            fileLink.setAttribute('href', '/danhsachdangky.csv');
+        if (selectedValue === 'basicEnrol') {
+            fileLink.setAttribute('href', '/CSV/danhsachdangky.csv');
             fileLink.textContent = 'danhsachdangky.csv';
-        } else if (selectedValue === 'DHCT') {
-            fileLink.setAttribute('href', '/DHCT.csv');
+        } else if (selectedValue === 'DHCTEnrol') {
+            fileLink.setAttribute('href', '/CSV/DHCT.csv');
             fileLink.textContent = 'DHCT.csv';
+        }else if (selectedValue === 'basicCourse') {
+            fileLink.setAttribute('href', '/CSV/danhsachkhoahoc.csv');
+            fileLink.textContent = 'danhsachkhoahoc.csv';
+        }else if (selectedValue === 'DHCTCourse') {
+            fileLink.setAttribute('href', '/CSV/danhsachkhoahocdhct.csv');
+            fileLink.textContent = 'danhsachkhoahocdhct.csv';
         }
     });
 </script>

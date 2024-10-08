@@ -7,6 +7,15 @@ public class CoursesDTO {
     private String shortname;
     private String summary;
 
+    public CoursesDTO() {}
+
+    public CoursesDTO(Integer categoryid, String fullname, String shortname, String summary) {
+        this.categoryid = categoryid;
+        this.fullname = fullname;
+        this.shortname = shortname;
+        this.summary = summary;
+    }
+
     public Integer getId() {
         return id;
     }

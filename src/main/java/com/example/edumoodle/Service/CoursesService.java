@@ -19,8 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -386,5 +390,78 @@ public class CoursesService {
         } else {
             return null;
         }
+    }
+
+    //tạo khóa học bằng upload file
+    public List<Map<String, String>> parseCSVFileCreateCourse(MultipartFile file, String fileType) throws IOException{
+        List<Map<String, String>> courses = new ArrayList<>();
+        Set<String> validFields;
+
+        // Kiểm tra loại file đường dùng để nhập
+        if ("basicCourse".equalsIgnoreCase(fileType)) {
+            validFields = Set.of("fullname", "shortname", "courseCode", "courseGroupCode", "category", "description");
+        } else if ("DHCTCourse".equalsIgnoreCase(fileType)) {
+            validFields = Set.of("fullname");
+        } else {
+            throw new IllegalArgumentException("Loại file không hợp lệ: " + fileType);
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine(); //đọc dòng đầu tiên của file
+            if (headerLine == null) {
+                throw new IllegalArgumentException("File CSV không có nội dung");
+            }
+
+            String[] headers = headerLine.split(",");
+            for (String header : headers) {
+                if (!validFields.contains(header.trim())) {
+                    throw new IllegalArgumentException("Trường " + header + " không hợp lệ!");
+                }
+            }
+
+            //đọc từng dòng
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+
+                Map<String, String> courseMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    if (i < fields.length) {
+                        courseMap.put(headers[i].trim(), fields[i].trim());
+                    } else {
+                        courseMap.put(headers[i].trim(), "");
+                    }
+                }
+
+                if (courseMap.get("fullname") == null || courseMap.get("fullname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'fullname' không được để trống");
+                }
+                if (courseMap.get("shortname") == null || courseMap.get("shortname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'shortname' không được để trống");
+                }
+                if (courseMap.get("courseCode") == null || courseMap.get("courseCode").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'courseCode' không được để trống");
+                }
+                if (courseMap.get("courseGroupCode") == null || courseMap.get("courseGroupCode").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'courseGroupCode' không được để trống");
+                }
+                if (courseMap.get("category") == null || courseMap.get("category").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'category' không được để trống");
+                }
+
+                List<CategoriesDTO> findCategoryByFullName = categoriesService.getSearchCategory(courseMap.get("category"));
+                if(findCategoryByFullName != null && !findCategoryByFullName.isEmpty()) {
+                    for (CategoriesDTO category : findCategoryByFullName) {
+                        String categoryId = String.valueOf(category.getId());
+                        courseMap.put("category", categoryId);
+                    }
+                }else {
+                    throw new IllegalArgumentException("Danh mục '" + courseMap.get("category") + "' không tồn tại. Hãy điền thông tin danh mục đúng như đã cung cấp trên web!");
+                }
+
+                courses.add(courseMap);
+            }
+        }
+        return courses;
     }
 }

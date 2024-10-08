@@ -5,6 +5,9 @@ import com.example.edumoodle.DTO.CategoryHierarchyDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
 import com.example.edumoodle.Model.CategoriesEntity;
 import com.example.edumoodle.Repository.CategoriesRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriUtils;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,6 +51,14 @@ public class CategoriesService {
 
         assert categories != null;
         return List.of(categories);
+    }
+
+    //lấy ra danh mục bằng fullname
+    public List<CategoriesDTO> getSearchCategory(String fullname) {
+        List<CategoriesDTO> categories = getAllCategory();
+        return categories.stream()
+                .filter(category -> StringEscapeUtils.unescapeHtml4(category.getName().toLowerCase()).contains(fullname.toLowerCase()))
+                .collect(Collectors.toList());
     }
 
     //lưu tất cả categories lấy đc lưu vào csdl web + update again

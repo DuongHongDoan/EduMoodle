@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -60,7 +61,7 @@ public class CoursesController {
     //    url = /admin/courses
     @GetMapping("/courses")
     public String getCategoriesForSelect(@RequestParam(value = "page", defaultValue = "1") int page,
-                                         @RequestParam(value = "size", defaultValue = "3") int size,Model model) {
+                                         @RequestParam(value = "size", defaultValue = "20") int size,Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
 
@@ -93,7 +94,7 @@ public class CoursesController {
     @GetMapping("/courses/category")
     public String  getCoursesByParentCategory(@RequestParam(value = "categoryId", required = false) Integer categoryId,
                                               @RequestParam(value = "page", defaultValue = "1") int page,
-                                              @RequestParam(value = "size", defaultValue = "3") int size, Model model) {
+                                              @RequestParam(value = "size", defaultValue = "20") int size, Model model) {
         List<CoursesDTO> coursesOfParent;
 
         if (categoryId != null) {
@@ -328,6 +329,119 @@ public class CoursesController {
             model.addAttribute("categoriesHierarchy", categoriesHierarchy);
             model.addAttribute("coursesDTO", coursesDTO);
             return "admin/CreateCourse";
+        }
+    }
+
+    //url = /admin/courses/create-course-list
+    @GetMapping("/courses/create-course-list")
+    public String showFormCreateCourseList(Model model) {
+        List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+        model.addAttribute("schoolYears", schoolYearsEntities);
+
+        List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+        model.addAttribute("semesters", semestersEntities);
+
+        return "admin/UploadCourseList";
+    }
+
+    @Operation(summary = "Upload course list", description = "Upload course list to create auto course")
+    @ApiResponse(responseCode = "200", description = "Successfully create course list")
+    //    url = /admin/courses/create-course-list
+    @PostMapping("/courses/create-course-list")
+    public String createCourseList(@RequestParam("file")MultipartFile file,
+                                   @RequestParam("type") String type,
+                                   @RequestParam("schoolYearName") Integer schoolYearName,
+                                   @RequestParam("semesterName") Integer semesterName, Model model) {
+        if (file.isEmpty()) {
+            model.addAttribute("errorMessage", "File không được để trống");
+            return "admin/UploadCourseList";
+        }
+
+        String fileType = file.getContentType();
+        if (!"text/csv".equals(fileType)) {
+            model.addAttribute("errorMessage", "Chỉ chấp nhận file định dạng CSV");
+            return "admin/UploadCourseList";
+        }
+
+        try {
+            // Đọc và xử lý file CSV
+            List<Map<String, String>> courses = coursesService.parseCSVFileCreateCourse(file, type);
+
+            for (Map<String, String> course : courses) {
+                String fullname = course.get("fullname");
+                String shortname = course.get("shortname");
+                String courseCode = course.get("courseCode");
+                String courseGroupCode = course.get("courseGroupCode");
+                Integer categoryId = Integer.valueOf(course.get("category"));
+                String description = course.get("description");
+
+                CoursesDTO courseDTO = new CoursesDTO(categoryId, fullname, shortname, description);
+                String moodleResponse = coursesService.createCourse(courseDTO);
+
+                if (moodleResponse != null && moodleResponse.contains("id")) {
+                    Integer moodleCourseId = coursesService.extractMoodleCourseId(moodleResponse);
+                    CategoriesEntity category = categoriesRepository.findByMoodleId(categoryId);
+                    if (category == null) {
+                        // Xử lý lỗi nếu category không tồn tại
+                        model.addAttribute("error", "Category không tồn tại.");
+                        return "admin/UploadCourseList";
+                    }
+
+                    //lưu in4 của khóa học vào các bảng trong csdl web
+                    CoursesEntity newCourse = new CoursesEntity();
+                    newCourse.setMoodleId(moodleCourseId);
+                    newCourse.setFullname(fullname);
+                    newCourse.setShortname(shortname);
+                    newCourse.setSummary(description);
+                    newCourse.setCategoriesEntity(category);
+                    coursesRepository.save(newCourse);
+
+                    SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getOrCreateSchoolYearSemester(schoolYearName, semesterName);
+                    if (getSchoolYearSemesterEntity == null) {
+                        model.addAttribute("error", "Năm học hoặc học kỳ không tồn tại.");
+                        return "admin/UploadCourseList";
+                    }
+                    CourseGroupsEntity courseGroupsEntity = new CourseGroupsEntity();
+                    courseGroupsEntity.setCourseCode(courseCode);
+                    courseGroupsEntity.setGroupName(courseGroupCode);
+                    courseGroupsEntity.setCoursesEntity(newCourse);
+                    courseGroupsEntity.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+                    courseGroupsRepository.save(courseGroupsEntity);
+                } else {
+                    // Nếu tạo khóa học thất bại, trả về thông báo lỗi
+                    model.addAttribute("errorMessage", "Lỗi tạo khóa học trên moodle. Vui lòng thử lại!");
+
+                    List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+                    model.addAttribute("schoolYears", schoolYearsEntities);
+
+                    List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+                    model.addAttribute("semesters", semestersEntities);
+
+                    return "admin/UploadCourseList";
+                }
+            }
+            model.addAttribute("successMessage", "Tạo danh sách khóa học thành công!");
+            return "admin/UploadCourseList";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
+
+            List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+            model.addAttribute("schoolYears", schoolYearsEntities);
+
+            List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+            model.addAttribute("semesters", semestersEntities);
+
+            return "admin/UploadCourseList";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+
+            List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+            model.addAttribute("schoolYears", schoolYearsEntities);
+
+            List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+            model.addAttribute("semesters", semestersEntities);
+
+            return "admin/UploadCourseList";
         }
     }
 
