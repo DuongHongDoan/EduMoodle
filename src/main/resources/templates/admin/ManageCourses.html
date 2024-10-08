@@ -15,6 +15,7 @@
     .link-cate {
         text-decoration: none;
         color: #fff;
+        margin: 0 2px;
     }
 
     .btn-edit:hover {
@@ -65,7 +66,7 @@
 
     .action-buttons {
       display: none; /* Ẩn các nút sửa/xóa ban đầu */
-      margin-left: 12px;
+      margin-left: 18px;
     }
   </style>
 </head>
@@ -145,7 +146,7 @@
             <div class="row mt-3 mb-3">
                 <!--coursePage.content đã bao gồm các khóa học để hiển thị theo size phân trang-->
                 <div th:each="course : ${coursePage.content}" class="col-xl-3 mt-3 mb-3">
-                    <div class="card" style="width: 18rem;">
+                    <div class="card" style="width: 18rem;height: 275px;">
                         <div class="card-img">
                             <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                                 <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
@@ -158,15 +159,19 @@
                                 <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                             </a>
                             <div class="d-flex justify-content-between">
-                                <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
-                                <span class="action-buttons">
-                                    <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
-                                        <i class="bi bi-pencil-fill text-warning"></i>
-                                    </a>
-                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
-                                        <i class="bi bi-trash text-danger"></i>
-                                    </a>
-                                </span>
+                                <div class="col-sm-9">
+                                    <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                                </div>
+                                <div class="col-sm-3">
+                                    <span class="action-buttons">
+                                        <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                            <i class="bi bi-pencil-fill text-warning"></i>
+                                        </a>
+                                        <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </a>
+                                    </span>
+                                </div>
                             </div>
                             <!-- The Modal -->
                             <div class="modal fade" th:id="'deleteModal' + ${course.id}">
@@ -216,7 +221,7 @@
         <div th:if="${coursesOfParent != null}">
             <div class="row mt-3 mb-3">
                 <div th:each="course : ${coursePage.content}" class="col-xl-3 mt-3 mb-3">
-                    <div class="card" style="width: 18rem;">
+                    <div class="card" style="width: 18rem;height: 275px;">
                         <div class="card-img">
                             <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                                 <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
@@ -229,15 +234,19 @@
                                 <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                             </a>
                             <div class="d-flex justify-content-between">
-                                <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
-                                <span class="action-buttons">
-                                    <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
-                                        <i class="bi bi-pencil-fill text-warning"></i>
-                                    </a>
-                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
-                                        <i class="bi bi-trash text-danger"></i>
-                                    </a>
-                                </span>
+                                <div class="col-sm-9">
+                                    <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                                </div>
+                                <div class="col-sm-3">
+                                    <span class="action-buttons">
+                                        <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                            <i class="bi bi-pencil-fill text-warning"></i>
+                                        </a>
+                                        <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </a>
+                                    </span>
+                                </div>
                             </div>
                             <!-- The Modal -->
                             <div class="modal fade" th:id="'deleteModal' + ${course.id}">
@@ -288,7 +297,7 @@
     <div th:if="${coursePage == null}">
         <div th:if="${coursesList != null}" class="row mt-3 mb-3">
             <div th:each="course : ${coursesList}" class="col-xl-3 mt-3 mb-3">
-                <div class="card" style="width: 18rem;">
+                <div class="card" style="width: 18rem;height: 275px;">
                     <div class="card-img">
                         <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                             <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
@@ -301,15 +310,19 @@
                             <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                         </a>
                         <div class="d-flex justify-content-between">
-                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
-                            <span class="action-buttons">
-                                <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
-                                    <i class="bi bi-pencil-fill text-warning"></i>
-                                </a>
-                                <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
-                                        <i class="bi bi-trash text-danger"></i>
-                                </a>
-                            </span>
+                            <div class="col-sm-9">
+                                <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                            </div>
+                            <div class="col-sm-3">
+                                <span class="action-buttons">
+                                    <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                        <i class="bi bi-pencil-fill text-warning"></i>
+                                    </a>
+                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                            <i class="bi bi-trash text-danger"></i>
+                                    </a>
+                                </span>
+                            </div>
                         </div>
                         <!-- The Modal -->
                         <div class="modal fade" th:id="'deleteModal' + ${course.id}">
@@ -338,7 +351,7 @@
         </div>
         <div th:if="${coursesOfParent != null}" class="row mt-3 mb-3">
             <div th:each="course : ${coursesOfParent}" class="col-xl-3 mt-3 mb-3">
-                <div class="card" style="width: 18rem;">
+                <div class="card" style="width: 18rem;height: 275px;">
                     <div class="card-img">
                         <a th:href="@{/admin/courses/view(courseId=${course.id})}">
                             <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
@@ -351,15 +364,19 @@
                             <h5 th:utext="${course.fullname}" class="card-title">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h5>
                         </a>
                         <div class="d-flex justify-content-between">
-                            <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
-                            <span class="action-buttons">
-                                <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
-                                    <i class="bi bi-pencil-fill text-warning"></i>
-                                </a>
-                                <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
-                                        <i class="bi bi-trash text-danger"></i>
-                                </a>
-                            </span>
+                            <div class="col-sm-9">
+                                <p th:utext="${categoryMap[course.categoryid]}" class="card-text">Tên Khoa hoặc Bộ môn</p>
+                            </div>
+                            <div class="col-sm-3">
+                                <span class="action-buttons">
+                                    <a class="link-cate" th:href="@{/admin/courses/edit-course(courseId=${course.id})}">
+                                        <i class="bi bi-pencil-fill text-warning"></i>
+                                    </a>
+                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${course.id}">
+                                            <i class="bi bi-trash text-danger"></i>
+                                    </a>
+                                </span>
+                            </div>
                         </div>
                         <!-- The Modal -->
                         <div class="modal fade" th:id="'deleteModal' + ${course.id}">

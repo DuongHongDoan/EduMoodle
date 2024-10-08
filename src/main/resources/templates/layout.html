@@ -23,6 +23,14 @@
     <link th:href="@{/css/styles.css}" rel="stylesheet">
 
     <style>
+        .navbar-nav .nav-link {
+            color: #dddfeb;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #fff;
+        }
+
         .navbar-nav .nav-link.active {
             font-weight: bold;
             color: #fff !important;
@@ -38,7 +46,7 @@
             height: auto; /* Để container auto-fit nội dung */
         }
 
-        .dropdown:hover .dropdown-menu {
+        .dropdown:hover .dropdown-menu-nav {
             display: block;
             margin-top: 0;
         }
@@ -78,7 +86,7 @@
                         <a class="nav-link" th:href="@{/admin/categories}" role="button" id="QLCourse" aria-expanded="false">
                             Danh mục - Khóa học
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" th:href="@{/admin/categories}">Xem danh mục</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/courses}">Xem danh sách khóa học</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/categories/create-category}">Thêm danh mục</a></li>
@@ -94,7 +102,7 @@
                             Thành viên
                         </a>
 
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" th:href="@{/admin/users}">Xem danh sách thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/add-user}">Thêm thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/upload-users}">Nhập danh sách thành viên</a></li>
@@ -104,11 +112,11 @@
                 </li>
                 <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
                     <div class="dropdown">
-                        <a class="nav-link" href="#" role="button" id="dropdownMenuLink" aria-expanded="false">
+                        <a class="nav-link" th:href="@{/baithi}" role="button" id="dropdownMenuLink" aria-expanded="false">
                             Bài thi
                         </a>
 
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" href="#">Action 1</a></li>
                             <li><a class="dropdown-item" href="#">Action 2</a></li>
                             <li><a class="dropdown-item" href="#">Action 3</a></li>
@@ -194,12 +202,27 @@
     <!-- script active links group -->
     document.addEventListener("DOMContentLoaded", function() {
         var currentPath = window.location.pathname;
-        if (currentPath.includes('/admin/courses')) {
-            document.querySelector('a[href="/admin/courses"]').classList.add('active');
-        }
-        if (currentPath.includes('/admin/users')) {
-            document.querySelector('a[href="/admin/users"]').classList.add('active');
-        }
+
+        // Lấy tất cả các nav-link và dropdown-item trong trang
+        var allLinks = document.querySelectorAll('.nav-link, .dropdown-item');
+
+        allLinks.forEach(function(link) {
+            var linkPath = link.getAttribute('href');
+
+            // So sánh chính xác đường dẫn hiện tại với href của từng liên kết
+            if (currentPath === linkPath) {
+                // Đánh dấu liên kết được chọn là active
+                link.classList.add('active');
+
+                // Nếu liên kết là dropdown-item, đánh dấu nav-link cha tương ứng cũng là active
+                if (link.classList.contains('dropdown-item')) {
+                    var parentNavLink = link.closest('.dropdown').querySelector('.nav-link');
+                    if (parentNavLink) {
+                        parentNavLink.classList.add('active');
+                    }
+                }
+            }
+        });
     });
 </script>
 
@@ -357,18 +380,18 @@ var myLineChart = new Chart(ctx, {
     });
 </script>
 <script>
-    // Get the current URL path
-    const currentPath = window.location.pathname;
+<!--    // Get the current URL path-->
+<!--    const currentPath = window.location.pathname;-->
 
-    // Get all navigation links
-    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+<!--    // Get all navigation links-->
+<!--    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');-->
 
-    // Loop through links and add 'active' class to the one that matches the current path
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-            link.classList.add('active');
-        }
-    });
+<!--    // Loop through links and add 'active' class to the one that matches the current path-->
+<!--    navLinks.forEach(link => {-->
+<!--        if (link.getAttribute('href') === currentPath) {-->
+<!--            link.classList.add('active');-->
+<!--        }-->
+<!--    });-->
 </script>
 <!--script modal enrol user to server-->
 <script>
