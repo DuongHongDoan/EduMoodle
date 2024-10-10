@@ -167,6 +167,82 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script th:src="@{/assets/chart.js/Chart.min.js}"></script>
 <script>
+    //script cập nhật topic
+    function editTopic(element) {
+        const parentDiv = element.closest('.topic-item');
+        const topicNameElement = parentDiv.querySelector('.topicName');
+        const editInput = parentDiv.querySelector('.edit-input');
+
+        // Hiển thị ô input, ẩn tên chủ đề
+        editInput.value = topicNameElement.textContent.trim();
+        topicNameElement.style.display = 'none';
+        editInput.style.display = 'inline-block';
+
+        // Đặt sự kiện lắng nghe cho ô input khi nhấn Enter
+        editInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                updateTopic(parentDiv);
+            }
+        });
+         // Đặt sự kiện lắng nghe cho ô input khi bị mất focus (blur)
+        editInput.addEventListener('blur', function() {
+            // Khôi phục trạng thái hiển thị ban đầu
+            topicNameElement.style.display = 'inline-block';
+            editInput.style.display = 'none';
+        });
+
+        // Đặt focus cho ô input để người dùng có thể nhập ngay lập tức
+        editInput.focus();
+    }
+    function updateTopic(parentDiv) {
+        const topicId = parentDiv.dataset.topicid;  // Lấy topicId từ dataset
+        const courseId = parentDiv.dataset.courseid;  // Lấy courseId từ dataset
+        const editInput = parentDiv.querySelector('.edit-input');
+        const newTopicName = editInput.value.trim();
+
+        if (newTopicName === '') {
+            alert('Tên chủ đề không được để trống.');
+            return;
+        }
+
+        // Gửi yêu cầu cập nhật qua API
+        fetch('/admin/courses/view/update-topic', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `sectionId=${topicId}&courseId=${courseId}&topicName=${encodeURIComponent(newTopicName)}`
+        })
+        .then(response => {
+            if (response.redirected) {
+                // Nếu server trả về redirect, chuyển hướng đến URL mới
+                window.location.href = response.url;
+            } else {
+                // Nếu không phải redirect, kiểm tra phản hồi JSON (nếu có)
+                return response.json();
+            }
+        })
+        .then(data => {
+            if (data && data.success) {
+                alert('Chủ đề đã được cập nhật thành công.');
+
+                // Cập nhật giao diện
+                const topicNameElement = parentDiv.querySelector('.topicName');
+                topicNameElement.textContent = newTopicName;
+
+                // Ẩn ô input, hiển thị tên chủ đề mới
+                editInput.style.display = 'none';
+                topicNameElement.style.display = 'inline-block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Đã xảy ra lỗi khi cập nhật chủ đề.');
+        });
+    }
+</script>
+
+<script>
     //script thêm topic
     $(document).ready(function() {
         $('.btn-add-topic').click(function(event) {

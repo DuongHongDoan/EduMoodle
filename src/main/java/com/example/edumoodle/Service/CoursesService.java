@@ -484,4 +484,45 @@ public class CoursesService {
             e.printStackTrace();
         }
     }
+
+    //cập nhật topic trong khóa học
+    public void updateTopicInCourse(Integer sectionId, Integer courseId, String sectionName) {
+        String apiMoodleFunc = "local_topic_update_topic";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&topicid=" + sectionId
+                + "&courseid=" + courseId
+                + "&name=" + sectionName;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //xóa topic trong khóa học
+    public void deleteTopicInCourse(Integer sectionId, Integer courseId) {
+        String apiMoodleFunc = "local_topic_delete_topic";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&topicid=" + sectionId
+                + "&courseid=" + courseId;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
 }

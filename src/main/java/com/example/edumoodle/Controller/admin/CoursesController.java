@@ -571,14 +571,30 @@ public class CoursesController {
     }
 
     @Operation(summary = "Create Topic", description = "Create topic in course")
-    @ApiResponse(responseCode = "200", description = "Successfully deleted course")
+    @ApiResponse(responseCode = "200", description = "Successfully created topic")
     //    url = /admin/courses/view/create-topic
     @PostMapping("/courses/view/create-topic")
     public String createTopic(@RequestParam Integer courseId,
                               @RequestParam String name) {
-        System.out.println("Received request to create topic for courseId: " + courseId + " with name: " + name);
-
         coursesService.createTopicInCourse(courseId, name);
+        return "redirect:/admin/courses/view?courseId=" + courseId;
+    }
+
+    @Operation(summary = "Update Topic", description = "Update topic in course")
+    @ApiResponse(responseCode = "200", description = "Successfully updated topic")
+    //    url = /admin/courses/view/update-topic
+    @PostMapping("/courses/view/update-topic")
+    public String updateTopic(@RequestParam Integer sectionId, @RequestParam Integer courseId, @RequestParam String topicName) {
+        coursesService.updateTopicInCourse(sectionId, courseId, topicName);
+        return "redirect:/admin/courses/view?courseId=" + courseId;
+    }
+
+    @Operation(summary = "Delete Topic", description = "Delete topic in course")
+    @ApiResponse(responseCode = "200", description = "Successfully deleted topic")
+    //    url = /admin/courses/view/delete-topic
+    @GetMapping("/courses/view/delete-topic")
+    public String deleteTopic(@RequestParam Integer sectionId, @RequestParam Integer courseId) {
+        coursesService.deleteTopicInCourse(sectionId, courseId);
         return "redirect:/admin/courses/view?courseId=" + courseId;
     }
 }

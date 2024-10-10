@@ -125,22 +125,47 @@
 
                         <div th:each="section : ${sections}" class="accordion-item">
                             <h2 class="accordion-header" th:id="'heading'+${section.id}">
-                                <button class="accordion-button collapsed topic-name" type="button" data-bs-toggle="collapse"
-                                        th:data-bs-target="'#collapse' + ${section.id}" aria-expanded="false"
-                                        th:attr="aria-controls='collapse'+${section.id}">
-                                    <span th:utext="${section.name}">Topic Name</span>
-                                    <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
-                                    <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
+                                <button class="accordion-button collapsed topic-name topic-item" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse' + ${section.id}" aria-expanded="false" th:attr="aria-controls='collapse'+${section.id}" th:data-topicid="${section.id}" th:data-courseid="${courseDetails.id}">
+                                    <span class="topicName" th:utext="${section.name}">Topic Name</span>
+                                    <input type="text" class="edit-input" style="display: none;" />
+                                    <a href="" th:onclick="editTopic(this); return false;" class="edit-topic">
+                                        <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
+                                    </a>
+                                    <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteTopicModal' + ${section.id}">
+                                        <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
+                                    </a>
                                 </button>
                             </h2>
+                            <!-- The Modal -->
+                            <div class="modal fade" th:id="'deleteTopicModal' + ${section.id}">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <!-- Modal Header -->
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Thông báo</h4>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <!-- Modal body -->
+                                        <div class="modal-body">
+                                            <span th:text="'Bạn có chắc muốn xóa chủ đề: ' + ${section.name} + ' không?'"></span>
+                                        </div>
+                                        <!-- Modal footer -->
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                            <a th:href="@{/admin/courses/view/delete-topic(sectionId=${section.id}, courseId=${courseDetails.id})}" class="btn btn-danger">Xóa</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div th:id="'collapse' + ${section.id}" class="accordion-collapse collapse"
                                  th:attr="aria-labelledby='heading'+${section.id}" data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                     <ul class="module-list">
                                         <li th:each="module : ${section.modules}">
-                                            <a href="#">
+                                            <a href="#" style="margin-left: 12px;">
+                                                <i class="bi bi-check2-square"></i>
                                                 <span th:utext="${module.name}">Module Name</span>
-                                                (<span th:utext="${module.modname}">Module Type</span>)
+<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                             </a>
                                             <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
                                             <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
