@@ -464,4 +464,24 @@ public class CoursesService {
         }
         return courses;
     }
+
+    //tạo topic trong khóa học
+    public void createTopicInCourse(Integer courseId, String name) {
+        String apiMoodleFunc = "local_topic_create_topic";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&courseid=" + courseId
+                + "&name=" + name;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
 }

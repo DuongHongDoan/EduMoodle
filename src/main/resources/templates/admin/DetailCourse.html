@@ -35,7 +35,8 @@
         text-decoration: none;
     }
 
-    .module-list li a:hover {
+    .module-list li a:hover,
+    .activity-add-text:hover{
         text-decoration: underline;
     }
 
@@ -70,6 +71,10 @@
 
     .gv-sv {
         border-bottom: 1px solid #dee2e6;
+    }
+
+    .btn-add-resource, .bi-pencil-fill, .bi-trash, .btn-add-topic, hr {
+        display: none;
     }
   </style>
 </head>
@@ -112,12 +117,20 @@
               <!-- Tab Khóa học -->
                 <div class="tab-pane fade active show" id="khoahoc" role="tabpanel" aria-labelledby="khoahoc-tab">
                     <div class="accordion mt-3" id="accordionExample">
+                        <div class="col mb-3 d-flex justify-content-end">
+                            <button id="contentCourseEdit" class="btn btn-primary" style="margin-left: 5px;">
+                                Chỉnh sửa <i class="bi bi-gear"></i>
+                            </button>
+                        </div>
+
                         <div th:each="section : ${sections}" class="accordion-item">
                             <h2 class="accordion-header" th:id="'heading'+${section.id}">
                                 <button class="accordion-button collapsed topic-name" type="button" data-bs-toggle="collapse"
                                         th:data-bs-target="'#collapse' + ${section.id}" aria-expanded="false"
                                         th:attr="aria-controls='collapse'+${section.id}">
                                     <span th:utext="${section.name}">Topic Name</span>
+                                    <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
+                                    <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
                                 </button>
                             </h2>
                             <div th:id="'collapse' + ${section.id}" class="accordion-collapse collapse"
@@ -129,8 +142,25 @@
                                                 <span th:utext="${module.name}">Module Name</span>
                                                 (<span th:utext="${module.modname}">Module Type</span>)
                                             </a>
+                                            <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
+                                            <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
+                                        </li>
+                                        <li class="btn-add-resource">
+                                            <button class="btn btn-link text-decoration-none" data-action="open-chooser" data-sectionid="0" data-sectionreturnid="0" id="yui_3_18_1_1_1728536782397_338">
+                                                    <span class="pluscontainer icon-no-margin icon-size-3">
+                                                        <i class="bi bi-plus-circle" style="font-size: 1.2rem;"></i>
+                                                    </span>
+                                                <span class="activity-add-text" id="yui_3_18_1_1_1728536782397_337">Thêm một hoạt động hoặc tài nguyên</span>
+                                            </button>
                                         </li>
                                     </ul>
+                                    <hr style="color: #187bd2;">
+                                    <button id="addTopic" th:data-courseid="${courseDetails.id}" class="btn text-primary btn-add-topic">
+                                        <span class="pluscontainer icon-no-margin icon-size-3">
+                                            <i class="bi bi-plus-lg" style="font-size: 1.2rem;"></i>
+                                        </span>
+                                        <span class="activity-add-text">Thêm chủ đề</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>

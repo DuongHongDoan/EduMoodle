@@ -167,6 +167,45 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script th:src="@{/assets/chart.js/Chart.min.js}"></script>
 <script>
+    //script thêm topic
+    $(document).ready(function() {
+        $('.btn-add-topic').click(function(event) {
+            event.preventDefault(); // Ngăn chặn hành động mặc định của nút
+
+            // Lấy courseId từ một nguồn nào đó (ví dụ như từ một biến, data attribute, hoặc từ một input)
+            const courseId = $(this).data('courseid');
+
+            createTopic(courseId); // Gọi hàm createTopic với courseId
+        });
+
+        function createTopic(courseId) {
+            const topicName = ""; // Tên topic để tạo
+
+            fetch('/admin/courses/view/create-topic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `courseId=${courseId}&name=${encodeURIComponent(topicName)}`
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;  // Chuyển hướng về trang view sau khi tạo topic thành công
+                } else {
+                    response.json().then(data => {
+                        alert('Lỗi: ' + data.message);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi tạo chủ đề.');
+            });
+        }
+    });
+</script>
+
+<script>
     //script trang uploadEnrolUser
     document.getElementById('selectType').addEventListener('change', function () {
         // Lấy giá trị được chọn trong dropdown
@@ -196,6 +235,14 @@
     // Sự kiện click để hiển thị hoặc ẩn các nút sửa/xóa trong category
     $('#toggleEdit').click(function() {
       $('.action-buttons').toggle(); // Hiển thị hoặc ẩn các nút sửa/xóa
+    });
+
+    $('#contentCourseEdit').click(function() {
+        $('.bi-pencil-fill').toggle();
+        $('.bi-trash').toggle();
+        $('.btn-add-topic').toggle();
+        $('hr').toggle();
+        $('.btn-add-resource').toggle();
     });
 </script>
 <script>

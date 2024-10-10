@@ -569,4 +569,16 @@ public class CoursesController {
         }
         return "redirect:/admin/courses";
     }
+
+    @Operation(summary = "Create Topic", description = "Create topic in course")
+    @ApiResponse(responseCode = "200", description = "Successfully deleted course")
+    //    url = /admin/courses/view/create-topic
+    @PostMapping("/courses/view/create-topic")
+    public String createTopic(@RequestParam Integer courseId,
+                              @RequestParam String name) {
+        System.out.println("Received request to create topic for courseId: " + courseId + " with name: " + name);
+
+        coursesService.createTopicInCourse(courseId, name);
+        return "redirect:/admin/courses/view?courseId=" + courseId;
+    }
 }
