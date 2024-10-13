@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Controller
@@ -151,6 +152,9 @@ public class CoursesController {
                 .toList();
         model.addAttribute("usersList", usersListNotEnrolled);
         model.addAttribute("course", courseId);
+
+        List<ModuleDTO> moduleList = coursesService.getModuleList();
+        model.addAttribute("moduleList", moduleList);
 
         return "admin/DetailCourse";
     }
@@ -595,6 +599,61 @@ public class CoursesController {
     @GetMapping("/courses/view/delete-topic")
     public String deleteTopic(@RequestParam Integer sectionId, @RequestParam Integer courseId) {
         coursesService.deleteTopicInCourse(sectionId, courseId);
+        return "redirect:/admin/courses/view?courseId=" + courseId;
+    }
+
+    //url = /admin/courses/view/create-activity
+    @GetMapping("/courses/view/create-activity")
+    public String showFormCreateActivity(@RequestParam Integer sectionId, @RequestParam Integer courseId,
+                                         @RequestParam String type, Model model) {
+        switch (type) {
+            case "forum":
+                String newType1 = "Diễn đàn";
+                model.addAttribute("newType", newType1);
+                break;
+            case "quiz":
+                String newType2 = "Trắc nghiệm";
+                model.addAttribute("newType", newType2);
+                break;
+        }
+        model.addAttribute("type", type);
+        model.addAttribute("sectionId", sectionId);
+        model.addAttribute("courseId", courseId);
+        return "admin/AddActivity";
+    }
+
+    @Operation(summary = "Add activity", description = "Add new activity in course")
+    @ApiResponse(responseCode = "200", description = "Successfully added activity")
+    //    url = /admin/courses/view/create-activity
+    @PostMapping("/courses/view/create-activity")
+    public String addActivity(@RequestParam Integer sectionId, @RequestParam Integer courseId,
+                              @RequestParam String type, @RequestParam String name, @RequestParam String intro,
+                              RedirectAttributes redirectAttributes) {
+        coursesService.addActivity(courseId, type, name, sectionId, intro);
+        redirectAttributes.addFlashAttribute("successMessage", "Thêm hoạt động mới thành công!");
+        return "redirect:/admin/courses/view?courseId=" + courseId;
+    }
+
+    @Operation(summary = "Update activity", description = "update activity in course")
+    @ApiResponse(responseCode = "200", description = "Successfully updated activity")
+    //    url = /admin/courses/view/update-activity
+    @PostMapping("/courses/view/update-activity")
+    public String updateActivity(@RequestParam Integer cmid, @RequestParam Integer courseId,
+                              @RequestParam String type, @RequestParam String name,
+                              RedirectAttributes redirectAttributes) {
+        coursesService.updateActivity(cmid, type, courseId, name);
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật hoạt động thành công!");
+        return "redirect:/admin/courses/view?courseId=" + courseId;
+    }
+
+    @Operation(summary = "Delete Activity", description = "Delete activity in course")
+    @ApiResponse(responseCode = "200", description = "Successfully deleted activity")
+    //    url = /admin/courses/view/delete-activity
+    @GetMapping("/courses/view/delete-activity")
+    public String deleteActivity(@RequestParam Integer cmid, @RequestParam Integer courseId, @RequestParam String type,
+                                 RedirectAttributes redirectAttributes) {
+        coursesService.deleteActivity(cmid, type, courseId);
+        redirectAttributes.addFlashAttribute("successMessage", "Xóa thành công!");
         return "redirect:/admin/courses/view?courseId=" + courseId;
     }
 }

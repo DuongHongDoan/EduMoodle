@@ -1,5 +1,6 @@
 package com.example.edumoodle.Service;
 
+import com.example.edumoodle.DTO.ModuleDTO;
 import com.example.edumoodle.DTO.SectionsDTO;
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
@@ -24,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.Inet4Address;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -514,6 +516,86 @@ public class CoursesService {
                 + "&wsfunction=" + apiMoodleFunc
                 + "&moodlewsrestformat=json"
                 + "&topicid=" + sectionId
+                + "&courseid=" + courseId;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //lấy danh sách module
+    public List<ModuleDTO> getModuleList() {
+        String apiMoodleFunc = "local_module_get_modules";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json";
+        RestTemplate restTemplate = new RestTemplate();
+        ModuleDTO[] moduleArray = restTemplate.getForObject(url, ModuleDTO[].class);
+
+        assert moduleArray != null;
+        return Arrays.asList(moduleArray);
+    }
+
+    //add activity vào moodle
+    public void addActivity(Integer courseId, String type, String name, Integer sectionId, String intro) {
+        String apiMoodleFunc = "local_module_add_activity";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&courseid=" + courseId
+                + "&type=" + type
+                + "&name=" + name
+                + "&sectionid=" + sectionId
+                + "&intro=" + intro;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //update activity in moodle
+    public void updateActivity(Integer cmid, String type, Integer courseId, String name) {
+        String apiMoodleFunc = "local_module_update_activity";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&cmid=" + cmid
+                + "&type=" + type
+                + "&courseid=" + courseId
+                + "&name=" + name;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //delete activity trong moodle
+    public void deleteActivity(Integer cmid, String type, Integer courseId) {
+        String apiMoodleFunc = "local_module_delete_activity";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&cmid=" + cmid
+                + "&type=" + type
                 + "&courseid=" + courseId;
         RestTemplate restTemplate = new RestTemplate();
         try {

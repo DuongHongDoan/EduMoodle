@@ -35,7 +35,7 @@
         text-decoration: none;
     }
 
-    .module-list li a:hover,
+    .activity-name-link:hover,
     .activity-add-text:hover{
         text-decoration: underline;
     }
@@ -161,24 +161,81 @@
                                  th:attr="aria-labelledby='heading'+${section.id}" data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                     <ul class="module-list">
-                                        <li th:each="module : ${section.modules}">
-                                            <a href="#" style="margin-left: 12px;">
+                                        <li th:each="module : ${section.modules}" class="activity-item"  th:data-activityid="${module.id}" th:data-typename="${module.modname}" th:data-courseid="${courseDetails.id}">
+                                            <a href="#" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-check2-square"></i>
-                                                <span th:utext="${module.name}">Module Name</span>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
 <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
                                             </a>
-                                            <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
-                                            <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
+                                            <a href="" th:onclick="editActivity(this); return false;" class="edit-activity">
+                                                <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
+                                            </a>
+                                            <a class="link-cate" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteActivityModal' + ${module.id}">
+                                                <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
+                                            </a>
+
+                                            <!-- The Modal -->
+                                            <div class="modal fade" th:id="'deleteActivityModal' + ${module.id}">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <!-- Modal Header -->
+                                                        <div class="modal-header">
+                                                            <h4 class="modal-title">Thông báo</h4>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <!-- Modal body -->
+                                                        <div class="modal-body">
+                                                            <span th:text="'Bạn có chắc muốn xóa hoạt động: ' + ${module.name} + ' này không?'"></span>
+                                                        </div>
+                                                        <!-- Modal footer -->
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                            <a th:href="@{/admin/courses/view/delete-activity(cmid=${module.id}, type=${module.modname}, courseId=${courseDetails.id})}" class="btn btn-danger">Xóa</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </li>
                                         <li class="btn-add-resource">
-                                            <button class="btn btn-link text-decoration-none" data-action="open-chooser" data-sectionid="0" data-sectionreturnid="0" id="yui_3_18_1_1_1728536782397_338">
+                                            <a href="" class="btn btn-link text-decoration-none" data-bs-toggle="modal" th:data-bs-target="'#addActivity' + ${section.id}">
                                                     <span class="pluscontainer icon-no-margin icon-size-3">
                                                         <i class="bi bi-plus-circle" style="font-size: 1.2rem;"></i>
                                                     </span>
                                                 <span class="activity-add-text" id="yui_3_18_1_1_1728536782397_337">Thêm một hoạt động hoặc tài nguyên</span>
-                                            </button>
+                                            </a>
                                         </li>
                                     </ul>
+                                    <!-- Modal -->
+                                    <div class="modal fade" th:id="'addActivity' + ${section.id}">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <!-- Modal Header -->
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title">Thêm một hoạt động hoặc tài nguyên</h4>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <!-- Modal body -->
+                                                <div class="modal-body">
+                                                    <div data-region="carousel" class="carousel slide d-flex flex-fill">
+                                                        <div class="carousel-inner d-flex flex-fill" aria-live="polite">
+                                                            <div class="carousel-item p-3 active" data-region="modules">
+                                                                <div class="row">
+                                                                    <div class="col-sm-4 mb-3" th:each="model : ${moduleList}"  th:if="${model.name == 'quiz' or model.name == 'forum'}">
+                                                                        <div class="btn d-flex justify-content-center" style="border: 1px solid #bebebe; padding: 20px; border-radius: 10px">
+                                                                            <a th:href="@{/admin/courses/view/create-activity(sectionId=${section.section}, courseId=${courseDetails.id}, type=${model.name})}" th:utext="${model.name}" class="text-decoration-none">Trắc nghiệm</a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Modal footer -->
+                                                <div class="modal-footer hidden"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <hr style="color: #187bd2;">
                                     <button id="addTopic" th:data-courseid="${courseDetails.id}" class="btn text-primary btn-add-topic">
                                         <span class="pluscontainer icon-no-margin icon-size-3">
