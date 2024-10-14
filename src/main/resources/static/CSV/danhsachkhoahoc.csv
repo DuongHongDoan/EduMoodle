@@ -1,0 +1,4 @@
+fullname,shortname,courseCode,courseGroupCode,category,description
+Tên đầy đủ khóa học,tên viết tắt(Thêm năm học phía sau, tránh trùng lặp khi tạo),mã học phần,mã nhóm học phần,thuộc đơn vị nào,mô tả(hoặc có thể để trống)
+Mạng máy tính,mmt24-25,CT112,CT11201,Khoa Mạng máy tính và truyền thông,
+Pháp luật đại cương,pldc24-25,KL001E,KL001E01,Khoa Luật,mô tả môn pháp luật đại cương

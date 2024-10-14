@@ -4,11 +4,8 @@ import com.example.edumoodle.DTO.EnrolUserDTO;
 import com.example.edumoodle.DTO.NguoiDungDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.DTO.UsersResponseDTO;
-import com.example.edumoodle.Model.RolesEntity;
-import com.example.edumoodle.Model.UsersEntity;
-import com.example.edumoodle.Repository.RolesRepository;
-import com.example.edumoodle.Repository.UserRoleRepository;
-import com.example.edumoodle.Repository.UsersRepository;
+import com.example.edumoodle.Model.*;
+import com.example.edumoodle.Repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -20,11 +17,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +44,12 @@ public class UsersService {
     private UserRoleRepository userRoleRepository;
     @Autowired
     private RolesRepository rolesRepository;
+    @Autowired
+    private CoursesRepository coursesRepository;
+    @Autowired
+    private CourseGroupsRepository courseGroupsRepository;
+    @Autowired
+    private CourseAssignmentRepository courseAssignmentRepository;
 
     @Autowired
     private UserInterface userInterface;
@@ -55,6 +60,22 @@ public class UsersService {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
+
+    //    lấy người dùng theo username
+    public UsersDTO getUserByUsername(String username) {
+        String apiMoodleFunc = "core_user_get_users";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&criteria[0][key]=username"
+                + "&criteria[0][value]=" + username;
+
+        UsersResponseDTO response = restTemplate.getForObject(url, UsersResponseDTO.class);
+        return (response != null && response.getUsers() != null && !response.getUsers().isEmpty())
+                ? response.getUsers().get(0)
+                : null;
+    }
 
     // Lấy danh sách giảng viên và sinh viên của khóa học
     public List<UsersDTO> getEnrolledUsers(Integer courseId) {
@@ -90,6 +111,105 @@ public class UsersService {
         restTemplate.postForObject(url.toString(), null, String.class);
     }
 
+    //đăng ký bằng cách upload file ds
+    public List<EnrolUserDTO> parseCSVFileEnrolUsers(MultipartFile file, String fileType) throws IOException {
+        List<EnrolUserDTO> enrolUsers = new ArrayList<>();
+        Set<String> validFields;
+
+        // Kiểm tra loại file đường dùng để nhập
+        if ("basicEnrol".equalsIgnoreCase(fileType)) {
+            validFields = Set.of("username", "course_group_code", "role");
+        } else if ("DHCTEnrol".equalsIgnoreCase(fileType)) {
+            validFields = Set.of("coursename");
+        } else {
+            throw new IllegalArgumentException("Loại file không hợp lệ: " + fileType);
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine(); //đọc dòng đầu tiên của file
+            if (headerLine == null) {
+                throw new IllegalArgumentException("File CSV không có nội dung");
+            }
+
+            String[] headers = headerLine.split(",");
+            for (String header : headers) {
+                if (!validFields.contains(header.trim().toLowerCase())) {
+                    throw new IllegalArgumentException("Trường " + header + " không hợp lệ!");
+                }
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+
+                Map<String, String> userMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    userMap.put(headers[i].trim().toLowerCase(), fields[i].trim());
+                }
+
+                if (userMap.get("username") == null || userMap.get("username").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'username' không được để trống");
+                }
+                if (userMap.get("course_group_code") == null || userMap.get("course_group_code").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'course_group_code' không được để trống");
+                }
+                if (userMap.get("role") == null || userMap.get("role").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'role' không được để trống");
+                }
+
+                List<Integer> userIds = new ArrayList<>(List.of());
+                UsersDTO usersDTO = getUserByUsername(userMap.getOrDefault("username", ""));
+                UsersEntity usersEntity = usersRepository.findByUsername(userMap.getOrDefault("username", ""));
+                if(usersDTO != null) {
+                    userIds.add(usersDTO.getId());
+
+                    String groupName = userMap.getOrDefault("course_group_code", "");
+                    CourseGroupsEntity courseGroupsEntity = courseGroupsRepository.findByGroupName(groupName);
+                    if(courseGroupsEntity != null) {
+                        Optional<CoursesEntity> coursesOpt = coursesRepository.findById(courseGroupsEntity.getCoursesEntity().getId_courses());
+                        CoursesEntity coursesEntity = coursesOpt.get();
+                        if(Objects.equals(userMap.get("role"), "sv")) {
+                            userMap.put("role", "student");
+                        }
+                        if(Objects.equals(userMap.get("role"), "gv")) {
+                            userMap.put("role", "editingteacher");
+                        }
+
+                        Optional<RolesEntity> rolesOpt = rolesRepository.findRoleByName(userMap.get("role"));
+                        if(rolesOpt.isPresent()) {
+                            RolesEntity rolesEntity = rolesOpt.get();
+
+                            //kiểm tra người dùng có đăng ký vào khóa học chưa?
+                            List<UserRoleEntity> userRoles = userRoleRepository.findByUsersEntityAndRolesEntity(usersEntity, rolesEntity);
+                            int cnt = 0;
+                            for(UserRoleEntity userRole : userRoles){
+                                CourseAssignmentEntity courseAssignment = courseAssignmentRepository.findByCourseGroupsEntityAndUserRoleEntity(courseGroupsEntity, userRole);
+                                if(courseAssignment == null) {
+                                    cnt++;
+                                }else {
+                                    break;
+                                }
+                            }
+                            if(cnt == userRoles.size()) {
+                                EnrolUserDTO enrolUser = new EnrolUserDTO(userIds, coursesEntity.getMoodleId(), rolesEntity.getMoodleId());
+                                enrolUsers.add(enrolUser);
+                            }else {
+                                throw new IllegalArgumentException("Người dùng '" + userMap.get("username") + "' đã được đăng ký vào khóa học '" + userMap.get("course_group_code") + "'!");
+                            }
+                        }else {
+                            throw new IllegalArgumentException("Cột role không hợp lệ, không phải '" + userMap.get("role") + "' mà nó phải là hoặc 'gv' hoặc 'sv'!");
+                        }
+                    }else {
+                        throw new IllegalArgumentException("Cột course_group_code không hợp lệ, vì khóa học'" + userMap.get("course_group_code") + "' chưa được tạo!");
+                    }
+                }else {
+                    throw new IllegalArgumentException("Cột username không hợp lệ, vì người dùng'" + userMap.get("username") + "' chưa được tạo!");
+                }
+            }
+        }
+        return enrolUsers;
+    }
+
     //Hủy đăng ký khóa học cho người dùng
     public void unEnrolUser(Integer userid, Integer courseId) {
         String apiMoodleFunc = "enrol_manual_unenrol_users";
@@ -101,6 +221,36 @@ public class UsersService {
                 + "&enrolments[0][courseid]=" + courseId;
 
         restTemplate.getForEntity(url, String.class);
+    }
+
+    //hủy đăng ký khóa học csdl web
+    public void unEnrolUserWeb(Integer userId, Integer courseId) {
+        Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(courseId);
+        if(courseOpt.isPresent()) {
+            CourseGroupsEntity courseGroup = courseGroupsRepository.findByCoursesEntity(courseOpt.get());
+            if(courseGroup != null) {
+                Optional<UsersEntity> userOpt = usersRepository.findByMoodleId(userId);
+                if(userOpt.isPresent()) {
+                    List<UserRoleEntity> userRoles = userRoleRepository.findByUsersEntity(userOpt.get());
+                    for(UserRoleEntity userRole : userRoles) {
+                        CourseAssignmentEntity courseAssignment =
+                                courseAssignmentRepository.findByCourseGroupsEntityAndUserRoleEntity(courseGroup, userRole);
+                        if(courseAssignment != null) {
+                            courseAssignmentRepository.deleteById(courseAssignment.getId_course_assign());
+                            userRoleRepository.deleteById(userRole.getId());
+                        }else {
+                            System.out.println("No course assignment found for role: " + userRole.getId());
+                        }
+                    }
+                } else {
+                    System.out.println("User not found.");
+                }
+            } else {
+                System.out.println("Course group not found.");
+            }
+        } else {
+            System.out.println("Course not found.");
+        }
     }
 
     //lấy danh sách tất cả user được thêm vào moodle (apiMoodleFunc là plugin import vào dự án moodle)
@@ -227,6 +377,67 @@ public class UsersService {
                 usersRepository.delete(existingUser);
             }
         }
+    }
+
+    private static final Set<String> VALID_FIELDS = Set.of(
+            "username", "password", "firstname", "lastname", "email"
+    );
+    public List<UsersDTO> parseCSVFileCreateUser(MultipartFile file) throws IOException {
+        List<UsersDTO> users = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine(); //đọc dòng đầu tiên của file (đây là các trường dùng để tạo user)
+            if (headerLine == null) {
+                throw new IllegalArgumentException("File CSV không có nội dung");
+            }
+
+            String[] headers = headerLine.split(",");
+            for (String header : headers) {
+                if (!VALID_FIELDS.contains(header.trim().toLowerCase())) {
+                    throw new IllegalArgumentException("Trường " + header + " không hợp lệ!");
+                }
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+
+                Map<String, String> userMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    userMap.put(headers[i].trim().toLowerCase(), fields[i].trim());
+                }
+
+                if (userMap.get("username") == null || userMap.get("username").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'username' không được để trống");
+                }
+                if (userMap.get("firstname") == null || userMap.get("firstname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'firstname' không được để trống");
+                }
+                if (userMap.get("lastname") == null || userMap.get("lastname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'lastname' không được để trống");
+                }
+                if (userMap.get("email") == null || userMap.get("email").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'email' không được để trống");
+                }
+                if (userMap.get("email") != null && !userMap.get("email").matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+                    throw new IllegalArgumentException("Định dạng email không hợp lệ: " + userMap.get("email"));
+                }
+                if (userMap.get("password") == null || userMap.get("password").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'password' không được để trống");
+                }
+
+                UsersDTO user = new UsersDTO(
+                        userMap.getOrDefault("username", ""),
+                        userMap.getOrDefault("firstname", ""),
+                        userMap.getOrDefault("lastname", ""),
+                        userMap.getOrDefault("email", ""),
+                        userMap.getOrDefault("password", "")
+                );
+
+                users.add(user);
+            }
+        }
+        return users;
     }
 
     //thêm thành viên mới

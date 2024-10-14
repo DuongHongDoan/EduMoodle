@@ -2,6 +2,8 @@ package com.example.edumoodle.Model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "tbl_User_Role")
 public class UserRoleEntity {
@@ -17,6 +19,9 @@ public class UserRoleEntity {
     @ManyToOne
     @JoinColumn(name = "roleid", referencedColumnName = "id_role")
     private RolesEntity rolesEntity;
+
+    @OneToMany(mappedBy = "userRoleEntity")
+    private List<CourseAssignmentEntity> courseAssign;
 
     public UserRoleEntity() {}
 

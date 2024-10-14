@@ -23,6 +23,14 @@
     <link th:href="@{/css/styles.css}" rel="stylesheet">
 
     <style>
+        .navbar-nav .nav-link {
+            color: #dddfeb;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #fff;
+        }
+
         .navbar-nav .nav-link.active {
             font-weight: bold;
             color: #fff !important;
@@ -38,14 +46,14 @@
             height: auto; /* Để container auto-fit nội dung */
         }
 
-        .dropdown:hover .dropdown-menu {
+        .dropdown:hover .dropdown-menu-nav {
             display: block;
             margin-top: 0;
         }
     </style>
 </head>
 <!--logo and login-->
-<nav class="navbar navbar-expand-lg bg-light">
+<nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" href="#">
             <img src="/imgs/logo_edumoodle.png" alt="logo web" style="height:100px;">
@@ -78,10 +86,13 @@
                         <a class="nav-link" th:href="@{/admin/categories}" role="button" id="QLCourse" aria-expanded="false">
                             Danh mục - Khóa học
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" th:href="@{/admin/categories}">Xem danh mục</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/courses}">Xem danh sách khóa học</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/categories/create-category}">Thêm danh mục</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/courses/create-course}">Thêm khóa học</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/courses/create-course-list}">Nhập danh sách khóa học</a></li>
+                            <li><a class="dropdown-item" th:href="@{/manage/courses/enrol-users}">Nhập danh sách đăng ký học phần</a></li>
                         </ul>
                     </div>
                 </li>
@@ -91,20 +102,21 @@
                             Thành viên
                         </a>
 
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" th:href="@{/admin/users}">Xem danh sách thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/add-user}">Thêm thành viên</a></li>
-                            <li><a class="dropdown-item" href="#">Nhập danh sách thành viên</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/users/upload-users}">Nhập danh sách thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/manage-role}">Quản lý vai trò</a></li>
                         </ul>
                     </div>
                 </li>
                 <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
                     <div class="dropdown">
-                        <a class="nav-link" href="#" role="button" id="dropdownMenuLink" aria-expanded="false">
+                        <a class="nav-link" th:href="@{/baithi}" role="button" id="dropdownMenuLink" aria-expanded="false">
                             Bài thi
                         </a>
 
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" href="#">Action 1</a></li>
                             <li><a class="dropdown-item" href="#">Action 2</a></li>
                             <li><a class="dropdown-item" href="#">Action 3</a></li>
@@ -112,13 +124,13 @@
                     </div>
                 </li>
 
-                <li sec:authorize="hasAuthority('student') or hasAuthority('editingteach') or isAuthenticated() and !hasAuthority('ADMIN')"  class="nav-item mx-3">
+                <li sec:authorize="hasAuthority('student') or hasAuthority('editingteacher') or isAuthenticated() and !hasAuthority('ADMIN')"  class="nav-item mx-3">
                     <a class="nav-link" aria-current="page" th:href="@{/user/home}">Trang chủ</a>
                 </li>
-                <li sec:authorize="hasAuthority('student') or isAuthenticated() and !hasAuthority('ADMIN') and !hasAuthority('editingteach')"  class="nav-item mx-3">
+                <li sec:authorize="hasAuthority('student') or isAuthenticated() and !hasAuthority('ADMIN') and !hasAuthority('editingteacher')"  class="nav-item mx-3">
                     <a class="nav-link" aria-current="page" th:href="@{/user/}">Trang cá nhân</a>
                 </li>
-                <li sec:authorize="hasAuthority('student') or hasAuthority('editingteach')"  class="nav-item mx-3">
+                <li sec:authorize="hasAuthority('student') or hasAuthority('editingteacher')"  class="nav-item mx-3">
                     <a class="nav-link" aria-current="page" th:href="@{/user/}">Các khóa học của tui</a>
                 </li>
             </ul>
@@ -154,23 +166,263 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script th:src="@{/assets/chart.js/Chart.min.js}"></script>
+<script>
+    //script cập nhật activity
+    function editActivity(element) {
+        const parentDiv = element.closest('.activity-item');
+        const activityNameElement = parentDiv.querySelector('.activity-name');
+        const activityNameLinkElement = parentDiv.querySelector('.activity-name-link');
+        const editInput = parentDiv.querySelector('.edit-activity-input');
+
+        // Hiển thị ô input, ẩn tên chủ đề
+        editInput.value = activityNameElement.textContent.trim();
+        activityNameElement.style.display = 'none';
+        editInput.style.display = 'inline-block';
+
+        // Đặt sự kiện lắng nghe cho ô input khi nhấn Enter
+        editInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                updateActivity(parentDiv);
+            }
+        });
+         // Đặt sự kiện lắng nghe cho ô input khi bị mất focus (blur)
+        editInput.addEventListener('blur', function() {
+            // Khôi phục trạng thái hiển thị ban đầu
+            activityNameElement.style.display = 'inline-block';
+            editInput.style.display = 'none';
+        });
+
+        // Đặt focus cho ô input để người dùng có thể nhập ngay lập tức
+        editInput.focus();
+    }
+    function updateActivity(parentDiv) {
+        const activityId = parentDiv.dataset.activityid;  // Lấy topicId từ dataset
+        const courseId = parentDiv.dataset.courseid;  // Lấy courseId từ dataset
+        const typeName = parentDiv.dataset.typename;  // Lấy courseId từ dataset
+        const editInput = parentDiv.querySelector('.edit-activity-input');
+        const newActivityName = editInput.value.trim();
+
+        if (newActivityName === '') {
+            alert('Tên chủ đề không được để trống.');
+            return;
+        }
+
+        // Gửi yêu cầu cập nhật qua API
+        fetch('/admin/courses/view/update-activity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `cmid=${activityId}&courseId=${courseId}&type=${typeName}&name=${encodeURIComponent(newActivityName)}`
+        })
+        .then(response => {
+            if (response.redirected) {
+                // Nếu server trả về redirect, chuyển hướng đến URL mới
+                window.location.href = response.url;
+            } else {
+                // Nếu không phải redirect, kiểm tra phản hồi JSON (nếu có)
+                return response.json();
+            }
+        })
+        .then(data => {
+            if (data && data.success) {
+                alert('Chủ đề đã được cập nhật thành công.');
+
+                // Cập nhật giao diện
+                const activityNameElement = parentDiv.querySelector('.activity-name');
+                activityNameElement.textContent = newActivityName;
+
+                // Ẩn ô input, hiển thị tên chủ đề mới
+                editInput.style.display = 'none';
+                activityNameElement.style.display = 'inline-block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Đã xảy ra lỗi khi cập nhật chủ đề.');
+        });
+    }
+</script>
+<script>
+    //script cập nhật topic
+    function editTopic(element) {
+        const parentDiv = element.closest('.topic-item');
+        const topicNameElement = parentDiv.querySelector('.topicName');
+        const editInput = parentDiv.querySelector('.edit-input');
+
+        // Hiển thị ô input, ẩn tên chủ đề
+        editInput.value = topicNameElement.textContent.trim();
+        topicNameElement.style.display = 'none';
+        editInput.style.display = 'inline-block';
+
+        // Đặt sự kiện lắng nghe cho ô input khi nhấn Enter
+        editInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                updateTopic(parentDiv);
+            }
+        });
+         // Đặt sự kiện lắng nghe cho ô input khi bị mất focus (blur)
+        editInput.addEventListener('blur', function() {
+            // Khôi phục trạng thái hiển thị ban đầu
+            topicNameElement.style.display = 'inline-block';
+            editInput.style.display = 'none';
+        });
+
+        // Đặt focus cho ô input để người dùng có thể nhập ngay lập tức
+        editInput.focus();
+    }
+    function updateTopic(parentDiv) {
+        const topicId = parentDiv.dataset.topicid;  // Lấy topicId từ dataset
+        const courseId = parentDiv.dataset.courseid;  // Lấy courseId từ dataset
+        const editInput = parentDiv.querySelector('.edit-input');
+        const newTopicName = editInput.value.trim();
+
+        if (newTopicName === '') {
+            alert('Tên chủ đề không được để trống.');
+            return;
+        }
+
+        // Gửi yêu cầu cập nhật qua API
+        fetch('/admin/courses/view/update-topic', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `sectionId=${topicId}&courseId=${courseId}&topicName=${encodeURIComponent(newTopicName)}`
+        })
+        .then(response => {
+            if (response.redirected) {
+                // Nếu server trả về redirect, chuyển hướng đến URL mới
+                window.location.href = response.url;
+            } else {
+                // Nếu không phải redirect, kiểm tra phản hồi JSON (nếu có)
+                return response.json();
+            }
+        })
+        .then(data => {
+            if (data && data.success) {
+                alert('Chủ đề đã được cập nhật thành công.');
+
+                // Cập nhật giao diện
+                const topicNameElement = parentDiv.querySelector('.topicName');
+                topicNameElement.textContent = newTopicName;
+
+                // Ẩn ô input, hiển thị tên chủ đề mới
+                editInput.style.display = 'none';
+                topicNameElement.style.display = 'inline-block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Đã xảy ra lỗi khi cập nhật chủ đề.');
+        });
+    }
+</script>
+
+<script>
+    //script thêm topic
+    $(document).ready(function() {
+        $('.btn-add-topic').click(function(event) {
+            event.preventDefault(); // Ngăn chặn hành động mặc định của nút
+
+            // Lấy courseId từ một nguồn nào đó (ví dụ như từ một biến, data attribute, hoặc từ một input)
+            const courseId = $(this).data('courseid');
+
+            createTopic(courseId); // Gọi hàm createTopic với courseId
+        });
+
+        function createTopic(courseId) {
+            const topicName = ""; // Tên topic để tạo
+
+            fetch('/admin/courses/view/create-topic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `courseId=${courseId}&name=${encodeURIComponent(topicName)}`
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;  // Chuyển hướng về trang view sau khi tạo topic thành công
+                } else {
+                    response.json().then(data => {
+                        alert('Lỗi: ' + data.message);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Đã xảy ra lỗi khi tạo chủ đề.');
+            });
+        }
+    });
+</script>
+
+<script>
+    //script trang uploadEnrolUser
+    document.getElementById('selectType').addEventListener('change', function () {
+        // Lấy giá trị được chọn trong dropdown
+        var selectedValue = this.value;
+
+        // Lấy thẻ <a> chứa liên kết file CSV
+        var fileLink = document.getElementById('fileLink');
+
+        // Kiểm tra giá trị được chọn và thay đổi liên kết tương ứng
+        if (selectedValue === 'basicEnrol') {
+            fileLink.setAttribute('href', '/CSV/danhsachdangky.csv');
+            fileLink.textContent = 'danhsachdangky.csv';
+        } else if (selectedValue === 'DHCTEnrol') {
+            fileLink.setAttribute('href', '/CSV/DHCT.csv');
+            fileLink.textContent = 'DHCT.csv';
+        }else if (selectedValue === 'basicCourse') {
+            fileLink.setAttribute('href', '/CSV/danhsachkhoahoc.csv');
+            fileLink.textContent = 'danhsachkhoahoc.csv';
+        }else if (selectedValue === 'DHCTCourse') {
+            fileLink.setAttribute('href', '/CSV/danhsachkhoahocdhct.csv');
+            fileLink.textContent = 'danhsachkhoahocdhct.csv';
+        }
+    });
+</script>
 
 <script>
     // Sự kiện click để hiển thị hoặc ẩn các nút sửa/xóa trong category
     $('#toggleEdit').click(function() {
       $('.action-buttons').toggle(); // Hiển thị hoặc ẩn các nút sửa/xóa
     });
+
+    $('#contentCourseEdit').click(function() {
+        $('.bi-pencil-fill').toggle();
+        $('.bi-trash').toggle();
+        $('.btn-add-topic').toggle();
+        $('hr').toggle();
+        $('.btn-add-resource').toggle();
+    });
 </script>
 <script>
     <!-- script active links group -->
     document.addEventListener("DOMContentLoaded", function() {
         var currentPath = window.location.pathname;
-        if (currentPath.includes('/admin/courses')) {
-            document.querySelector('a[href="/admin/courses"]').classList.add('active');
-        }
-        if (currentPath.includes('/admin/users')) {
-            document.querySelector('a[href="/admin/users"]').classList.add('active');
-        }
+
+        // Lấy tất cả các nav-link và dropdown-item trong trang
+        var allLinks = document.querySelectorAll('.nav-link, .dropdown-item');
+
+        allLinks.forEach(function(link) {
+            var linkPath = link.getAttribute('href');
+
+            // So sánh chính xác đường dẫn hiện tại với href của từng liên kết
+            if (currentPath === linkPath) {
+                // Đánh dấu liên kết được chọn là active
+                link.classList.add('active');
+
+                // Nếu liên kết là dropdown-item, đánh dấu nav-link cha tương ứng cũng là active
+                if (link.classList.contains('dropdown-item')) {
+                    var parentNavLink = link.closest('.dropdown').querySelector('.nav-link');
+                    if (parentNavLink) {
+                        parentNavLink.classList.add('active');
+                    }
+                }
+            }
+        });
     });
 </script>
 
@@ -328,18 +580,18 @@ var myLineChart = new Chart(ctx, {
     });
 </script>
 <script>
-    // Get the current URL path
-    const currentPath = window.location.pathname;
+<!--    // Get the current URL path-->
+<!--    const currentPath = window.location.pathname;-->
 
-    // Get all navigation links
-    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+<!--    // Get all navigation links-->
+<!--    const navLinks = document.querySelectorAll('.navbar-nav .nav-link');-->
 
-    // Loop through links and add 'active' class to the one that matches the current path
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-            link.classList.add('active');
-        }
-    });
+<!--    // Loop through links and add 'active' class to the one that matches the current path-->
+<!--    navLinks.forEach(link => {-->
+<!--        if (link.getAttribute('href') === currentPath) {-->
+<!--            link.classList.add('active');-->
+<!--        }-->
+<!--    });-->
 </script>
 <!--script modal enrol user to server-->
 <script>

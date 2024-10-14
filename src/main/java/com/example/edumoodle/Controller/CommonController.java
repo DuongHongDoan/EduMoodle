@@ -1,11 +1,13 @@
 package com.example.edumoodle.Controller;
 
-import com.example.edumoodle.DTO.CategoriesDTO;
-import com.example.edumoodle.DTO.CategoryHierarchyDTO;
-import com.example.edumoodle.DTO.CoursesDTO;
-import com.example.edumoodle.DTO.UsersDTO;
+import com.example.edumoodle.DTO.*;
+import com.example.edumoodle.Model.*;
+import com.example.edumoodle.Repository.*;
 import com.example.edumoodle.Service.CategoriesService;
 import com.example.edumoodle.Service.CoursesService;
+import com.example.edumoodle.Service.UsersService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -13,11 +15,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 //controller chung cho vai trò student, teacher và những người dùng không có vai trò
 @Controller
@@ -27,6 +33,23 @@ public class CommonController {
     private CategoriesService categoriesService;
     @Autowired
     private CoursesService coursesService;
+    @Autowired
+    private UsersService usersService;
+
+    @Autowired
+    private CoursesRepository coursesRepository;
+    @Autowired
+    private UsersRepository usersRepository;
+    @Autowired
+    private RolesRepository rolesRepository;
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    @Autowired
+    private SchoolYearSemesterRepository schoolYearSemesterRepository;
+    @Autowired
+    private CourseGroupsRepository courseGroupsRepository;
+    @Autowired
+    private CourseAssignmentRepository courseAssignmentRepository;
 
     @GetMapping("/login")
     public String getLogin(Model model, UsersDTO usersDTO) {
@@ -40,6 +63,7 @@ public class CommonController {
         return "admin/Dashboard";
     }
 
+//dành cho sv-gv
     //home của user (teacher-student) là danh sách categories
     @GetMapping("/user/home")
     public String getHome(Model model) {
@@ -151,5 +175,82 @@ public class CommonController {
         }
 
         return "common/CoursesList";
+    }
+
+//dành cho: admin-gv
+
+    // url = /manage/courses/enrol-users --> trả ra form nhập danh sách người dùng đăng ký role vào course
+    @GetMapping("/manage/courses/enrol-users")
+    public String getFormUploadEnrolUsers() {
+        return "common/UploadEnrolUsers";
+    }
+
+    @Operation(summary = "Upload user list to enrol course", description = "Handle form upload user list to enrol course")
+    @ApiResponse(responseCode = "200", description = "Successfully enrolled user list")
+    //url = /admin/users/upload-users
+    @PostMapping("/manage/courses/enrol-users")
+    public String enrollUserList(@RequestParam("file") MultipartFile file, @RequestParam("type") String type, Model model) {
+        if (file.isEmpty()) {
+            model.addAttribute("errorMessage", "File không được để trống");
+            return "common/UploadEnrolUsers";
+        }
+
+        String fileType = file.getContentType();
+        if (!"text/csv".equals(fileType)) {
+            model.addAttribute("errorMessage", "Chỉ chấp nhận file định dạng CSV");
+            return "common/UploadEnrolUsers";
+        }
+
+        try {
+            // Đọc và xử lý file CSV
+            List<EnrolUserDTO> enrolUsers = usersService.parseCSVFileEnrolUsers(file, type);
+
+            for (EnrolUserDTO enrolUser : enrolUsers) {
+                usersService.enrolUser(enrolUser);
+
+                for(Integer userId : enrolUser.getUserid()) {
+                    UsersEntity user = usersRepository.findByMoodleId(userId).orElse(null);
+                    if (user == null) {
+                        model.addAttribute("errorMessage", "Người dùng không tồn tại.");
+                        return "common/UploadEnrolUsers";
+                    }
+
+                    RolesEntity roleName = rolesRepository.findByMoodleId(enrolUser.getRoleid()).orElse(null);
+                    assert roleName != null;
+                    RolesEntity role = rolesRepository.findByName(roleName.getName());
+                    if (role == null) {
+                        model.addAttribute("errorMessage", "Vai trò không tồn tại.");
+                        return "common/UploadEnrolUsers";
+                    }
+
+                    // Tạo quan hệ giữa user và role
+                    UserRoleEntity userRole = new UserRoleEntity();
+                    userRole.setUsersEntity(user);
+                    userRole.setRolesEntity(role);
+                    userRoleRepository.save(userRole);
+
+                    //đăng ký người dùng với khóa học tương ứng
+                    Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(enrolUser.getCourseid());
+                    if(courseOpt.isPresent()) {
+                        CoursesEntity course = courseOpt.get();
+                        CourseGroupsEntity courseGroup = courseGroupsRepository.findByCoursesEntity(course);
+
+                        CourseAssignmentEntity courseAssignment = new CourseAssignmentEntity();
+                        courseAssignment.setUserRoleEntity(userRole);
+                        courseAssignment.setCourseGroupsEntity(courseGroup);
+                        courseAssignmentRepository.save(courseAssignment);
+                    }
+                }
+            }
+            // Nếu thành công, chuyển hướng tới trang danh sách thành viên
+            model.addAttribute("successMessage", "Thêm danh sách đăng ký khóa học thành công!");
+            return "common/UploadEnrolUsers";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "common/UploadEnrolUsers";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            return "common/UploadEnrolUsers";
+        }
     }
 }

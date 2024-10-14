@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE" th:text="'Thêm một ' + ${newType} + ' mới'">Thêm 'quiz'</title>
+  <style>
+    .btn-reset:hover {
+      background-color: #aeaeae !important;
+    }
+
+    .btn-save:hover {
+      background-color: #7ac7e3 !important;
+    }
+
+    input {
+      width: 48% !important;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body">
+  <div class="row">
+    <div class="col d-sm-flex col align-items-center justify-content-center mb-3">
+      <h1 class="list-courses-name h3 mb-0 text-gray-800 text-uppercase" th:text="'Thêm một ' + ${newType} + ' mới'">Thêm hoạt động mới</h1>
+    </div>
+  </div>
+
+  <div class="row gx-4 gx-lg-5 align-items-center justify-content-center text-end">
+    <div class="col-lg-9 align-self-lg-center">
+      <form th:action="@{/admin/courses/view/create-activity}" method="post">
+        <input type="hidden" th:value="${type}" id="type" name="type"/>
+        <input type="hidden" th:value="${sectionId}" id="sectionId" name="sectionId"/>
+        <input type="hidden" th:value="${courseId}" id="courseId" name="courseId"/>
+
+        <div class="row mb-3 justify-content-center">
+          <label class="col-sm-3 col-form-label" for="name">Tên:</label>
+          <div class="col-sm-1 text-danger">*</div>
+          <div class="col-sm-8">
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+        </div>
+
+        <div class="row mb-3 justify-content-center">
+          <label class="col-sm-3 col-form-label" for="intro">Mô tả:</label>
+          <div class="col-sm-1 text-danger"></div>
+          <div class="col-sm-8">
+            <input type="password" class="form-control" id="intro" name="intro" >
+          </div>
+        </div>
+
+        <div class="row mb-3 justify-content-center">
+          <div class="col-sm-2 d-grid">
+            <button type="reset" class="btn btn-reset bg-secondary text-white">Đặt lại</button>
+          </div>
+
+          <div class="col-sm-2 d-grid">
+            <button type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Lưu</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>
