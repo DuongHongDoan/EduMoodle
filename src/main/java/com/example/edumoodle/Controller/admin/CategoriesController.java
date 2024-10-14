@@ -2,10 +2,13 @@ package com.example.edumoodle.Controller.admin;
 
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CategoryHierarchyDTO;
+import com.example.edumoodle.DTO.CoursesDTO;
 import com.example.edumoodle.Service.CategoriesService;
+import com.example.edumoodle.Service.CoursesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,6 +28,8 @@ public class CategoriesController {
 
     @Autowired
     private CategoriesService categoriesService;
+    @Autowired
+    private CoursesService coursesService;
 
     @Operation(summary = "Get all categories", description = "Fetch a list of all categories")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
@@ -43,6 +48,8 @@ public class CategoriesController {
         }
 
         List<CategoriesDTO> cateTest = categoriesService.getAllCategory();
+        List<CoursesDTO> coursesList = coursesService.getAllCourses();
+        coursesService.synchronizeCourses(coursesList);
         categoriesService.saveCategories(cateTest);
         model.addAttribute("cateTest", cateTest);
 
@@ -75,5 +82,45 @@ public class CategoriesController {
         model.addAttribute("categoriesDTO", categoriesDTO);
 
         return "admin/CreateCategory";
+    }
+
+    @GetMapping("/categories/delete")
+    public String deleteCategory(@RequestParam() Integer categoryId, RedirectAttributes redirectAttributes) {
+        try {
+            System.out.println("Deleting category with ID: " + categoryId);
+
+            // Lấy danh mục từ categoryId
+            CategoriesDTO category = categoriesService.getCategoryById(categoryId);
+
+            // In giá trị của parentCategoryId
+//            Integer parentCategoryId = categoryService.getParentCategoryId(categoryId); // Gọi phương thức để lấy parentCategoryId
+            Integer parentCategoryId = category.getParent();
+            System.out.println("Parent Category ID: " + parentCategoryId); // In ra parentCategoryId
+
+            // Kiểm tra xem danh mục có phải là danh mục gốc không
+            if (parentCategoryId == 0) {
+                // Nếu là danh mục gốc, xử lý riêng (ví dụ: không cho phép xóa hoặc thông báo đặc biệt)
+                redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa vì đây là danh mục gốc.");
+                return "redirect:/admin/categories";
+            }
+
+            // Thực hiện logic xóa danh mục
+            String newCategoryName = categoriesService.deleteCategoryWithCourses(categoryId);
+
+            if (newCategoryName != null) {
+                redirectAttributes.addFlashAttribute("successMessage", "Courses moved to new category: " + newCategoryName);
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Category deleted successfully.");
+            }
+
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Category not found.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "An unexpected error occurred.");
+        }
+
+        return "redirect:/admin/categories";
     }
 }
