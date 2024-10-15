@@ -7,7 +7,7 @@ public class SectionsDTO {
     private String name;
     private Integer section;
     private List<Sections_ModuleDTO> modules;
-
+    private List<ModuleDTO> moduless;
     public Integer getId() {
         return id;
     }
@@ -38,6 +38,14 @@ public class SectionsDTO {
 
     public void setModules(List<Sections_ModuleDTO> modules) {
         this.modules = modules;
+    }
+
+    public List<ModuleDTO> getModuless() {
+        return moduless;
+    }
+
+    public void setModuless(List<ModuleDTO> moduless) {
+        this.moduless = moduless;
     }
 }
 

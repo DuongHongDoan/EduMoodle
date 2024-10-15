@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="utf-8"/>
+<!--    <link layout:href="@{/css/styles.css}" rel="stylesheet"/>-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <style>
+        body {
+            background-color: #f8f9fa; /* Màu nền nhẹ cho toàn trang */
+            font-family: Arial, sans-serif; /* Font chữ đơn giản và dễ đọc */
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40; /* Màu đậm hơn cho tiêu đề */
+            margin-top: 20px;
+        }
+
+        .search-form {
+            text-align: center; /* Canh giữa form */
+            margin-bottom: 30px; /* Khoảng cách dưới form */
+        }
+
+        .search-form input[type="text"] {
+            padding: 10px 15px; /* Padding cho ô tìm kiếm */
+            width: 300px; /* Độ rộng của ô tìm kiếm */
+            border: 1px solid #ced4da; /* Đường viền nhẹ */
+            border-radius: 20px; /* Bo tròn góc ô tìm kiếm */
+            font-size: 14px;
+            outline: none; /* Ẩn viền khi nhấp vào */
+            transition: border-color 0.3s; /* Hiệu ứng khi thay đổi màu đường viền */
+        }
+
+        .search-form input[type="text"]:focus {
+            border-color: #007bff; /* Đổi màu viền khi focus */
+        }
+
+        .search-form button {
+            background-color: #007bff; /* Màu nền xanh cho nút */
+            color: #ffffff; /* Màu chữ trắng */
+            border: none;
+            border-radius: 20px; /* Bo tròn góc nút */
+            padding: 10px 20px; /* Padding cho nút */
+            font-size: 14px;
+            cursor: pointer; /* Hiệu ứng con trỏ chuột */
+            margin: 5px; /* Khoảng cách giữa các nút */
+            transition: background-color 0.3s, transform 0.3s; /* Hiệu ứng khi hover */
+        }
+
+        .search-form button:hover {
+            background-color: #0056b3; /* Màu nền đậm hơn khi hover */
+            transform: translateY(-2px); /* Di chuyển nhẹ lên trên khi hover */
+        }
+
+        .search-form button:focus {
+            outline: none; /* Ẩn viền khi nhấn nút */
+        }
+
+        .course-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center; /* Canh giữa các thẻ */
+            padding: 20px; /* Khoảng cách giữa các thẻ và cạnh container */
+        }
+
+        .course-card {
+            width: 300px; /* Đặt chiều rộng cụ thể cho thẻ khóa học */
+            margin: 15px; /* Khoảng cách giữa các thẻ */
+            background-color: #ffffff; /* Màu nền trắng cho thẻ */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng đổ bóng */
+            border-radius: 10px; /* Bo tròn góc thẻ */
+            text-align: center;
+            overflow: hidden; /* Để bo góc đúng cách */
+            transition: transform 0.3s, box-shadow 0.3s; /* Hiệu ứng chuyển đổi cho thẻ */
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px); /* Di chuyển lên trên khi hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Tăng độ đổ bóng khi hover */
+        }
+
+        .course-card img {
+            width: 100%;
+            border-bottom: 1px solid #dee2e6; /* Đường kẻ dưới ảnh */
+            transition: transform 0.3s; /* Hiệu ứng phóng to ảnh khi hover */
+        }
+
+        .course-card img:hover {
+            transform: scale(1.05); /* Phóng to ảnh khi hover */
+        }
+
+        .course-card h3 {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #495057; /* Màu chữ tối */
+        }
+
+        .course-card p {
+            font-size: 14px;
+            color: #6c757d; /* Màu chữ nhẹ hơn cho phần mô tả */
+            margin: 10px 20px; /* Khoảng cách giữa các đoạn văn bản */
+        }
+
+        .course-card button {
+            background-color: #007bff; /* Màu nền xanh */
+            color: #ffffff; /* Màu chữ trắng */
+            border: none;
+            border-radius: 5px; /* Bo tròn góc nút */
+            padding: 10px 20px; /* Padding cho nút */
+            font-size: 14px;
+            cursor: pointer; /* Hiệu ứng con trỏ chuột */
+            margin-bottom: 15px;
+            transition: background-color 0.3s; /* Hiệu ứng chuyển đổi màu nền */
+        }
+
+        .course-card button:hover {
+            background-color: #0056b3; /* Màu nền đậm hơn khi hover */
+        }
+    </style>
+</head>
+<body id="page-top" layout:fragment="body">
+<h1>Các khóa học của tôi</h1>
+<!-- Display the username -->
+<p style="text-align:center; font-weight:bold;">Chào, <span th:text="${username}">Người dùng</span>!</p>
+
+<!-- Form tìm kiếm và điều hướng -->
+<form action="/user/my-courses-student" method="post" class="search-form">
+    <input type="hidden" name="username" th:value="${username}"/>
+    <input type="text" name="searchQuery" placeholder="Tìm kiếm khóa học..." th:value="${searchQuery}" />
+    <button type="submit" style="border: none; background: none; cursor: pointer;">
+        <i class="fas fa-search" style="font-size: 20px; color: #007bff;"></i>
+    </button>
+    <button type="submit" name="sort" value="name">Sắp xếp theo tên</button>
+    <button type="submit" name="showAll" value="true">Hiển thị tất cả</button>
+</form>
+
+<!-- Danh sách khóa học hiển thị-->
+<div class="course-container">
+    <div class="course-card" th:each="course : ${userCourses}">
+        <img th:src="@{/imgs/courses.png}" alt="Course Image"/>
+        <h3 th:text="${course.fullname}">Tên khóa học</h3>
+
+        <p>Moodle Course ID: <span th:text="${course.moodleCourseId}">ID khóa học</span></p> <!-- In ra Moodle Course ID -->
+
+        <!-- Hiển thị danh mục -->
+        <p>Danh mục: <span th:text="${course.categoryName}">Tên Category</span></p>
+        <p>Giảng viên: <span th:text="${course.teacherName}">Không xác định</span></p>
+
+        <!-- Sử dụng thẻ a để tạo liên kết -->
+        <a th:href="@{/student_course_details(moodleCourseId=${course.moodleCourseId})}" class="btn btn-primary">Xem chi tiết</a>
+    </div>
+</div>
+
+</body>
+</html>

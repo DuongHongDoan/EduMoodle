@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface CoursesRepository extends JpaRepository<CoursesEntity, Integer> {
     Optional<CoursesEntity> findByMoodleId(Integer moodleCourseId);
+
 }
