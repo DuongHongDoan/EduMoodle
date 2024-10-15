@@ -162,7 +162,15 @@
                                 <div class="accordion-body">
                                     <ul class="module-list">
                                         <li th:each="module : ${section.modules}" class="activity-item"  th:data-activityid="${module.id}" th:data-typename="${module.modname}" th:data-courseid="${courseDetails.id}">
-                                            <a href="#" style="margin-left: 12px;" class="activity-name-link">
+                                            <!-- Nếu là forum thì hiển thị trang thông báo -->
+                                            <a th:if="${module.modname == 'forum'}" th:href="@{/admin/courses/forum(courseId=${courseDetails.id}, forumId=${module.instance})}" style="margin-left: 12px;" class="activity-name-link">
+                                                <i class="bi bi-card-text"></i>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
+<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+                                            <!-- Nếu là quiz thì hiển thị trang quiz tương ứng -->
+                                            <a th:if="${module.modname == 'quiz'}" th:href="@{/admin/courses}" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-check2-square"></i>
                                                 <span th:utext="${module.name}" class="activity-name">Module Name</span>
 <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
