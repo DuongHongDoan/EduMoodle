@@ -3,7 +3,6 @@ package com.example.edumoodle.Service;
 import com.example.edumoodle.DTO.ForumDiscussionsDTO;
 import com.example.edumoodle.DTO.SectionsDTO;
 import com.example.edumoodle.DTO.Sections_ModuleDTO;
-import com.example.edumoodle.DTO.UsersDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +27,7 @@ public class ForumDiscussionsService {
         this.restTemplate = new RestTemplate();
     }
 
+    //lấy tên forum
     public String getForumName(Integer courseId, Integer forumId) {
         String apiMoodleFunc = "core_course_get_contents";
         String url = domainName + "/webservice/rest/server.php"
@@ -56,6 +55,7 @@ public class ForumDiscussionsService {
         return forumName;
     }
 
+    //lấy danh sách thảo luận
     public List<ForumDiscussionsDTO> getForumDiscussions(Integer forumId) {
         String apiMoodleFunc = "mod_forum_get_forum_discussions";
         String url = domainName + "/webservice/rest/server.php"
@@ -82,5 +82,96 @@ public class ForumDiscussionsService {
         }
 
         return discussionsList;
+    }
+
+    //lấy 1 post bằng id
+    public ForumDiscussionsDTO getPostById(Integer postId) {
+        String apiMoodleFunc = "mod_forum_get_discussion_post";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&postid=" + postId;
+
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        String jsonResponse = response.getBody();
+
+        ForumDiscussionsDTO forumDiscussion = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            JsonNode postNode = rootNode.path("post");
+            if (!postNode.isMissingNode()) {
+                forumDiscussion = objectMapper.readValue(postNode.toString(), ForumDiscussionsDTO.class);
+                //Loại bỏ tag <p> trong message trả về
+                String plainTextMessage = forumDiscussion.getMessage().replaceAll("<[^>]*>", "");
+                forumDiscussion.setMessage(plainTextMessage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return forumDiscussion;
+    }
+
+    //Thêm thảo luận mới
+    public void addNewDiscussion(Integer forumId, String subject, String message) {
+        String apiMoodleFunc = "mod_forum_add_discussion";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&forumid=" + forumId
+                + "&subject=" + subject
+                + "&message=" + message;
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //sửa thảo luận
+    public void editDiscussion(Integer postId, String subject, String message) {
+        String apiMoodleFunc = "mod_forum_update_discussion_post";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&postid=" + postId
+                + "&subject=" + subject
+                + "&message=" + message;
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //xóa thảo luận
+    public void deleteDiscussion(Integer postId) {
+        String apiMoodleFunc = "mod_forum_delete_post";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&postid=" + postId;
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
     }
 }
