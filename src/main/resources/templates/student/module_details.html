@@ -2,9 +2,87 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Details</title>
+    <style>
+        /* Reset CSS cơ bản */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Đặt font đẹp cho toàn bộ trang */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9; /* Màu nền nhạt để dễ đọc */
+            color: #333; /* Màu chữ dễ nhìn */
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #4A90E2;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        /* Định dạng cho phần moduleContent */
+        #moduleContent {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Liên kết đẹp */
+        a {
+            display: inline-block;
+            background-color: #4A90E2;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease; /* Hiệu ứng hover */
+        }
+
+        a:hover {
+            background-color: #357ABD; /* Màu đậm hơn khi hover */
+        }
+
+        /* Responsive cho các màn hình nhỏ hơn */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            p {
+                font-size: 1em;
+            }
+
+            #moduleContent {
+                padding: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
+<h1>Chi Tiết Mô-Đun</h1>
 
+<!--<p>Moodle Course ID: <span th:text="${moodleCourseId}"></span></p>-->
+<!--<p>Module ID: <span th:text="${moduleId}"></span></p>-->
+
+<div id="moduleContent" th:utext="${moduleContent}"></div> <!-- Hiển thị nội dung mô-đun ở đây -->
+
+<a href="/some_other_page">Trở lại trang khác</a>
 </body>
 </html>

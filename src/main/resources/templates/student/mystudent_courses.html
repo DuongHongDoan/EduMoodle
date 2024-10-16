@@ -123,8 +123,8 @@
 </head>
 <body id="page-top" layout:fragment="body">
 <h1>Các khóa học của tôi</h1>
-<!-- Display the username -->
-<p style="text-align:center; font-weight:bold;">Chào, <span th:text="${username}">Người dùng</span>!</p>
+<!--&lt;!&ndash; Display the username &ndash;&gt;-->
+<!--<p style="text-align:center; font-weight:bold;">Chào, <span th:text="${username}">Người dùng</span>!</p>-->
 
 <!-- Form tìm kiếm và điều hướng -->
 <form action="/user/my-courses-student" method="post" class="search-form">
@@ -150,7 +150,7 @@
         <p>Giảng viên: <span th:text="${course.teacherName}">Không xác định</span></p>
 
         <!-- Sử dụng thẻ a để tạo liên kết -->
-        <a th:href="@{/student_course_details(moodleCourseId=${course.moodleCourseId})}" class="btn btn-primary">Xem chi tiết</a>
+        <a th:href="@{/user/student_course_details(moodleCourseId=${course.moodleCourseId})}" class="btn btn-primary">Xem chi tiết</a>
     </div>
 </div>
 
