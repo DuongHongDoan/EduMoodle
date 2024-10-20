@@ -30,19 +30,23 @@
             <h1 class="h3 dashboard mb-0 text-gray-800">Dashboard</h1>
         </div>
     </div>
-    <form class="d-flex align-items-center justify-content-center mb-3">
+    <form method="get" th:action="@{/admin/filter}" class="d-flex align-items-center justify-content-center mb-3">
         <label for="namHoc" class="me-2">Năm học:</label>
-        <select id="namHoc" class="form-select me-3" style="width: 150px;">
-            <option selected="">2024-2025</option>
-            <option>2023-2024</option>
-            <option>2022-2023</option>
+        <select id="namHoc" name="id_school_year" class="form-select me-3" style="width: 150px;">
+            <option th:each="schoolYear : ${schoolYears}"
+                    th:value="${schoolYear.id_school_year}"
+                    th:utext="${schoolYear.schoolYearName}"
+                    th:selected="${schoolYear.id_school_year == currentSchoolYear}">
+            </option>
         </select>
 
         <label for="hocKy" class="me-2">Học kỳ:</label>
-        <select id="hocKy" class="form-select me-3" style="width: 80px;">
-            <option selected="">1</option>
-            <option>2</option>
-            <option>3</option>
+        <select id="hocKy" name="id_semester" class="form-select me-3" style="width: 80px;">
+            <option th:each="semester : ${semesters}"
+                    th:value="${semester.id_semester}"
+                    th:utext="${semester.semesterName}"
+                    th:selected="${semester.id_semester == currentSemester}">
+            </option>
         </select>
 
         <button type="submit" class="btn btn-filter text-white" style="background-color: #00afef">LỌC</button>
@@ -56,7 +60,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Số lượng khóa học</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">1000</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${courseCnt}">1000</div>
                             </div>
                             <div class="col-auto">
                                 <i class="bi bi-file-spreadsheet-fill"></i>
@@ -119,7 +123,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                     Số lượng Giảng viên</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">870</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${teacher}">870</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fa-solid fa-person-chalkboard"></i>
@@ -136,7 +140,7 @@
                             <div class="col mr-2">
                                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                     Số lượng Sinh viên</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">5000</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${student}">5000</div>
                             </div>
                             <div class="col-auto">
                                 <i class="fa-solid fa-user-graduate"></i>

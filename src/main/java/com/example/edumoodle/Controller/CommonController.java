@@ -57,12 +57,6 @@ public class CommonController {
         return "common/Login";
     }
 
-    //để tạm
-    @GetMapping("/admin/dashboard")
-    public String getDashboard() {
-        return "admin/Dashboard";
-    }
-
 //dành cho sv-gv
     //home của user (teacher-student) là danh sách categories
     @GetMapping("/user/home")
