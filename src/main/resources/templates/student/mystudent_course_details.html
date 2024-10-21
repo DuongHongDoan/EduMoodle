@@ -9,42 +9,131 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            font-family: 'Source Sans Pro', sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
         h1 {
             text-align: center;
-            color: #343a40;
-            margin-top: 20px;
+            color: #333;
+            font-weight: 600;
+            font-size: 2rem;
+            margin-top: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e6e6e6;
+        }
+
+        .course-header {
+            text-align: center;
+            color: #0073aa;
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
         }
 
         .section-title {
             cursor: pointer;
-            color: #007bff;
+            color: #0073aa;
+            font-size: 1.1rem;
             font-weight: bold;
-            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, box-shadow 0.2s ease;
+            border: 1px solid #eaeaea;
         }
 
         .section-title:hover {
-            text-decoration: underline;
+            background-color: #e2f0fb;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .module-title {
             cursor: pointer;
-            color: #007bff;
-            font-weight: bold;
+            color: #005b8a;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 5px 0;
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
         }
 
         .module-title:hover {
+            color: #0073aa;
             text-decoration: underline;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .btn {
+            background-color: #0073aa;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #005b8a;
+        }
+
+        .section-content {
+            background-color: #ffffff;
+            padding: 10px 20px;
+            border-left: 4px solid #0073aa;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tăng padding nhiều hơn để nội dung vào sâu hơn */
+        .content-wrapper {
+            padding: 0 100px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .section-title, .module-title {
+                font-size: 1rem;
+            }
+
+            /* Điều chỉnh padding cho màn hình nhỏ */
+            .content-wrapper {
+                padding: 0 20px;
+            }
         }
     </style>
 </head>
 <body id="page-top" layout:fragment="body">
-<div>
+<div class="content-wrapper">
     <h1>Course Details</h1>
-    <p>Course Name: <span th:text="${courseDetails.fullname}"></span></p>
+    <p class="course-header">Course Name: <span th:text="${courseDetails.fullname}"></span></p>
+
+    <input type="hidden" id="user-id" name="userId" th:value="${userId}">
+    <input type="hidden" id="moodle-course-id" name="moodleCourseId" th:value="${courseDetails.moodleCourseId}">
 
     <h2>Sections</h2>
     <div th:each="section : ${courseDetails.sections}">
@@ -59,70 +148,38 @@
                        th:data-module-id="${module.id}"
                        th:data-module-type="${module.moduleType}"
                        th:data-course-id="${courseDetails.moodleCourseId}"
-                       onclick="redirectToModulePage(this)"></p>
+                       onclick="submitModuleForm(this)"></p>
                 </li>
-
             </ul>
         </div>
     </div>
 </div>
 
+<!-- Form ẩn để submit POST -->
+<form id="module-form" action="/user/fetch_module_content" method="post" style="display:none;">
+    <input type="hidden" name="moduleId" id="module-id">
+    <input type="hidden" name="moduleType" id="module-type">
+    <input type="hidden" name="userId" id="hidden-user-id" th:value="${userId}">
+    <input type="hidden" name="moodleCourseId" id="hidden-moodle-course-id" th:value="${courseDetails.moodleCourseId}">
+</form>
+
 <script>
-    // Function to toggle the visibility of a section's content
     function toggleSectionContent(sectionId) {
         var sectionContent = document.getElementById("section-content-" + sectionId);
-        if (sectionContent.style.display === "none") {
-            sectionContent.style.display = "block"; // Show section content
-        } else {
-            sectionContent.style.display = "none"; // Hide section content
-        }
+        sectionContent.style.display = sectionContent.style.display === "none" ? "block" : "none";
     }
 
-    // Function to submit the module form using POST method
-    function redirectToModulePage(element) {
+    function submitModuleForm(element) {
         const moduleId = element.getAttribute("data-module-id");
         const moduleType = element.getAttribute("data-module-type");
-        const moodleCourseId = element.getAttribute("data-course-id");
 
-        // In ra thông tin kiểm tra moduleId, moduleType và moodleCourseId
-        console.log("Module ID: " + moduleId);
-        console.log("Module Type: " + moduleType);
-        console.log("Moodle Course ID: " + moodleCourseId);
+        // Đặt giá trị vào form ẩn
+        document.getElementById("module-id").value = moduleId;
+        document.getElementById("module-type").value = moduleType;
 
-        // Tạo form POST và thêm dữ liệu vào
-        const form = document.createElement('form');
-        form.method = 'POST'; // Sử dụng phương thức POST
-        form.action = '/user/fetch_module_content'; // Đường dẫn tới @PostMapping trong controller
-
-        // Thêm trường moduleId vào form
-        const moduleIdInput = document.createElement('input');
-        moduleIdInput.type = 'hidden';
-        moduleIdInput.name = 'moduleId';
-        moduleIdInput.value = moduleId;
-        form.appendChild(moduleIdInput);
-
-        // Thêm trường moduleType vào form
-        const moduleTypeInput = document.createElement('input');
-        moduleTypeInput.type = 'hidden';
-        moduleTypeInput.name = 'moduleType';
-        moduleTypeInput.value = moduleType;
-        form.appendChild(moduleTypeInput);
-
-        // Thêm trường moodleCourseId vào form
-        const moodleCourseIdInput = document.createElement('input');
-        moodleCourseIdInput.type = 'hidden';
-        moodleCourseIdInput.name = 'moodleCourseId';
-        moodleCourseIdInput.value = moodleCourseId;
-        form.appendChild(moodleCourseIdInput);
-
-        // Thêm form vào trang và gửi yêu cầu
-        document.body.appendChild(form);
-        form.submit(); // Gửi yêu cầu POST
+        // Submit form
+        document.getElementById("module-form").submit();
     }
-
-
-
 </script>
-
 </body>
 </html>

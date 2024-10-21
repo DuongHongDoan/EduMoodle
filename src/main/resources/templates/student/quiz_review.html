@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Review</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .question-container {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .answers {
+            margin-top: 10px;
+        }
+
+        .answer {
+            display: block;
+            margin-bottom: 10px;
+            padding-left: 20px;
+        }
+
+        .answer input {
+            margin-right: 10px;
+        }
+
+        .correct-answer {
+            background-color: #e7f7d9;
+            border-left: 5px solid green;
+            padding: 10px;
+        }
+
+        .incorrect-answer {
+            background-color: #fde8e8;
+            border-left: 5px solid red;
+            padding: 10px;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff5d8;
+            border-left: 5px solid #f7d479;
+        }
+
+        .student-answer {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .question-status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .correct-status {
+            color: green;
+        }
+
+        .incorrect-status {
+            color: red;
+        }
+
+        .icon-correct {
+            color: green;
+            font-weight: bold;
+        }
+
+        .icon-incorrect {
+            color: red;
+            font-weight: bold;
+        }
+
+        .print-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+
+        .navigation-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 275px;
+            height: calc(100vh - 40px);
+            background-color: #f9f9f9;
+            border-right: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, margin-left 0.3s ease;
+        }
+
+        .hidden-panel {
+            transform: translateX(-100%);
+            margin-left: -250px;
+        }
+
+        .show-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #007bff; /* Màu nền xanh */
+            color: white; /* Màu chữ trắng */
+            border: none; /* Xóa viền */
+            padding: 15px; /* Tăng padding để nút trông lớn hơn */
+            border-radius: 50%; /* Nút tròn */
+            cursor: pointer; /* Con trỏ hiển thị như nút nhấn */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Tạo bóng lớn hơn để có hiệu ứng nổi */
+            font-size: 18px; /* Tăng kích thước chữ cho dấu ☰ */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Thêm hiệu ứng chuyển đổi mượt */
+            z-index: 1000; /* Đảm bảo nút nằm trên tất cả các thành phần khác */
+            display: none; /* Mặc định ẩn */
+        }
+
+        .show-button:hover {
+            background-color: #0056b3; /* Đổi màu khi hover */
+            transform: scale(1.1); /* Tăng kích thước một chút khi hover */
+        }
+
+
+        .navigation-header {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .nav-item {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-item.correct {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .nav-item.incorrect {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .nav-item:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .shifted {
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Close icon "X" cho việc ẩn panel */
+        .close-icon {
+            position: absolute;
+            top: 10px;
+            left: 10px; /* Đẩy sát vào góc trái */
+            font-size: 24px; /* Tăng kích thước của dấu X */
+            cursor: pointer;
+            color: #333; /* Màu của dấu X */
+            font-weight: bold;
+            z-index: 1000; /* Đảm bảo dấu X nằm trên tất cả các thành phần khác */
+        }
+
+        .close-icon:hover {
+            color: #f44336; /* Đổi màu khi hover */
+        }
+
+        /* Điều chỉnh lại khoảng cách khi có close icon */
+        .navigation-header {
+            margin-top: 30px; /* Tạo khoảng trống phía trên để tránh đè lên close icon */
+        }
+
+
+    </style>
+</head>
+<body>
+
+<h1>Quiz Review</h1>
+
+<button class="show-button" id="show-button" style="display: none;" onclick="toggleNavigation()">☰</button>
+
+<div class="navigation-panel" id="navigation-panel">
+    <!-- Thêm dấu X -->
+    <span class="close-icon" onclick="toggleNavigation()">✖</span>
+
+    <div class="navigation-header">Quiz Navigation</div>
+    <div class="navigation-grid">
+        <div th:each="questionDetail, iterStat : ${questionDetails}"
+             class="nav-item"
+             th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
+             onclick="scrollToQuestion([[${iterStat.index}]])">
+            <span th:text="${iterStat.index + 1}"></span>
+        </div>
+    </div>
+</div>
+
+
+<div class="content-wrapper" id="content-wrapper">
+    <div th:each="questionDetail, iterStat : ${questionDetails}"
+         class="question-container"
+         th:id="'question-' + ${iterStat.index}">
+
+        <div class="question-status"
+             th:classappend="${questionDetail.isCorrect ? 'correct-status' : 'incorrect-status'}"
+             th:text="${questionDetail.isCorrect ? 'Correct' : 'Incorrect'}">
+        </div>
+
+        <div class="question-text">
+            Question <span th:text="${iterStat.index + 1}"></span>:
+            <span th:text="${questionDetail.questionText}"></span>
+        </div>
+
+        <div>
+            <p>Student Response: <span th:text="${questionDetail.studentResponse}"></span></p>
+            <p>Correct Response: <span th:text="${questionDetail.correctResponse}"></span></p>
+        </div>
+
+        <div class="answers" th:each="response : ${questionDetail.allResponses}">
+            <label class="answer">
+                <input type="radio" disabled th:checked="${response == questionDetail.studentResponse}">
+                <span th:text="${response}"></span>
+                <span th:if="${response == questionDetail.studentResponse && response == questionDetail.correctResponse}" class="icon-correct">✔</span>
+                <span th:if="${response == questionDetail.studentResponse && response != questionDetail.correctResponse}" class="icon-incorrect">✘</span>
+                <span th:if="${response != questionDetail.studentResponse && response == questionDetail.correctResponse}" class="icon-correct">✔</span>
+            </label>
+        </div>
+
+        <div class="feedback">
+            Your answer:
+            <span class="student-answer" th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
+                  th:text="${questionDetail.studentResponse}"></span>
+            <br>
+            The correct answer is:
+            <span th:text="${questionDetail.correctResponse}"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleNavigation() {
+        const nav = document.getElementById('navigation-panel');
+        const content = document.getElementById('content-wrapper');
+        const showBtn = document.getElementById('show-button');
+
+        nav.classList.toggle('hidden-panel');
+        content.classList.toggle('shifted');
+
+        if (nav.classList.contains('hidden-panel')) {
+            showBtn.style.display = 'block';
+        } else {
+            showBtn.style.display = 'none';
+        }
+    }
+
+    function scrollToQuestion(index) {
+        const question = document.getElementById(`question-${index}`);
+        question.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

@@ -1,23 +1,27 @@
 package com.example.edumoodle.Service;
-
-
-import com.example.edumoodle.DTO.CoursesDTO;
-import com.example.edumoodle.DTO.ModuleDTO;
-import com.example.edumoodle.DTO.SectionsDTO;
+import com.example.edumoodle.DTO.*;
 import com.example.edumoodle.Repository.CategoriesRepository;
 import com.example.edumoodle.Repository.CoursesRepository;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jsoup.nodes.Element;
+import java.util.ArrayList;
+import java.util.List;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 @Service
 public class MyCoursesStudentService {
@@ -38,9 +42,31 @@ public class MyCoursesStudentService {
 
     public List<CoursesDTO> getUserCourses(String username) {
         List<CoursesDTO> userCourses = new ArrayList<>(); // Danh sách khóa học của người dùng
+        int userId = getUserIdByUsername(username); // Lấy user ID từ username
+
+        // Đảm bảo user ID hợp lệ
+        if (userId == 0) {
+            return userCourses; // Trả về danh sách trống nếu không tìm thấy user ID
+        }
+
+        // URL API để lấy khóa học của người dùng
+        String getUserCoursesUrl = domainName + "/webservice/rest/server.php" +
+                "?wstoken=" + token +
+                "&wsfunction=core_enrol_get_users_courses" +
+                "&moodlewsrestformat=json" +
+                "&userid=" + userId;
+
+        System.out.println("userid: " + userId);
+        String coursesResponse = restTemplate.getForObject(getUserCoursesUrl, String.class);
+
+        // Phân tích dữ liệu khóa học từ phản hồi
+        userCourses = parseCoursesResponse(coursesResponse);
+
+        return userCourses; // Trả về danh sách khóa học của người dùng
+    }
+
+    public int getUserIdByUsername(String username) {
         String getStudentsFunction = "core_user_get_users";
-        String getUserCoursesFunction = "core_enrol_get_users_courses";
-        String getEnrolledUsersFunction = "core_enrol_get_enrolled_users"; // Lấy thông tin giảng viên
 
         // URL API để lấy user ID dựa vào username
         String getStudentsUrl = domainName + "/webservice/rest/server.php" +
@@ -69,76 +95,27 @@ public class MyCoursesStudentService {
             e.printStackTrace();
         }
 
-        // Đảm bảo user ID hợp lệ
-        if (userId == 0) {
-            return userCourses; // Trả về danh sách trống nếu không tìm thấy user ID
-        }
+        return userId; // Trả về user ID
+    }
 
-        // URL API để lấy khóa học của người dùng
-        String getUserCoursesUrl = domainName + "/webservice/rest/server.php" +
-                "?wstoken=" + token +
-                "&wsfunction=" + getUserCoursesFunction +
-                "&moodlewsrestformat=json" +
-                "&userid=" + userId;
-
-        String coursesResponse = restTemplate.getForObject(getUserCoursesUrl, String.class);
-
-        // Phân tích dữ liệu khóa học từ phản hồi
+    private List<CoursesDTO> parseCoursesResponse(String coursesResponse) {
+        List<CoursesDTO> userCourses = new ArrayList<>();
         try {
             JSONArray coursesArray = new JSONArray(coursesResponse);
             for (int i = 0; i < coursesArray.length(); i++) {
                 JSONObject course = coursesArray.getJSONObject(i);
+                CoursesDTO coursesDto = new CoursesDTO();
                 int courseMoodleId = course.getInt("id");  // Lấy courseMoodleId
                 String courseName = course.getString("fullname");
+                int category = course.optInt("category", 0); // Mặc định là 0 nếu không có
 
-                // Lấy thông tin category và categoryName nếu có
-                int category = course.has("category") ? course.getInt("category") : 0; // Mặc định là 0 nếu không có
-                String categoryName;
-
-                // Kiểm tra nếu categoryName không có trong phản hồi thì gọi API để lấy
-                if (!course.has("categoryname")) {
-                    categoryName = getCategoryName(category); // Gọi hàm để lấy tên category
-                } else {
-                    categoryName = course.getString("categoryname");
-                }
+                // Lấy tên danh mục
+                String categoryName = course.optString("categoryname", getCategoryName(category));
 
                 // Gọi API để lấy thông tin giảng viên của khóa học
-                String getEnrolledUsersUrl = domainName + "/webservice/rest/server.php" +
-                        "?wstoken=" + token +
-                        "&wsfunction=" + getEnrolledUsersFunction +
-                        "&moodlewsrestformat=json" +
-                        "&courseid=" + courseMoodleId;
+                String teacherName = getTeacherName(courseMoodleId);
 
-                String enrolledUsersResponse = restTemplate.getForObject(getEnrolledUsersUrl, String.class);
-
-                System.out.println(getEnrolledUsersUrl);
-                System.out.println("Enrolled Users Response: " + enrolledUsersResponse);
-                String teacherName = "Không xác định"; // Mặc định là không xác định nếu không tìm thấy giảng viên
-
-                try {
-                    JSONArray enrolledUsersArray = new JSONArray(enrolledUsersResponse);
-                    for (int j = 0; j < enrolledUsersArray.length(); j++) {
-                        JSONObject user = enrolledUsersArray.getJSONObject(j);
-                        if (user.has("roles")) {
-                            JSONArray roles = user.getJSONArray("roles");
-                            for (int k = 0; k < roles.length(); k++) {
-                                JSONObject role = roles.getJSONObject(k);
-                                // Kiểm tra vai trò của người dùng, tìm vai trò giảng viên (editingteacher hoặc teacher)
-                                String roleShortName = role.getString("shortname");
-                                if (roleShortName.equals("editingteacher") || roleShortName.equals("teacher")) {
-                                    teacherName = user.getString("fullname"); // Lấy tên giảng viên
-                                    break; // Dừng khi tìm thấy giảng viên đầu tiên
-                                }
-                            }
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("Teacher: " + teacherName); // In ra tên giảng viên để kiểm tra
-                // Tạo đối tượng CoursesDto và thêm vào danh sách
-                CoursesDTO coursesDto = new CoursesDTO();
+                // Thiết lập thông tin vào đối tượng CoursesDTO
                 coursesDto.setMoodleCourseId(courseMoodleId);
                 coursesDto.setFullname(courseName);
                 coursesDto.setCategoryid(category); // Set giá trị category
@@ -152,9 +129,46 @@ public class MyCoursesStudentService {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        return userCourses; // Trả về danh sách khóa học của người dùng
+        return userCourses;
     }
+
+    private String getTeacherName(int courseMoodleId) {
+        String getEnrolledUsersFunction = "core_enrol_get_enrolled_users";
+
+        // URL API để lấy thông tin giảng viên của khóa học
+        String getEnrolledUsersUrl = domainName + "/webservice/rest/server.php" +
+                "?wstoken=" + token +
+                "&wsfunction=" + getEnrolledUsersFunction +
+                "&moodlewsrestformat=json" +
+                "&courseid=" + courseMoodleId;
+
+        String enrolledUsersResponse = restTemplate.getForObject(getEnrolledUsersUrl, String.class);
+        String teacherName = "Không xác định"; // Mặc định là không xác định nếu không tìm thấy giảng viên
+
+        try {
+            JSONArray enrolledUsersArray = new JSONArray(enrolledUsersResponse);
+            for (int j = 0; j < enrolledUsersArray.length(); j++) {
+                JSONObject user = enrolledUsersArray.getJSONObject(j);
+                if (user.has("roles")) {
+                    JSONArray roles = user.getJSONArray("roles");
+                    for (int k = 0; k < roles.length(); k++) {
+                        JSONObject role = roles.getJSONObject(k);
+                        // Kiểm tra vai trò của người dùng, tìm vai trò giảng viên (editingteacher hoặc teacher)
+                        String roleShortName = role.getString("shortname");
+                        if (roleShortName.equals("editingteacher") || roleShortName.equals("teacher")) {
+                            teacherName = user.getString("fullname"); // Lấy tên giảng viên
+                            break; // Dừng khi tìm thấy giảng viên đầu tiên
+                        }
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return teacherName; // Trả về tên giảng viên
+    }
+
 
     // Hàm để lấy tên của category dựa vào category ID
     public String getCategoryName(int categoryId) {
@@ -194,8 +208,7 @@ public class MyCoursesStudentService {
 
         return filteredCourses;
     }
-
-
+    //chitieetsts khóa học
     public CoursesDTO getCourseDetails(Integer moodleCourseId) {
         CoursesDTO courseDetails = new  CoursesDTO();
         List<SectionsDTO> sectionsList = new ArrayList<>(); // Lưu trữ các section
@@ -306,7 +319,7 @@ public class MyCoursesStudentService {
     }
 
     // Phương thức để lấy nội dung module dựa trên module ID và loại
-    public String fetchModuleContent(Integer moduleId, String moduleType, Integer moodleCourseId) {
+    public Object fetchModuleContent(Integer moduleId, String moduleType, Integer moodleCourseId) {
         String moduleContentUrl;
 
         // Xây dựng URL cho các loại module khác nhau
@@ -336,7 +349,7 @@ public class MyCoursesStudentService {
             } else if (jsonResponse.has("assignments")) {
                 return handleAssignments(jsonResponse);  // Xử lý bài tập (assignments)
             } else if (jsonResponse.has("quizzes")) {
-                return handleQuizzes(jsonResponse);  // Xử lý bài kiểm tra (quizzes)
+                return handleQuizzes(jsonResponse);  // Trả về danh sách bài kiểm tra
             }
 
             // Thêm các trường hợp khác cho các loại module khác nếu cần
@@ -348,7 +361,6 @@ public class MyCoursesStudentService {
         // Nếu không có dữ liệu hợp lệ, trả về thông báo mặc định
         return "No content available for this module.";
     }
-
 
     // Phương thức để xử lý thông tin assignments
     private String handleAssignments(JSONObject jsonResponse) throws JSONException {
@@ -378,14 +390,28 @@ public class MyCoursesStudentService {
     }
 
 
-    // Thêm phương thức để xử lý thông tin quizzes (nếu cần)
-    private String handleQuizzes(JSONObject jsonResponse) throws JSONException {
+    // Phương thức để xử lý thông tin quizzes và trả về danh sách đối tượng QuizDTO
+    private List<QuizDTO> handleQuizzes(JSONObject jsonResponse) throws JSONException {
         JSONArray quizzes = jsonResponse.getJSONArray("quizzes");
+        List<QuizDTO> quizList = new ArrayList<>();
+
         if (quizzes.length() > 0) {
-            JSONObject quiz = quizzes.getJSONObject(0);
-            return "Quiz: " + quiz.optString("name") + "\nDetails: " + quiz.optString("intro");
+            // Duyệt qua danh sách các bài kiểm tra
+            for (int i = 0; i < quizzes.length(); i++) {
+                JSONObject quiz = quizzes.getJSONObject(i);
+                int quizId = quiz.getInt("id");
+                String quizName = quiz.optString("name");
+
+                // Tạo đối tượng QuizDTO và thêm vào danh sách
+                QuizDTO quizInfo = new QuizDTO(quizId, quizName);
+                quizList.add(quizInfo);
+                System.out.println("Quiz ID: " + quizId + ", Quiz Name: " + quizName);
+            }
         }
-        return "No quizzes found.";
+        else {
+            System.out.println("No quizzes found.");
+        }
+        return quizList;
     }
 
     // Phương thức để xử lý tất cả resources theo module và chỉ lấy theo moduleId nếu cần
@@ -455,7 +481,6 @@ public class MyCoursesStudentService {
         return "Không tìm thấy tài liệu.";
     }
 
-
     // Phương thức để lấy tên hàm đúng dựa trên loại module
     private String getModuleFunction(String moduleType) {
         switch (moduleType) {
@@ -469,6 +494,132 @@ public class MyCoursesStudentService {
             default:
                 return "unknown_module_type"; // Mặc định cho loại không xác định
         }
+    }
+
+
+    // bai thi
+    public List<AttemptIDTO> getStudentAttempts(String studentId, String quizId) {
+        String getAttemptsFunction = "mod_quiz_get_user_attempts";
+        List<AttemptIDTO> attemptList = new ArrayList<>();
+
+        try {
+            String getAttemptsUrl = domainName + "/webservice/rest/server.php" +
+                    "?wstoken=" + token +
+                    "&wsfunction=" + getAttemptsFunction +
+                    "&moodlewsrestformat=json" +
+                    "&quizid=" + quizId +
+                    "&userid=" + studentId;
+
+            String attemptsResponse = restTemplate.getForObject(getAttemptsUrl, String.class);
+            System.out.println("Request URL: " + getAttemptsUrl);
+            System.out.println("Response: " + attemptsResponse);
+
+            JSONObject responseJson = new JSONObject(attemptsResponse);
+            JSONArray attemptsArray = responseJson.optJSONArray("attempts");
+
+            if (attemptsArray != null && attemptsArray.length() > 0) {
+                for (int i = 0; i < attemptsArray.length(); i++) {
+                    JSONObject attempt = attemptsArray.getJSONObject(i);
+                    Integer attemptId = attempt.getInt("id");
+                    Double score = attempt.optDouble("sumgrades", 0.0);
+                    Long timeStartLong = attempt.optLong("timestart", 0L); // Thời gian bắt đầu
+                    Long timeFinishLong = attempt.optLong("timefinish", 0L); // Thời gian kết thúc
+                    String status = attempt.optString("state", "unknown"); // Trạng thái
+
+                    // Chuyển đổi từ long sang LocalDateTime
+                    LocalDateTime timeStart = LocalDateTime.ofEpochSecond(timeStartLong, 0, ZoneOffset.UTC);
+                    LocalDateTime timeFinish = LocalDateTime.ofEpochSecond(timeFinishLong, 0, ZoneOffset.UTC);
+
+                    // Tạo đối tượng AttemptIDTO với tất cả các tham số
+                    AttemptIDTO attemptInfo = new AttemptIDTO(attemptId, score, timeStart, timeFinish, status);
+
+                    // Thêm vào danh sách
+                    attemptList.add(attemptInfo);
+                }
+            } else {
+                System.out.println("No attempts found for the student in this quiz.");
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            System.out.println("Error parsing JSON response: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
+        }
+
+        return attemptList;
+    }
+
+    // Hàm để loại bỏ các ký tự như a., b., c. từ câu trả lời
+    private String cleanResponse(String response) {
+        return response.replaceAll("^[a-d]\\.", "").trim(); // Loại bỏ a., b., c., d. ở đầu và khoảng trắng thừa
+    }
+
+    public List<QuestionDetail> getAttemptDetails(Integer attemptId) {
+        List<QuestionDetail> questionDetails = new ArrayList<>();
+        try {
+            String getAttemptReviewFunction = "mod_quiz_get_attempt_review";
+            String getAttemptReviewUrl = domainName + "/webservice/rest/server.php" +
+                    "?wstoken=" + token +
+                    "&wsfunction=" + getAttemptReviewFunction +
+                    "&moodlewsrestformat=json" +
+                    "&attemptid=" + attemptId;
+
+            String attemptReviewResponse = restTemplate.getForObject(getAttemptReviewUrl, String.class);
+            JSONObject reviewJson = new JSONObject(attemptReviewResponse);
+            JSONArray questionArray = reviewJson.getJSONArray("questions");
+
+            for (int i = 0; i < questionArray.length(); i++) {
+                JSONObject questionJson = questionArray.getJSONObject(i);
+
+                // Khởi tạo QuestionDetail với số thứ tự câu hỏi
+                QuestionDetail questionDetail = new QuestionDetail(i + 1, "", "", "", new ArrayList<>(), "", false);
+
+                // Parse HTML từ câu hỏi
+                String questionHtml = questionJson.optString("html", "");
+                Document doc = Jsoup.parse(questionHtml);
+
+                // Lấy nội dung câu hỏi
+                String questionText = doc.select(".qtext").text();
+                String correctResponse = cleanResponse(doc.select(".rightanswer").text().replace("The correct answer is: ", ""));
+
+                // Lấy tất cả các phương án trả lời
+                Elements answerElements = doc.select(".answer .r0, .answer .r1");
+                List<String> allResponses = new ArrayList<>();
+                String studentResponse = "";
+
+                // Duyệt qua từng đáp án để thêm vào danh sách và kiểm tra câu trả lời của sinh viên
+                for (Element answerElement : answerElements) {
+                    String responseText = answerElement.text();
+                    allResponses.add(cleanResponse(responseText));  // Clean trước khi lưu vào danh sách đáp án
+
+                    // Kiểm tra nếu đây là câu trả lời sinh viên đã chọn
+                    if (answerElement.select("input[checked=checked]").size() > 0) {
+                        studentResponse = cleanResponse(responseText);  // Cắt ký tự a., b., c. trong câu trả lời sinh viên đã chọn
+                    }
+                }
+
+                // So sánh câu trả lời của sinh viên với câu trả lời đúng sau khi đã xử lý
+                boolean isCorrect = studentResponse.equalsIgnoreCase(correctResponse);
+
+                // Đặt giá trị vào `questionDetail`
+                questionDetail.setQuestionText(questionText);
+                questionDetail.setStudentResponse(studentResponse);  // Đã được xử lý sạch
+                questionDetail.setCorrectResponse(correctResponse);  // Đã được xử lý sạch
+                questionDetail.setAllResponses(allResponses);  // Lưu danh sách đáp án đã được xử lý
+                questionDetail.setCorrect(isCorrect);  // Đặt trạng thái đúng/sai
+
+                System.out.println("Student Response: " + studentResponse);
+                System.out.println("Correct Response: " + correctResponse);
+                System.out.println("isCorrect: " + isCorrect);
+                // Thêm câu hỏi vào danh sách
+                questionDetails.add(questionDetail);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return questionDetails;
     }
 
 }

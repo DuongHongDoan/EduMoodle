@@ -44,6 +44,14 @@
             margin-bottom: 20px;
         }
 
+        /* Định dạng cho danh sách quizzes */
+        #quizList {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
         /* Liên kết đẹp */
         a {
             display: inline-block;
@@ -69,7 +77,7 @@
                 font-size: 1em;
             }
 
-            #moduleContent {
+            #moduleContent, #quizList {
                 padding: 15px;
             }
         }
@@ -78,11 +86,36 @@
 <body>
 <h1>Chi Tiết Mô-Đun</h1>
 
-<!--<p>Moodle Course ID: <span th:text="${moodleCourseId}"></span></p>-->
-<!--<p>Module ID: <span th:text="${moduleId}"></span></p>-->
+<!--<div id="moduleContent" th:utext="${moduleContent}"></div> &lt;!&ndash; Hiển thị nội dung mô-đun ở đây &ndash;&gt;-->
+
+<!--&lt;!&ndash; Hiển thị danh sách quizzes nếu có &ndash;&gt;-->
+<!--<div id="quizList" th:if="${quizzes != null}">-->
+<!--    <h2>Danh Sách Quizzes</h2>-->
+<!--    <ul>-->
+<!--        <li th:each="quiz : ${quizzes}">-->
+<!--            <a th:href="@{/user/quizCourseStudent/{quizId}/{userId}(quizId=${quiz.id}, userId=${userId})}" th:text="${quiz.name}">Quiz Name</a>-->
+<!--        </li>-->
+<!--    </ul>-->
+<!--</div>-->
 
 <div id="moduleContent" th:utext="${moduleContent}"></div> <!-- Hiển thị nội dung mô-đun ở đây -->
 
+<!-- Hiển thị danh sách quizzes nếu có -->
+<div id="quizList" th:if="${quizzes != null}">
+    <h2>Danh Sách Quizzes</h2>
+    <ul>
+        <li th:each="quiz : ${quizzes}">
+            <!-- Sử dụng form để gửi quizId và userId bằng POST -->
+            <form th:action="@{/user/quizCourseStudent}" method="post">
+                <input type="hidden" name="quizId" th:value="${quiz.id}">
+                <input type="hidden" name="userId" th:value="${userId}">
+                <button type="submit" th:text="${quiz.name}">Quiz Name</button>
+            </form>
+        </li>
+    </ul>
+</div>
+
 <a href="/some_other_page">Trở lại trang khác</a>
+
 </body>
 </html>
