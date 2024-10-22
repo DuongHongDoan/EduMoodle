@@ -169,7 +169,7 @@
     <ul>
         <li th:each="quiz : ${quizzes}">
             <!-- Sử dụng form để gửi quizId và userId bằng POST -->
-            <form th:action="@{/user/quizCourseStudent}" method="post">
+            <form th:action="@{/user/quizCourseStudent}" method="get">
                 <input type="hidden" name="quizId" th:value="${quiz.id}">
                 <input type="hidden" name="userId" th:value="${userId}">
                 <button type="submit" th:text="${quiz.name}">Quiz Name</button>

@@ -117,7 +117,7 @@
       <td th:text="${attempt.timeFinish}">Finish Time</td>
       <td th:text="${attempt.status}">Status</td>
       <td>
-        <form th:action="@{/user/quiz/review}" method="post">
+        <form th:action="@{/user/quiz/review}" method="get">
           <input type="hidden" name="attemptId" th:value="${attempt.attemptId}" />
           <button type="submit" class="btn">Xem lại</button>
         </form>

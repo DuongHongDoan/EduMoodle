@@ -156,7 +156,7 @@
 </div>
 
 <!-- Form ẩn để submit POST -->
-<form id="module-form" action="/user/fetch_module_content" method="post" style="display:none;">
+<form id="module-form" action="/user/fetch_module_content" method="get" style="display:none;">
     <input type="hidden" name="moduleId" id="module-id">
     <input type="hidden" name="moduleType" id="module-type">
     <input type="hidden" name="userId" id="hidden-user-id" th:value="${userId}">
