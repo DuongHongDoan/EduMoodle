@@ -349,7 +349,7 @@ public class MyCoursesStudentService {
             } else if (jsonResponse.has("assignments")) {
                 return handleAssignments(jsonResponse);  // Xử lý bài tập (assignments)
             } else if (jsonResponse.has("quizzes")) {
-                return handleQuizzes(jsonResponse);  // Trả về danh sách bài kiểm tra
+                return handleQuizzes(jsonResponse, moduleId);  // Trả về danh sách bài kiểm tra
             }
 
             // Thêm các trường hợp khác cho các loại module khác nếu cần
@@ -391,7 +391,7 @@ public class MyCoursesStudentService {
 
 
     // Phương thức để xử lý thông tin quizzes và trả về danh sách đối tượng QuizDTO
-    private List<QuizDTO> handleQuizzes(JSONObject jsonResponse) throws JSONException {
+    private List<QuizDTO> handleQuizzes(JSONObject jsonResponse, Integer selectedModuleId) throws JSONException {
         JSONArray quizzes = jsonResponse.getJSONArray("quizzes");
         List<QuizDTO> quizList = new ArrayList<>();
 
@@ -401,18 +401,25 @@ public class MyCoursesStudentService {
                 JSONObject quiz = quizzes.getJSONObject(i);
                 int quizId = quiz.getInt("id");
                 String quizName = quiz.optString("name");
+                int moduleId = quiz.optInt("coursemodule"); // Lấy moduleId từ JSON nếu có
+
+                // Kiểm tra nếu moduleId đã được chọn và chỉ lấy module đó
+                if (selectedModuleId != null && moduleId != selectedModuleId) {
+                    continue; // Bỏ qua các quiz không thuộc module được chọn
+                }
 
                 // Tạo đối tượng QuizDTO và thêm vào danh sách
-                QuizDTO quizInfo = new QuizDTO(quizId, quizName);
+                QuizDTO quizInfo = new QuizDTO(quizId, quizName, moduleId);
                 quizList.add(quizInfo);
-                System.out.println("Quiz ID: " + quizId + ", Quiz Name: " + quizName);
+
+                System.out.println("Quiz ID: " + quizId + ", Quiz Name: " + quizName + ", Module ID: " + moduleId);
             }
-        }
-        else {
+        } else {
             System.out.println("No quizzes found.");
         }
         return quizList;
     }
+
 
     // Phương thức để xử lý tất cả resources theo module và chỉ lấy theo moduleId nếu cần
     private String handleResources(JSONObject jsonResponse, Integer selectedModuleId) throws JSONException {
