@@ -10,16 +10,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.jsoup.nodes.Element;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -627,6 +628,86 @@ public class MyCoursesStudentService {
             e.printStackTrace();
         }
         return questionDetails;
+    }
+
+    // Method to get all enrolled students from Moodle
+    public List<StudentsCourseDTO> getEnrolledStudents(Integer moodleCourseId) {
+        List<StudentsCourseDTO> students = new ArrayList<>();
+        try {
+            String getEnrolledUsersFunction = "core_enrol_get_enrolled_users";
+            String getEnrolledUsersUrl = domainName + "/webservice/rest/server.php" +
+                    "?wstoken=" + token +
+                    "&wsfunction=" + getEnrolledUsersFunction +
+                    "&moodlewsrestformat=json" +
+                    "&courseid=" + moodleCourseId;
+
+            // Log the URL for debugging
+            System.out.println("Enrolled Users URL: " + getEnrolledUsersUrl);
+
+            // Make the API request and log the response
+            String enrolledUsersResponse = restTemplate.getForObject(getEnrolledUsersUrl, String.class);
+            System.out.println("API Response: " + enrolledUsersResponse);
+
+            // Parse the JSON response
+            JSONArray usersArray = new JSONArray(enrolledUsersResponse);
+            System.out.println("Number of users enrolled: " + usersArray.length());
+
+            // Format for converting Unix timestamp to readable date
+            SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+            for (int i = 0; i < usersArray.length(); i++) {
+                JSONObject userJson = usersArray.getJSONObject(i);
+
+                Integer userId = userJson.getInt("id");
+                String fullName = userJson.getString("fullname");
+                String firstName = userJson.getString("firstname");
+                String lastName = userJson.getString("lastname");
+
+                // Log user details
+                System.out.println("User ID: " + userId + ", Full Name: " + fullName + ", First Name: " + firstName + ", Last Name: " + lastName);
+
+                // Retrieve role shortname
+                JSONArray rolesArray = userJson.getJSONArray("roles");
+                String role = rolesArray.length() > 0 ? rolesArray.getJSONObject(0).getString("shortname") : "";
+                System.out.println("Role: " + role);
+
+                // Retrieve last access time and convert to readable date
+                Long lastCourseAccess = userJson.optLong("lastcourseaccess", 0);
+                String lastCourseAccessDate = lastCourseAccess > 0 ? sdf.format(new Date(lastCourseAccess * 1000L)) : "Never";
+                System.out.println("Last Course Access: " + lastCourseAccessDate);
+
+                // Create StudentsCourseDTO object with firstName and lastName
+                StudentsCourseDTO student = new StudentsCourseDTO(userId, fullName, firstName, lastName, role, lastCourseAccess);
+                students.add(student);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return students;
+    }
+
+    // Method to get filtered enrolled students based on first name and last name
+    public List<StudentsCourseDTO> getFilteredEnrolledStudents(Integer moodleCourseId, String firstName, String lastName) {
+        // Get the list of enrolled students
+        List<StudentsCourseDTO> students = getEnrolledStudents(moodleCourseId);
+
+        // Filter by first name if provided
+        if (firstName != null && !firstName.isEmpty()) {
+            students = students.stream()
+                    .filter(student -> student.getFirstName() != null &&
+                            student.getFirstName().toLowerCase().contains(firstName.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        // Filter by last name if provided
+        if (lastName != null && !lastName.isEmpty()) {
+            students = students.stream()
+                    .filter(student -> student.getLastName() != null &&
+                            student.getLastName().toLowerCase().contains(lastName.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return students;
     }
 
 }

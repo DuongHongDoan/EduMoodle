@@ -1,11 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-  <meta charset="UTF-8">
-  <title>Chi tiết Quiz</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Quiz details</title>
+
   <style>
-    /* Một số style cơ bản để cải thiện hiển thị */
+    /* Style for the table and buttons */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -22,52 +26,25 @@
       background-color: #f2f2f2;
     }
 
-    /* Nút "Xem lại" với kích thước nhỏ hơn và màu xanh biển */
     .btn {
-      background: linear-gradient(90deg, #00b4db, #0083b0); /* Gradient từ xanh biển nhạt sang đậm */
+      background: linear-gradient(90deg, #00b4db, #0083b0);
       color: white;
-      padding: 10px 15px; /* Giảm padding để làm hẹp nút về chiều ngang */
+      padding: 10px 15px;
       text-align: center;
-      display: inline-block;
       font-size: 14px;
       font-weight: bold;
-      margin: 8px 2px;
-      cursor: pointer;
       border: none;
       border-radius: 40px;
-      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
       transition: all 0.4s ease;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
       position: relative;
-      overflow: hidden;
-      min-width: 100px; /* Giảm min-width để làm hẹp nút */
-    }
-
-    .btn:before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 300%;
-      height: 300%;
-      background: rgba(255, 255, 255, 0.2);
-      transition: all 0.6s ease;
-      border-radius: 50%;
-      transform: translate(-50%, -50%) scale(0);
+      min-width: 100px;
     }
 
     .btn:hover {
-      background: linear-gradient(90deg, #0093c4, #005b96); /* Gradient xanh biển đậm hơn khi hover */
+      background: linear-gradient(90deg, #0093c4, #005b96);
       box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.4);
-      transform: translateY(-3px);
-    }
-
-    .btn:hover:before {
-      transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* Form căn chỉnh */
-    form {
-      display: inline-block;
     }
 
     .container {
@@ -75,7 +52,12 @@
       margin: auto;
     }
 
-    /* Media query cho màn hình tablet */
+    .start-quiz-container {
+      margin: 20px 0;
+      text-align: left; /* Align button to the left */
+    }
+
+    /* Responsive styles */
     @media (max-width: 768px) {
       .btn {
         font-size: 12px;
@@ -84,7 +66,6 @@
       }
     }
 
-    /* Media query cho màn hình nhỏ hơn */
     @media (max-width: 480px) {
       .btn {
         font-size: 10px;
@@ -94,9 +75,9 @@
     }
   </style>
 </head>
-<body>
+<body id="page-top" layout:fragment="body">
 <div class="container">
-  <h2>Chi tiết Quiz</h2>
+  <h2 style="text-align: center">Chi tiết bài kiểm tra</h2>
 
   <table>
     <thead>
@@ -106,7 +87,7 @@
       <th>Thời gian bắt đầu</th>
       <th>Thời gian kết thúc</th>
       <th>Trạng thái</th>
-      <th>Xem lại</th>
+      <th>Hành động</th>
     </tr>
     </thead>
     <tbody>
@@ -126,7 +107,6 @@
     </tbody>
   </table>
 
-  <a href="/path/to/another/page" th:href="@{/path/to/another/page}">Quay lại danh sách Quiz</a>
 </div>
 </body>
 </html>

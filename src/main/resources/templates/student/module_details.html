@@ -1,184 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Module Details</title>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Details module</title>
     <style>
-        /* Reset CSS cơ bản */
-        * {
+        .module-detail-page {
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Đặt font đẹp cho toàn bộ trang */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #e9ecef; /* Màu nền nhẹ nhàng */
-            color: #333; /* Màu chữ dễ nhìn */
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Căn giữa tất cả các phần tử */
+            align-items: center;
         }
 
-        h1 {
-            font-size: 2.5em;
-            color: #4A90E2;
-            margin-bottom: 30px;
+        .module-detail-page h1 {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-top: 20px;
             text-align: center;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
         }
 
-        h2 {
-            font-size: 1.8em;
-            color: #333;
-            margin: 20px 0 15px 0;
-            border-bottom: 2px solid #4A90E2;
-            padding-bottom: 5px;
-            text-align: left;
-            letter-spacing: 1px;
-            width: 100%; /* Chiếm toàn bộ chiều rộng */
+        .module-detail-page #moduleContent {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: 80%;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-detail-page #quizList {
+            width: 80%;
+            background-color: #eaf6ff; /* Màu nền nhẹ cho quizList */
+            border: 1px solid #3498db; /* Đường viền xanh */
+            border-radius: 8px;
+            padding: 20px; /* Thêm khoảng cách bên trong */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+            margin: 20px 0; /* Khoảng cách trên và dưới */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Căn giữa các phần tử con */
+        }
+
+        .module-detail-page #quizList h2 {
+            font-size: 1.5em;
+            color: #2980b9; /* Màu tiêu đề */
+            margin-bottom: 15px; /* Tăng khoảng cách dưới */
             text-align: center; /* Căn giữa tiêu đề */
         }
 
-        p {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            line-height: 1.8;
-            color: #555;
-            text-align: justify;
-            width: 90%; /* Đặt chiều rộng của đoạn văn */
-            max-width: 800px; /* Giới hạn chiều rộng tối đa */
+        .module-detail-page #quizList ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%; /* Đảm bảo ul chiếm toàn bộ chiều rộng */
+            text-align: center; /* Căn giữa danh sách */
         }
 
-        /* Định dạng cho phần moduleContent */
-        #moduleContent {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            width: 90%; /* Đặt chiều rộng của moduleContent */
-            max-width: 800px; /* Giới hạn chiều rộng tối đa */
+        .module-detail-page #quizList ul li {
+            margin: 10px 0;
+            transition: transform 0.2s; /* Hiệu ứng khi di chuột */
         }
 
-        #moduleContent:hover {
-            transform: translateY(-5px); /* Hiệu ứng nâng lên khi hover */
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        .module-detail-page #quizList ul li:hover {
+            transform: scale(1.05); /* Phóng to khi di chuột */
         }
 
-        /* Định dạng cho danh sách quizzes */
-        #quizList {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            width: 90%; /* Đặt chiều rộng của quizList */
-            max-width: 800px; /* Giới hạn chiều rộng tối đa */
+        .module-detail-page #quizList form {
+            display: inline;
         }
 
-        /* Định dạng danh sách quizzes */
-        #quizList ul {
-            list-style-type: none; /* Không hiển thị dấu chấm đầu dòng */
-            padding: 0; /* Xóa padding */
-        }
-
-        #quizList li {
-            margin-bottom: 10px; /* Khoảng cách giữa các quiz */
-            text-align: center; /* Căn giữa tên quiz */
-        }
-
-        /* Nút Quiz */
-        button {
-            background-color: #4A90E2;
+        .module-detail-page #quizList button[type="submit"] {
+            font-size: 1em;
+            padding: 10px 20px;
+            background-color: #3498db; /* Màu nền nút */
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s;
-            font-size: 1em;
-            width: 100%; /* Chiếm toàn bộ chiều rộng */
-            text-align: center; /* Canh giữa văn bản */
-            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin: 5px; /* Khoảng cách giữa các nút */
         }
 
-        button:hover {
-            background-color: #357ABD; /* Màu đậm hơn khi hover */
-            transform: scale(1.05); /* Hiệu ứng phóng to khi hover */
+        .module-detail-page #quizList button[type="submit"]:hover {
+            background-color: #2980b9; /* Màu nền nút khi di chuột */
         }
 
-        /* Liên kết đẹp */
-        a {
+        .module-detail-page a {
             display: inline-block;
-            background-color: #4A90E2;
-            color: white;
-            padding: 12px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease, transform 0.2s;
             margin-top: 20px;
-            text-align: center;
-            font-size: 1.2em;
+            text-decoration: none;
+            color: #3498db;
             font-weight: bold;
+            transition: color 0.3s ease;
         }
 
-        a:hover {
-            background-color: #357ABD; /* Màu đậm hơn khi hover */
-            transform: translateY(-2px); /* Hiệu ứng nâng lên khi hover */
-        }
-
-        /* Responsive cho các màn hình nhỏ hơn */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-            }
-
-            h2 {
-                font-size: 1.5em;
-            }
-
-            p {
-                font-size: 1em;
-            }
-
-            #moduleContent, #quizList {
-                padding: 15px;
-            }
-
-            a, button {
-                font-size: 1em;
-                padding: 10px 16px;
-            }
+        .module-detail-page a:hover {
+            color: #2980b9;
         }
     </style>
+
+
 </head>
-<body>
-<h1>Chi Tiết Mô-Đun</h1>
+<body id="page-top" layout:fragment="body">
+<div class="module-detail-page">
+    <!-- Chỉ hiển thị moduleContent nếu không trống và moduleType khác "test" -->
+    <div id="moduleContent" th:if="${moduleType != 'quiz' and moduleContent != ''}" th:utext="${moduleContent}"></div>
 
-<!--<div id="moduleContent" th:utext="${moduleContent}"></div> &lt;!&ndash; Hiển thị nội dung mô-đun ở đây &ndash;&gt;-->
+    <!-- Hiển thị danh sách quizzes nếu có -->
+    <div id="quizList" th:if="${quizzes != null}">
+        <h2>Danh Sách Quizzes</h2>
+        <ul>
+            <li th:each="quiz : ${quizzes}">
+                <form th:action="@{/user/quizCourseStudent}" method="get">
+                    <input type="hidden" name="quizId" th:value="${quiz.id}">
+                    <input type="hidden" name="userId" th:value="${userId}">
+                    <button type="submit" th:text="${quiz.name}">Quiz Name</button>
+                </form>
+            </li>
+        </ul>
+    </div>
 
-<!-- Hiển thị danh sách quizzes nếu có -->
-<div id="quizList" th:if="${quizzes != null}">
-    <h2>Danh Sách Quizzes</h2>
-    <ul>
-        <li th:each="quiz : ${quizzes}">
-            <!-- Sử dụng form để gửi quizId và userId bằng POST -->
-            <form th:action="@{/user/quizCourseStudent}" method="get">
-                <input type="hidden" name="quizId" th:value="${quiz.id}">
-                <input type="hidden" name="userId" th:value="${userId}">
-                <button type="submit" th:text="${quiz.name}">Quiz Name</button>
-            </form>
-        </li>
-    </ul>
+    <a th:href="@{/user/student_course_details(moodleCourseId=${moodleCourseId})}">Trở lại khóa học</a>
 </div>
-
-<a href="/some_other_page">Trở lại trang khác</a>
-
 </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var moduleContent = document.getElementById("moduleContent");
+
+        // Kiểm tra và ẩn moduleContent nếu nội dung rỗng
+        if (moduleContent && moduleContent.innerHTML.trim() === "") {
+            moduleContent.style.display = "none";
+        }
+    });
+</script>
+
 </html>

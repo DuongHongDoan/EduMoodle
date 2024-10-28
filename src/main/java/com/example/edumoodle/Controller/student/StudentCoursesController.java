@@ -1,9 +1,6 @@
 package com.example.edumoodle.Controller.student;
 
-import com.example.edumoodle.DTO.AttemptIDTO;
-import com.example.edumoodle.DTO.CoursesDTO;
-import com.example.edumoodle.DTO.QuestionDetail;
-import com.example.edumoodle.DTO.QuizDTO;
+import com.example.edumoodle.DTO.*;
 import com.example.edumoodle.Service.MyCoursesStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -19,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class StudentCoursesController {
@@ -122,7 +120,66 @@ public class StudentCoursesController {
         return "student/mystudent_course_details"; // Return the view name
     }
 
+    // danh sach sinh vien trong khoa hoc
+    @GetMapping("/user/student_list")
+    public String getStudentList(@RequestParam("moodleCourseId") Integer moodleCourseId,
+                                 @RequestParam(value = "selectedLetter", required = false, defaultValue = "") String selectedLetter,
+                                 @RequestParam(value = "filterType", required = false, defaultValue = "firstName") String filterType,
+                                 Model model,
+                                 @RequestParam(value = "isFragment", required = false, defaultValue = "false") boolean isFragment) {
+        // Fetch the list of students
+        List<StudentsCourseDTO> students = myCoursesStudentService.getEnrolledStudents(moodleCourseId);
 
+        // Trim and validate selectedLetter, and assign it to a new final variable
+        final String filteredLetter = selectedLetter.trim().toUpperCase();
+
+        // Filter students by the selected letter and the filter type (firstName or lastName)
+        List<StudentsCourseDTO> filteredStudents = students; // Keep original list unchanged
+        if (!filteredLetter.isEmpty()) {
+            if ("firstName".equals(filterType)) {
+                filteredStudents = students.stream()
+                        .filter(student -> student.getFirstName() != null && student.getFirstName().toUpperCase().startsWith(filteredLetter))
+                        .collect(Collectors.toList());
+            } else if ("lastName".equals(filterType)) {
+                filteredStudents = students.stream()
+                        .filter(student -> student.getLastName() != null && student.getLastName().toUpperCase().startsWith(filteredLetter))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        // Add data to the model
+        model.addAttribute("students", filteredStudents);
+        model.addAttribute("moodleCourseId", moodleCourseId);
+        model.addAttribute("selectedLetter", filteredLetter);
+        model.addAttribute("filterType", filterType);
+
+        // Nếu yêu cầu là từ student_course_details, chỉ trả về phần body
+        if (isFragment) {
+            return "student/course_students_list :: studentListContent"; // Chỉ lấy phần studentListContent
+        }
+
+        return "student/course_students_list"; // Trả về toàn bộ view nếu không phải từ student_course_details
+    }
+
+
+
+    //diem so sinh vien trong khoa hoc do
+    @GetMapping("/user/student_grades")
+    public String getStudentGrades(@RequestParam("moodleCourseId") Integer moodleCourseId, Model model) {
+        // Gọi service lấy danh sách điểm của sinh viên
+//        List<GradesDTO> grades = myCoursesStudentService.getGrades(moodleCourseId);
+
+        System.out.println("Grades for course: " + moodleCourseId);
+
+        // Thêm danh sách điểm vào model
+//        model.addAttribute("grades", grades);
+
+        // Trả về một phần view chứa danh sách điểm
+        return "student/course_grades_list";
+    }
+
+
+    ////
     @GetMapping("/user/fetch_module_content")
     public String fetchModuleContent(@RequestParam("moodleCourseId") Integer moodleCourseId,
                                      @RequestParam("moduleId") Integer moduleId,
@@ -197,6 +254,5 @@ public class StudentCoursesController {
         return "student/quiz_review"; // Trả về view "quiz_review.html"
     }
 
-    
 
 }

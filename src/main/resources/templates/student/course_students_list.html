@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>List Student</title>
+  <style>
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      color: #ff9e00;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    td {
+      text-align: center;
+      color: #555;
+    }
+
+    .student-name {
+      color: #ff9e00;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .student-role, .student-group, .student-last-access {
+      color: #555;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+
+    .alphabet-filter {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+
+    .alphabet-filter a {
+      margin: 5px;
+      padding: 8px 12px;
+      background-color: #f2f2f2;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .alphabet-filter a:hover, .alphabet-filter a.active {
+      background-color: #007bff;
+      color: white;
+    }
+
+
+    .content-wrapper {
+      padding: 0 100px;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      border-bottom: 2px solid #e6e6e6;
+      background-color: #fff;
+    }
+
+    .nav-content-wrapper {
+      display: flex;
+      justify-content: center; /* Chỉnh sửa ở đây để căn giữa */
+      padding: 10px 0; /* Thêm padding cho thẩm mỹ */
+    }
+
+    nav a {
+      color: #333;
+      text-decoration: none;
+      padding: 10px 15px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-right: 30px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease-in-out;
+    }
+
+    nav a.active {
+      color: #0073aa;
+      border-bottom: 2px solid #0073aa;
+    }
+
+    nav a:hover {
+      color: #0073aa;
+      border-bottom: 2px solid #0073aa;
+    }
+
+    .totalstudents, .filter-header {
+      margin-top: 20px;
+      text-align: left;
+      font-weight: normal;
+    }
+
+    @media (max-width: 768px) {
+      .totalstudents, .filter-header {
+        text-align: center;
+      }
+      .content-wrapper {
+        padding: 0 20px;
+      }
+    }
+
+  </style>
+</head>
+<body layout:fragment="body">
+
+  <!-- Navigation Bar -->
+  <nav>
+    <div class="nav-content-wrapper">
+      <a th:href="@{/user/student_course_details(moodleCourseId=${moodleCourseId})}" id="courses-tab">Khóa học</a>
+      <a href="#" id="students-tab" onclick="showSection('students')" class="active">Danh sách sinh viên</a>
+      <a href="#" id="grades-tab" onclick="showSection('grades')">Điểm số</a>
+    </div>
+  </nav>
+
+<div class="content-wrapper">
+  <div th:fragment="studentListContent" class="content-wrapper">
+
+    <!--  <p>Course ID: <span th:text="${moodleCourseId}"></span></p>-->
+    <div th:if="${students != null}" class="totalstudents">
+      <p>Tìm thấy người tham gia: <span th:text="${students.size()}"></span></p> <!-- Hiển thị tổng số sinh viên -->
+    </div>
+
+    <!-- Filter by First Name -->
+    <div>
+      <p class="filter-header">Filter by First Name:</p>
+      <div class="alphabet-filter">
+        <a th:each="letter : ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')}"
+           th:text="${letter}"
+           th:href="@{/user/student_list(moodleCourseId=${moodleCourseId}, selectedLetter=${letter}, filterType='firstName')}">
+        </a>
+        <a th:href="@{/user/student_list(moodleCourseId=${moodleCourseId}, filterType='firstName')}">All</a>
+      </div>
+    </div>
+
+    <!-- Filter by Last Name -->
+    <div>
+      <p class="filter-header">Filter by Last Name:</p>
+      <div class="alphabet-filter">
+        <a th:each="letter : ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')}"
+           th:text="${letter}"
+           th:href="@{/user/student_list(moodleCourseId=${moodleCourseId}, selectedLetter=${letter}, filterType='lastName')}">
+        </a>
+        <a th:href="@{/user/student_list(moodleCourseId=${moodleCourseId}, filterType='lastName')}">All</a>
+      </div>
+    </div>
+
+    <!-- Student List Table -->
+    <div th:if="${students != null}">
+      <table>
+        <thead>
+        <tr>
+          <th></th>
+          <th>Tên đệm và tên / Họ</th>
+          <th>Vai trò</th>
+          <th>Nhóm</th>
+          <th>Lần truy cập cuối vào khóa học</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="student : ${students}">
+          <td><input type="checkbox"></td>
+          <td class="student-name" th:text="${student.fullName}"></td>
+          <td class="student-role" th:text="${student.role}">Sinh viên</td>
+          <td class="student-group">Không phân nhóm</td>
+          <td class="student-last-access" th:text="${#dates.format(new java.util.Date(student.lastCourseAccess * 1000), 'dd-MM-yyyy HH:mm:ss')}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p th:if="${students == null || students.isEmpty()}">No students enrolled in this course.</p>
+
+    <!-- Back to Top Button with Font Awesome Icon -->
+    <button id="backToTopBtn" class="back-to-top" onclick="backToTop()">
+      <i class="fa fa-arrow-up"></i>
+    </button>
+
+  </div>
+
+</div>
+
+</body>
+
+<script>
+  window.onscroll = function() {
+    const topButton = document.getElementById("backToTopBtn");
+    if (window.scrollY > 100) {
+      topButton.style.display = "flex"; // "flex" thay vì "block" để dùng với `align-items` và `justify-content`
+    } else {
+      topButton.style.display = "none";
+    }
+  };
+
+  function backToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+<script>
+  function showSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.section').forEach(function (section) {
+      section.classList.remove('active-section');
+    });
+
+    // Remove 'active' class from all tabs
+    document.querySelectorAll('nav a').forEach(function (tab) {
+      tab.classList.remove('active');
+    });
+
+    // Show the selected section
+    document.getElementById(sectionId).classList.add('active-section');
+
+    // Set the selected tab as active
+    document.getElementById(sectionId + '-tab').classList.add('active');
+
+    // Fetch and display content if it's not the "Courses" tab
+    // Fetch and display content if it's not the "Courses" tab
+    if (sectionId !== "courses") {
+      // Lấy courseId từ hidden input
+      const moodleCourseId = document.getElementById("moodle-course-id").value;
+
+      // Gọi AJAX tới controller tương ứng để lấy dữ liệu (Student List hoặc Grades)
+      let fetchUrl;
+      if (sectionId === "students") {
+        fetchUrl = `/user/student_list?moodleCourseId=` + moodleCourseId + `&isFragment=true`;
+      } else if (sectionId === "grades") {
+        fetchUrl = `/user/student_grades?moodleCourseId=` + moodleCourseId;
+      }
+
+      fetch(fetchUrl)
+              .then(response => response.text())
+              .then(html => {
+                // Đưa nội dung vào trong section tương ứng
+                document.getElementById(sectionId).innerHTML = html;
+                document.getElementById(sectionId).classList.add('active-section');
+              })
+              .catch(error => console.error('Error fetching section content:', error));
+    }
+
+  }
+
+  function toggleSectionContent(sectionId) {
+    // Toggle hiển thị nội dung của mỗi section khi bấm vào
+    var sectionContent = document.getElementById("section-content-" + sectionId);
+    sectionContent.style.display = sectionContent.style.display === "none" ? "block" : "none";
+  }
+
+  function submitModuleForm(element) {
+    // Lấy moduleId và moduleType từ thuộc tính của phần tử
+    const moduleId = element.getAttribute("data-module-id");
+    const moduleType = element.getAttribute("data-module-type");
+
+    // Gán giá trị vào các input của form
+    document.getElementById("module-id").value = moduleId;
+    document.getElementById("module-type").value = moduleType;
+
+    // Gửi form để lấy nội dung module
+    document.getElementById("module-form").submit();
+  }
+</script>
+</html>
+
