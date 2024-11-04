@@ -1,5 +1,6 @@
 package com.example.edumoodle.Controller.admin;
 
+import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
 import com.example.edumoodle.DTO.UsersDTO;
 import com.example.edumoodle.Model.SchoolYearSemesterEntity;
@@ -7,6 +8,7 @@ import com.example.edumoodle.Model.SchoolYearsEntity;
 import com.example.edumoodle.Model.SemestersEntity;
 import com.example.edumoodle.Model.UsersEntity;
 import com.example.edumoodle.Repository.UsersRepository;
+import com.example.edumoodle.Service.CategoriesService;
 import com.example.edumoodle.Service.CoursesService;
 import com.example.edumoodle.Service.DashboardService;
 import com.example.edumoodle.Service.UsersService;
@@ -24,6 +26,8 @@ public class DashboardController {
 
     @Autowired
     private CoursesService coursesService;
+    @Autowired
+    private CategoriesService categoriesService;
     @Autowired
     private UsersService usersService;
     @Autowired
@@ -51,6 +55,9 @@ public class DashboardController {
 
         model.addAttribute("currentSchoolYear", namHocId);
         model.addAttribute("currentSemester", hocKyId);
+
+        List<CategoriesDTO> cateTest = categoriesService.getAllCategory();
+        categoriesService.saveCategories(cateTest);
         return "admin/Dashboard";
     }
 

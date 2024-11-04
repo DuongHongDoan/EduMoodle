@@ -189,15 +189,22 @@ public class CommonController {
             return "common/UploadEnrolUsers";
         }
 
+        System.out.println("Type file đầu vào: " + type);
+
         String fileType = file.getContentType();
-        if (!"text/csv".equals(fileType)) {
-            model.addAttribute("errorMessage", "Chỉ chấp nhận file định dạng CSV");
+        System.out.println("Kq biến fileType: " + fileType);
+        if (!"text/csv".equals(fileType)
+                && !"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".equals(fileType)
+                && !"application/vnd.ms-excel".equals(fileType)) {
+            model.addAttribute("errorMessage", "Chỉ chấp nhận file định dạng CSV hoặc Excel");
             return "common/UploadEnrolUsers";
         }
 
         try {
+            System.out.println("Bắt đầu parse file");
             // Đọc và xử lý file CSV
-            List<EnrolUserDTO> enrolUsers = usersService.parseCSVFileEnrolUsers(file, type);
+            List<EnrolUserDTO> enrolUsers = usersService.parseFileEnrolUsers(file, type);
+            System.out.println("bắt đầu vòng for");
 
             for (EnrolUserDTO enrolUser : enrolUsers) {
                 usersService.enrolUser(enrolUser);
@@ -205,7 +212,7 @@ public class CommonController {
                 for(Integer userId : enrolUser.getUserid()) {
                     UsersEntity user = usersRepository.findByMoodleId(userId).orElse(null);
                     if (user == null) {
-                        model.addAttribute("errorMessage", "Người dùng không tồn tại.");
+                        model.addAttribute("errorMessage", "Người dùng không tồn tại." + userId);
                         return "common/UploadEnrolUsers";
                     }
 
