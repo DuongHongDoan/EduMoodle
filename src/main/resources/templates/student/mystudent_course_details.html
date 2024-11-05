@@ -277,8 +277,11 @@
                            th:data-module-id="${module.id}"
                            th:data-module-type="${module.moduleType}"
                            th:data-course-id="${courseDetails.moodleCourseId}"
-                           onclick="submitModuleForm(this)"></p>
+                           th:data-instance-id="${module.moduleType == 'forum' ? module.instanceId : ''}"
+                           onclick="submitModuleForm(this)">
+                        </p>
                     </li>
+
                 </ul>
             </div>
         </div>
@@ -333,17 +336,17 @@
         document.getElementById(sectionId + '-tab').classList.add('active');
 
         // Fetch and display content if it's not the "Courses" tab
-        // Fetch and display content if it's not the "Courses" tab
         if (sectionId !== "courses") {
-            // Lấy courseId từ hidden input
+            // Lấy courseId và userId từ hidden inputs
             const moodleCourseId = document.getElementById("moodle-course-id").value;
+            const userId = document.getElementById("user-id").value;
 
             // Gọi AJAX tới controller tương ứng để lấy dữ liệu (Student List hoặc Grades)
             let fetchUrl;
             if (sectionId === "students") {
                 fetchUrl = `/user/student_list?moodleCourseId=` + moodleCourseId + `&isFragment=true`;
             } else if (sectionId === "grades") {
-                fetchUrl = `/user/student_grades?moodleCourseId=` + moodleCourseId;
+                fetchUrl = `/user/student_grades?moodleCourseId=` + moodleCourseId + `&userId=` + userId;
             }
 
             fetch(fetchUrl)
@@ -355,8 +358,8 @@
                 })
                 .catch(error => console.error('Error fetching section content:', error));
         }
-
     }
+
 
     function toggleSectionContent(sectionId) {
         // Toggle hiển thị nội dung của mỗi section khi bấm vào
@@ -368,10 +371,32 @@
         // Lấy moduleId và moduleType từ thuộc tính của phần tử
         const moduleId = element.getAttribute("data-module-id");
         const moduleType = element.getAttribute("data-module-type");
+        const instanceId = element.getAttribute("data-instance-id"); // Lấy instanceId nếu có
 
         // Gán giá trị vào các input của form
         document.getElementById("module-id").value = moduleId;
         document.getElementById("module-type").value = moduleType;
+
+        // Kiểm tra nếu module type là 'forum'
+        if (moduleType === 'forum') {
+            // Tạo input hidden cho instanceId nếu chưa có
+            let instanceInput = document.getElementById("instance-id");
+            if (!instanceInput) {
+                instanceInput = document.createElement("input");
+                instanceInput.type = "hidden";
+                instanceInput.name = "instanceId";
+                instanceInput.id = "instance-id";
+                document.getElementById("module-form").appendChild(instanceInput);
+            }
+            // Gán giá trị cho instanceId
+            instanceInput.value = instanceId;
+        } else {
+            // Nếu không phải forum, loại bỏ instanceId nếu có
+            const instanceInput = document.getElementById("instance-id");
+            if (instanceInput) {
+                instanceInput.remove();
+            }
+        }
 
         // Gửi form để lấy nội dung module
         document.getElementById("module-form").submit();

@@ -36,6 +36,58 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .module-detail-page #forumList {
+            width: 80%;
+            background-color: #ffffff; /* White background for better contrast */
+            border: 1px solid #ddd; /* Light gray border */
+            border-radius: 8px; /* Rounded corners */
+            padding: 20px; /* Internal padding */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            margin: 20px 0; /* Space above and below */
+        }
+
+        .module-detail-page #forumList h2 {
+            font-size: 1.8em; /* Slightly larger font size */
+            color: #2980b9; /* Dark blue for header */
+            margin-bottom: 15px; /* Space below the header */
+            text-align: center; /* Center align */
+        }
+
+        .module-detail-page #forumList ul {
+            list-style: none; /* Remove bullet points */
+            padding: 0; /* No padding */
+            margin: 0; /* No margin */
+        }
+
+        .module-detail-page #forumList ul li {
+            padding: 10px; /* Padding for each list item */
+            border-bottom: 1px solid #ddd; /* Bottom border for separation */
+            transition: background-color 0.2s; /* Smooth background change on hover */
+        }
+
+        .module-detail-page #forumList ul li:last-child {
+            border-bottom: none; /* Remove border for the last item */
+        }
+
+        .module-detail-page #forumList ul li:hover {
+            background-color: #f0f8ff; /* Light blue background on hover */
+        }
+
+        .module-detail-page #forumList strong {
+            color: #34495e; /* Darker color for subject */
+            font-size: 1.1em; /* Slightly larger */
+        }
+
+        .module-detail-page #forumList span {
+            font-size: 0.9em; /* Smaller font for the user name */
+            color: #7f8c8d; /* Grey color */
+        }
+
+        .module-detail-page #forumList p {
+            margin-top: 5px; /* Space above the message */
+            color: #555; /* Dark grey for the message text */
+        }
+
         .module-detail-page #quizList {
             width: 80%;
             background-color: #eaf6ff; /* Màu nền nhẹ cho quizList */
@@ -106,22 +158,36 @@
             color: #2980b9;
         }
     </style>
-
-
 </head>
 <body id="page-top" layout:fragment="body">
 <div class="module-detail-page">
-    <!-- Chỉ hiển thị moduleContent nếu không trống và moduleType khác "test" -->
-    <div id="moduleContent" th:if="${moduleType != 'quiz' and moduleContent != ''}" th:utext="${moduleContent}"></div>
 
-    <!-- Hiển thị danh sách quizzes nếu có -->
-    <div id="quizList" th:if="${quizzes != null}">
+    <div id="forumList" th:if="${forumDiscussions != null}">
+        <h2>Danh Sách Diễn Đàn</h2>
+        <ul>
+            <li th:each="discussion : ${forumDiscussions}">
+                <div>
+                    <strong th:text="${discussion.subject}">Subject</strong> <br />
+                    <span th:text="${discussion.userFullName}">User</span> <br />
+                    <p th:utext="${discussion.message}">Message</p>
+                    <hr />
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Chỉ hiển thị moduleContent nếu không trống và moduleType khác "quiz" và "forum" -->
+    <div id="moduleContent" th:if="${moduleType != 'quiz' and moduleType != 'forum' and moduleContent != ''}" th:utext="${moduleContent}"></div>
+
+    <!-- Hiển thị danh sách quizzes nếu có và moduleType không phải là "forum" -->
+    <div id="quizList" th:if="${quizzes != null and moduleType != 'forum'}">
         <h2>Danh Sách Quizzes</h2>
         <ul>
             <li th:each="quiz : ${quizzes}">
                 <form th:action="@{/user/quizCourseStudent}" method="get">
                     <input type="hidden" name="quizId" th:value="${quiz.id}">
                     <input type="hidden" name="userId" th:value="${userId}">
+                    <input type="hidden" name="moodleCourseId" th:value="${moodleCourseId}">
                     <button type="submit" th:text="${quiz.name}">Quiz Name</button>
                 </form>
             </li>
@@ -142,5 +208,4 @@
         }
     });
 </script>
-
 </html>

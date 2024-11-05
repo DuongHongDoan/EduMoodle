@@ -6,10 +6,10 @@
 <head>
   <meta charset="utf-8"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
-  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Quiz details</title>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Details quiz</title> <!-- Cập nhật tiêu đề -->
 
   <style>
-    /* Style for the table and buttons */
+    /* Style cho bảng và nút bấm */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -54,7 +54,7 @@
 
     .start-quiz-container {
       margin: 20px 0;
-      text-align: left; /* Align button to the left */
+      text-align: left; /* Căn trái nút bấm */
     }
 
     /* Responsive styles */
@@ -83,7 +83,9 @@
     <thead>
     <tr>
       <th>Mã lần làm bài</th>
-      <th>Điểm</th>
+      <th>Số câu đúng</th>
+      <th>Điểm tối đa</th> <!-- Add maxGrade column -->
+      <th>Điểm</th> <!-- Add numberOfQuestions column -->
       <th>Thời gian bắt đầu</th>
       <th>Thời gian kết thúc</th>
       <th>Trạng thái</th>
@@ -93,7 +95,9 @@
     <tbody>
     <tr th:each="attempt : ${quizDetails}">
       <td th:text="${attempt.attemptId}">Attempt ID</td>
-      <td th:text="${attempt.score}">Score</td>
+      <td th:text="${#numbers.formatDecimal(attempt.score, 0, 0)} + '/' + ${numberOfQuestions}">Score/Questions</td> <!-- Display score as score/numberOfQuestions without .0 -->
+      <td th:text="${maxGrade}">Max Grade</td> <!-- Display maxGrade -->
+      <td th:text="${(attempt.score / numberOfQuestions) * maxGrade} + ' / ' + ${maxGrade}">Score</td>
       <td th:text="${attempt.timeStart}">Start Time</td>
       <td th:text="${attempt.timeFinish}">Finish Time</td>
       <td th:text="${attempt.status}">Status</td>
@@ -104,6 +108,7 @@
         </form>
       </td>
     </tr>
+
     </tbody>
   </table>
 

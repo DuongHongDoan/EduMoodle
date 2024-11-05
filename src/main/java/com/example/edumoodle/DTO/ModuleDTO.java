@@ -6,8 +6,7 @@ public class ModuleDTO {
     private String description;
     private String moduleType; // Thêm thuộc tính cho loại module
     private String content;
-
-
+    private Integer instanceId;
 
     public Integer getId() {
         return id;
@@ -47,5 +46,13 @@ public class ModuleDTO {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Integer getInstanceId() {
+        return instanceId;
+    }
+
+    public void setInstanceId(Integer instanceId) {
+        this.instanceId = instanceId;
     }
 }

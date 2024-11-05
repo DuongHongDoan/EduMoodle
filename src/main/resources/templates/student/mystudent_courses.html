@@ -128,18 +128,28 @@
 <!--<p style="text-align:center; font-weight:bold;">Chào, <span th:text="${username}">Người dùng</span>!</p>-->
 
 <!-- Form tìm kiếm và điều hướng -->
-<form action="/user/my-courses-student" method="post" class="search-form">
+<form th:action="@{/user/my-courses-student}" method="post" class="search-form">
     <input type="hidden" name="username" th:value="${username}"/>
     <input type="text" name="searchQuery" placeholder="Tìm kiếm khóa học..." th:value="${searchQuery}" />
+
+    <!-- Search Button -->
     <button type="submit" style="border: none; background: none; cursor: pointer;">
         <i class="fas fa-search" style="font-size: 20px; color: #007bff;"></i>
     </button>
+
+    <!-- Sort Button -->
     <button type="submit" name="sort" value="name">Sắp xếp theo tên</button>
+
+    <!-- Show All Button -->
     <button type="submit" name="showAll" value="true">Hiển thị tất cả</button>
 </form>
 
-<!-- Danh sách khóa học hiển thị-->
-<div class="course-container">
+
+<!-- Display error message if no courses found -->
+<p th:if="${error}" style="color: red; text-align: center;">[[${error}]]</p>
+
+<!-- Course cards -->
+<div class="course-container" th:if="${userCourses}">
     <div class="course-card" th:each="course : ${userCourses}">
         <img th:src="@{/imgs/courses.png}" alt="Course Image"/>
         <h3 th:text="${course.fullname}">Tên khóa học</h3>

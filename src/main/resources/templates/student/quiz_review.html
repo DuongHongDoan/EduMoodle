@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Review</title>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Quiz review</title> <!-- Cập nhật tiêu đề -->
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -226,7 +230,7 @@
 
     </style>
 </head>
-<body>
+<body id="page-top" layout:fragment="body">
 
 <h1>Quiz Review</h1>
 
@@ -241,7 +245,7 @@
         <div th:each="questionDetail, iterStat : ${questionDetails}"
              class="nav-item"
              th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
-             onclick="scrollToQuestion([[${iterStat.index}]])">
+             th:onclick="'scrollToQuestion(' + ${iterStat.index} + ')'">
             <span th:text="${iterStat.index + 1}"></span>
         </div>
     </div>
@@ -307,8 +311,13 @@
 
     function scrollToQuestion(index) {
         const question = document.getElementById(`question-${index}`);
-        question.scrollIntoView({ behavior: 'smooth' });
+        if (question) {
+            question.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            console.error(`Question with ID 'question-${index}' not found.`);
+        }
     }
+
 </script>
 
 </body>

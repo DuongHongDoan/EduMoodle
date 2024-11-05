@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,18 +62,25 @@ public class StudentCoursesController {
     public String processCourseSearch(@RequestParam("username") String username,
                                       @RequestParam(value = "searchQuery", required = false) String searchQuery,
                                       @RequestParam(value = "sort", required = false) String sort,
+                                      @RequestParam(value = "showAll", required = false) String showAll,
                                       Model model) {
         if (username == null) {
             model.addAttribute("error", "Không thể xác định được người dùng hiện tại.");
             return "student/mystudent_courses";
         }
 
-        // Get user courses as CoursesDto
+        // Get all user courses
         List<CoursesDTO> userCourses = myCoursesStudentService.getUserCourses(username);
 
-        // Filter by search query if provided
-        if (searchQuery != null && !searchQuery.isEmpty()) {
-            userCourses = myCoursesStudentService.filterCoursesByName(userCourses, searchQuery);
+        // Handle "showAll" button click
+        if (showAll == null) {
+            // Filter by search query if provided and not showing all
+            if (searchQuery != null && !searchQuery.isEmpty()) {
+                userCourses = myCoursesStudentService.filterCoursesByName(userCourses, searchQuery);
+                if (userCourses.isEmpty()) {
+                    model.addAttribute("error", "Không tìm thấy khóa học phù hợp.");
+                }
+            }
         }
 
         // Sort if requested
@@ -91,6 +99,8 @@ public class StudentCoursesController {
 
         return "student/mystudent_courses";
     }
+
+
 
     // Lấy chi tiết một khóa học dựa trên moodleCourseId
     @GetMapping("/user/student_course_details")
@@ -161,71 +171,103 @@ public class StudentCoursesController {
         return "student/course_students_list"; // Trả về toàn bộ view nếu không phải từ student_course_details
     }
 
-
-
-    //diem so sinh vien trong khoa hoc do
     @GetMapping("/user/student_grades")
-    public String getStudentGrades(@RequestParam("moodleCourseId") Integer moodleCourseId, Model model) {
-        // Gọi service lấy danh sách điểm của sinh viên
-//        List<GradesDTO> grades = myCoursesStudentService.getGrades(moodleCourseId);
+    public String getStudentGrades(@RequestParam("moodleCourseId") Integer moodleCourseId,
+                                   @RequestParam("userId") Integer userId,
+                                   Model model) {
+        // Thêm moodleCourseId và userId vào model
+        model.addAttribute("moodleCourseId", moodleCourseId);
+        model.addAttribute("userId", userId);
 
-        System.out.println("Grades for course: " + moodleCourseId);
+        // Lấy danh sách điểm của sinh viên
+        GradesDTO gradesDTO =  myCoursesStudentService.getStudentGrades(moodleCourseId, userId);
 
-        // Thêm danh sách điểm vào model
-//        model.addAttribute("grades", grades);
+        // Khởi tạo danh sách nếu nó là null
+        if (gradesDTO.getGradeItems() == null) {
+            gradesDTO.setGradeItems(new ArrayList<GradeItemDTO>());
+        }
 
-        // Trả về một phần view chứa danh sách điểm
+        model.addAttribute("grades", gradesDTO);
         return "student/course_grades_list";
     }
 
 
-    ////
+
     @GetMapping("/user/fetch_module_content")
     public String fetchModuleContent(@RequestParam("moodleCourseId") Integer moodleCourseId,
                                      @RequestParam("moduleId") Integer moduleId,
                                      @RequestParam("userId") Integer userId,
                                      @RequestParam("moduleType") String moduleType,
+                                     @RequestParam(value = "instanceId", required = false) Integer instanceId, // Thêm instanceId (optional)
                                      Model model) {
-        // Fetch module content using service method
-        Object moduleContent = myCoursesStudentService.fetchModuleContent(moduleId, moduleType, moodleCourseId);
+        // In ra thông tin để kiểm tra
         System.out.println("Moodle Course ID (GET): " + moodleCourseId);
         System.out.println("Module ID (GET): " + moduleId);
         System.out.println("User ID (GET): " + userId);
         System.out.println("Module Type (GET): " + moduleType);
+        if (moduleType.equals("forum") && instanceId != null) {
+            System.out.println("Forum Instance ID (GET): " + instanceId);
+        }
 
-        // Check if content is a list (for quizzes) or other content
+        // Fetch module content bằng service, có thể cần điều chỉnh nếu là forum và cần thêm instanceId
+        Object moduleContent;
+        if ("forum".equals(moduleType) && instanceId != null) {
+            moduleContent = myCoursesStudentService.fetchForumContent(instanceId);
+        } else {
+            moduleContent = myCoursesStudentService.fetchModuleContent(moduleId, moduleType, moodleCourseId);
+        }
+
+        // Nếu content là List, giả sử là các quiz
         if (moduleContent instanceof List<?>) {
-            // Assuming it's a list of QuizDTO
             List<QuizDTO> quizzes = (List<QuizDTO>) moduleContent;
-            model.addAttribute("quizzes", quizzes); // Add quizzes to the model
+            model.addAttribute("quizzes", quizzes); // Add vào model
         } else {
             model.addAttribute("moduleContent", moduleContent);
         }
 
-        // Add these values to the model
+        // Add các giá trị vào model
         model.addAttribute("moodleCourseId", moodleCourseId);
         model.addAttribute("moduleId", moduleId);
         model.addAttribute("userId", userId);
         model.addAttribute("moduleType", moduleType);
-
-        return "student/module_details"; // Return the module details view
+        if ("forum".equals(moduleType) && instanceId != null) {
+            List<ForumDiscussionDTO> forumDiscussions = myCoursesStudentService.fetchForumContent(instanceId);
+            model.addAttribute("forumDiscussions", forumDiscussions); // Add discussions to the model
+        }
+        return "student/module_details"; // Trả về view
     }
+
 
 
     @GetMapping("/user/quizCourseStudent")
     public String showQuizDetailsGet(@RequestParam("quizId") Integer quizId,
-                                     @RequestParam("userId") Integer userId, Model model) {
+                                     @RequestParam("moodleCourseId") Integer moodleCourseId,
+                                     @RequestParam("userId") Integer userId,
+                                     Model model) {
 
         // In ra để kiểm tra xem quizId và userId có được truyền đúng không
         System.out.println("GET - Quiz ID: " + quizId + ", User ID: " + userId);
 
+        // Lấy chi tiết quiz bao gồm maxGrade và numberOfQuestions
+        QuizDetails quizDetails = myCoursesStudentService.getQuizDetails(quizId.toString(), moodleCourseId);
+        Double maxGrade = quizDetails.getMaxGrade();
+        Integer numberOfQuestions = quizDetails.getNumberOfQuestions();
+
+        if (maxGrade == null || numberOfQuestions == null) {
+            System.out.println("Max grade or number of questions not found for course ID: " + moodleCourseId);
+            model.addAttribute("errorMessage", "Could not retrieve quiz details.");
+            return "student/quiz_details"; // Trả về view với thông báo lỗi
+        }
+
         // Lấy danh sách attempts của sinh viên cho quiz
-        List<AttemptIDTO> attempts = myCoursesStudentService.getStudentAttempts(userId.toString(), quizId.toString());
+        List<AttemptIDTO> attempts = myCoursesStudentService.getStudentAttempts(userId.toString(), quizId.toString(), maxGrade, numberOfQuestions);
 
         // Thêm attempts vào model để hiển thị trên giao diện
         model.addAttribute("quizId", quizId);
         model.addAttribute("userId", userId);
         model.addAttribute("quizDetails", attempts); // Đổi từ 'attempts' thành 'quizDetails'
+        model.addAttribute("maxGrade", maxGrade); // Thêm maxGrade vào model nếu cần
+        model.addAttribute("numberOfQuestions", numberOfQuestions); // Thêm số câu hỏi vào model nếu cần
 
         // Trả về view 'student/quiz_details' để hiển thị chi tiết quiz
         return "student/quiz_details";

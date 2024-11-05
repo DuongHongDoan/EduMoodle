@@ -291,14 +291,21 @@ public class MyCoursesStudentService {
                             JSONObject module = modules.getJSONObject(j);
                             String moduleName = module.optString("name", "No name");
                             Integer moduleId = module.optInt("id");
-                            String moduleType = module.optString("modname", "unknown"); // Lấy tên loại module
+                            String moduleType = module.optString("modname", "unknown"); // Get module type
 
                             ModuleDTO moduleDto = new ModuleDTO();
                             moduleDto.setId(moduleId);
                             moduleDto.setName(moduleName);
-                            moduleDto.setModuleType(moduleType); // Thêm thuộc tính loại module
+                            moduleDto.setModuleType(moduleType);
 
-                            // In loại module ra console
+                            // Check if the module is a forum, and handle instanceId
+                            if ("forum".equals(moduleType)) {
+                                Integer instanceId = module.optInt("instance", 0); // Get instance ID (forum ID)
+                                moduleDto.setInstanceId(instanceId); // Set instance ID only for forums
+                                System.out.println("Forum ID (Instance): " + instanceId);
+                            }
+
+                            // Print module info (without instanceId for other types)
                             System.out.println("Module ID: " + moduleId + ", Name: " + moduleName + ", Type: " + moduleType);
 
                             moduleList.add(moduleDto);
@@ -506,7 +513,7 @@ public class MyCoursesStudentService {
 
 
     // bai thi
-    public List<AttemptIDTO> getStudentAttempts(String studentId, String quizId) {
+    public List<AttemptIDTO> getStudentAttempts(String studentId, String quizId, Double maxGrade, Integer numberOfQuestions) {
         String getAttemptsFunction = "mod_quiz_get_user_attempts";
         List<AttemptIDTO> attemptList = new ArrayList<>();
 
@@ -530,16 +537,16 @@ public class MyCoursesStudentService {
                     JSONObject attempt = attemptsArray.getJSONObject(i);
                     Integer attemptId = attempt.getInt("id");
                     Double score = attempt.optDouble("sumgrades", 0.0);
-                    Long timeStartLong = attempt.optLong("timestart", 0L); // Thời gian bắt đầu
-                    Long timeFinishLong = attempt.optLong("timefinish", 0L); // Thời gian kết thúc
-                    String status = attempt.optString("state", "unknown"); // Trạng thái
+                    Long timeStartLong = attempt.optLong("timestart", 0L);
+                    Long timeFinishLong = attempt.optLong("timefinish", 0L);
+                    String status = attempt.optString("state", "unknown");
 
                     // Chuyển đổi từ long sang LocalDateTime
                     LocalDateTime timeStart = LocalDateTime.ofEpochSecond(timeStartLong, 0, ZoneOffset.UTC);
                     LocalDateTime timeFinish = LocalDateTime.ofEpochSecond(timeFinishLong, 0, ZoneOffset.UTC);
 
                     // Tạo đối tượng AttemptIDTO với tất cả các tham số
-                    AttemptIDTO attemptInfo = new AttemptIDTO(attemptId, score, timeStart, timeFinish, status);
+                    AttemptIDTO attemptInfo = new AttemptIDTO(attemptId, score, maxGrade, numberOfQuestions, timeStart, timeFinish, status);
 
                     // Thêm vào danh sách
                     attemptList.add(attemptInfo);
@@ -558,6 +565,108 @@ public class MyCoursesStudentService {
 
         return attemptList;
     }
+
+    public QuizDetails getQuizDetails(String quizId, Integer moodleCourseId) {
+        String getQuizDetailsFunction = "mod_quiz_get_quizzes_by_courses";
+        Double maxGrade = null;
+        Integer numberOfQuestions = null;
+
+        try {
+            String getQuizDetailsUrl = domainName + "/webservice/rest/server.php" +
+                    "?wstoken=" + token +
+                    "&wsfunction=" + getQuizDetailsFunction +
+                    "&moodlewsrestformat=json" +
+                    "&courseids[0]=" + moodleCourseId;  // Sử dụng courseId để lấy danh sách các quiz trong khóa học
+
+            String quizDetailsResponse = restTemplate.getForObject(getQuizDetailsUrl, String.class);
+            System.out.println("Request URL: " + getQuizDetailsUrl);
+            System.out.println("Response: " + quizDetailsResponse);
+
+            JSONObject responseJson = new JSONObject(quizDetailsResponse);
+            JSONArray quizzesArray = responseJson.optJSONArray("quizzes");
+
+            if (quizzesArray != null && quizzesArray.length() > 0) {
+                for (int i = 0; i < quizzesArray.length(); i++) {
+                    JSONObject quizDetails = quizzesArray.getJSONObject(i);
+
+                    // Kiểm tra xem quizId có khớp với quiz hiện tại không
+                    if (quizDetails.optString("id").equals(quizId)) {
+                        maxGrade = quizDetails.optDouble("grade", 0.0); // Lấy maxGrade
+                        numberOfQuestions = quizDetails.optInt("sumgrades", 0); // Lấy sumgrades làm số câu hỏi
+                        System.out.println("Max Grade: " + maxGrade + ", Total Questions: " + numberOfQuestions);
+                        break;  // Thoát vòng lặp sau khi tìm thấy quiz tương ứng
+                    }
+                }
+            } else {
+                System.out.println("No quizzes found for courseId: " + moodleCourseId);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error: " + e.getMessage());
+        }
+
+        return new QuizDetails(maxGrade, numberOfQuestions); // Trả về chi tiết quiz
+    }
+
+
+
+    // Hàm tính điểm (grade) từ score và maxGrade
+    private Double calculateGrade(Double score, Double maxGrade) {
+        return (maxGrade != 0) ? (score / maxGrade) * 10 : 0.0; // Tính điểm trên thang 10
+    }
+
+    // thong bao trong khoa hoc
+    public List<ForumDiscussionDTO> fetchForumContent(Integer instanceId) {
+        // Hàm gọi API Moodle
+        String getForumContentFunction = "mod_forum_get_forum_discussions";
+
+        String apiUrl = domainName + "/webservice/rest/server.php" +
+                "?wstoken=" + token +
+                "&wsfunction=" + getForumContentFunction +
+                "&moodlewsrestformat=json" +
+                "&forumid=" + instanceId;
+
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            String response = restTemplate.getForObject(apiUrl, String.class);
+            System.out.println("API URL: " + apiUrl);
+            System.out.println("Response: " + response);
+
+            return processForumDiscussions(response); // Return the list of DTOs
+        } catch (Exception e) {
+            System.out.println("Error fetching forum content: " + e.getMessage());
+            e.printStackTrace();
+            return Collections.emptyList(); // Return an empty list in case of error
+        }
+    }
+
+    private List<ForumDiscussionDTO> processForumDiscussions(String jsonResponse) {
+        List<ForumDiscussionDTO> discussions = new ArrayList<>();
+        try {
+            JSONObject responseJson = new JSONObject(jsonResponse);
+            JSONArray discussionsArray = responseJson.optJSONArray("discussions");
+
+            if (discussionsArray != null && discussionsArray.length() > 0) {
+                for (int i = 0; i < discussionsArray.length(); i++) {
+                    JSONObject discussion = discussionsArray.getJSONObject(i);
+                    String subject = discussion.getString("subject");
+                    String message = discussion.getString("message");
+                    String userFullName = discussion.getString("userfullname"); // Get user full name
+
+                    // Create DTO and add it to the list
+                    discussions.add(new ForumDiscussionDTO(subject, message, userFullName));
+                }
+            } else {
+                System.out.println("No discussions found for this forum.");
+            }
+        } catch (JSONException e) {
+            System.out.println("Error parsing JSON response: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return discussions; // Return the list of DTOs
+    }
+
 
     // Hàm để loại bỏ các ký tự như a., b., c. từ câu trả lời
     private String cleanResponse(String response) {
@@ -686,28 +795,113 @@ public class MyCoursesStudentService {
         return students;
     }
 
-    // Method to get filtered enrolled students based on first name and last name
-    public List<StudentsCourseDTO> getFilteredEnrolledStudents(Integer moodleCourseId, String firstName, String lastName) {
-        // Get the list of enrolled students
-        List<StudentsCourseDTO> students = getEnrolledStudents(moodleCourseId);
+    //diem so
+    public GradesDTO getStudentGrades(Integer moodleCourseId, Integer userId) {
+        GradesDTO gradesDTO = new GradesDTO();
+        try {
+            String getGradesFunction = "gradereport_user_get_grades_table";
+            String getGradesUrl = domainName + "/webservice/rest/server.php" +
+                    "?wstoken=" + token +
+                    "&wsfunction=" + getGradesFunction +
+                    "&moodlewsrestformat=json" +
+                    "&courseid=" + moodleCourseId +
+                    "&userid=" + userId;
 
-        // Filter by first name if provided
-        if (firstName != null && !firstName.isEmpty()) {
-            students = students.stream()
-                    .filter(student -> student.getFirstName() != null &&
-                            student.getFirstName().toLowerCase().contains(firstName.toLowerCase()))
-                    .collect(Collectors.toList());
+            String gradesResponse = restTemplate.getForObject(getGradesUrl, String.class);
+            System.out.println("Grades API Response: " + gradesResponse);  // Print the entire JSON response
+
+            JSONObject responseJson = new JSONObject(gradesResponse);
+            JSONArray tablesArray = responseJson.getJSONArray("tables");
+
+            if (tablesArray.length() > 0) {
+                JSONObject tableJson = tablesArray.getJSONObject(0);
+                JSONArray tableData = tableJson.getJSONArray("tabledata");
+
+                List<GradeItemDTO> gradeItems = new ArrayList<>();
+                for (int i = 0; i < tableData.length(); i++) {
+                    JSONObject item = tableData.getJSONObject(i);
+
+                    // Print each item JSON object to see its structure
+                    System.out.println("Item JSON Object: " + item);
+
+                    String htmlContent = item.optString("itemname", "");
+                    System.out.println("HTML Content of itemname: " + htmlContent);  // Print HTML content before parsing
+
+                    if (!htmlContent.isEmpty()) {
+                        Document doc = Jsoup.parse(htmlContent);
+                        Elements spans = doc.select("span");
+
+                        // Extract, clean, and format the item name
+                        String itemName = spans.size() > 0 ? spans.get(spans.size() - 1).text() : "N/A";
+                        itemName = itemName.replaceAll("<[^>]*>", "") // Remove any remaining HTML tags
+                                .replace("\\/", "/")      // Replace escaped slashes
+                                .replaceAll("\\s+", " ")  // Replace multiple spaces/newlines with a single space
+                                .replaceAll("[\"\\{\\}\\n]", "") // Remove quotes, braces, and newlines
+                                .replaceAll("\\\\", "")    // Remove any backslashes
+                                .trim();
+
+                        // Format itemName to add a line break between type and name if it starts with "Quiz" or "Test"
+                        String formattedItemName;
+                        if (itemName.startsWith("Quiz")) {
+                            formattedItemName = "Quiz\n" + itemName.substring(4).trim();  // Adds line break after "Quiz"
+                        } else if (itemName.startsWith("Test")) {
+                            formattedItemName = "Test\n" + itemName.substring(4).trim();  // Adds line break after "Test"
+                        } else {
+                            formattedItemName = itemName; // For other items, keep as is
+                        }
+                        System.out.println("Formatted itemName: " + formattedItemName);  // Print formatted item name for verification
+
+                        // Check if this is the first item (assumed to be the course name)
+                        if (i == 0) {
+                            gradesDTO.setCourseName(itemName);  // Set course name in GradesDTO
+                            System.out.println("Set Course Name: " + itemName);
+                            continue;  // Skip adding this as a grade item
+                        }
+
+                        // Extract and log each data field for grade items
+                        Double grade = item.optJSONObject("grade") != null ?
+                                item.getJSONObject("grade").optDouble("content", 0.0) : 0.0;
+                        System.out.println("Grade: " + grade);
+
+                        Double maxGrade = item.optJSONObject("grademax") != null ?
+                                item.getJSONObject("grademax").optDouble("content", 0.0) : 0.0;
+                        System.out.println("Max Grade: " + maxGrade);
+
+                        String percentage = item.optJSONObject("percentage") != null ?
+                                item.getJSONObject("percentage").optString("content", "N/A") : "N/A";
+                        System.out.println("Percentage: " + percentage);
+
+                        String weight = item.optJSONObject("weight") != null ?
+                                item.getJSONObject("weight").optString("content", "N/A") : "N/A";
+                        System.out.println("Weight: " + weight);
+
+                        String range = maxGrade != 0 ? "0-" + maxGrade : "N/A";
+                        System.out.println("Range: " + range);
+
+                        String feedback = item.optJSONObject("feedback") != null ?
+                                item.getJSONObject("feedback").optString("content", "").replace("&nbsp;", "").trim() : "";
+
+                        String contributionToCourseTotal = item.optJSONObject("contributiontocoursetotal") != null ?
+                                item.getJSONObject("contributiontocoursetotal").optString("content", "N/A") : "N/A";
+                        System.out.println("Contribution to Course Total: " + contributionToCourseTotal);
+
+                        // Add the grade item to the list
+                        GradeItemDTO gradeItemDTO = new GradeItemDTO(
+                                itemName, grade, maxGrade, percentage, weight, range, feedback, contributionToCourseTotal
+                        );
+                        gradeItems.add(gradeItemDTO);
+                    }
+                }
+
+                gradesDTO.setUserId(userId);
+                gradesDTO.setMoodleCourseId(moodleCourseId);
+                gradesDTO.setGradeItems(gradeItems);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        // Filter by last name if provided
-        if (lastName != null && !lastName.isEmpty()) {
-            students = students.stream()
-                    .filter(student -> student.getLastName() != null &&
-                            student.getLastName().toLowerCase().contains(lastName.toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        return students;
+        return gradesDTO;
     }
 
 }

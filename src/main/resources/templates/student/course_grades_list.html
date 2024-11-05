@@ -1,10 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Student Grades</title>
+    <style>
+        .item-type {
+            display: block;
+            font-weight: bold;
+        }
+        .item-name {
+            display: block;
+            margin-top: 2px;
+        }
+    </style>
 </head>
 <body>
-<h1> day la diem so ne</h1>
+<h1>Điểm số của sinh viên</h1>
+
+<div th:if="${grades != null}">
+    <table border="1" id="gradesTable">
+        <thead>
+        <tr>
+            <th>Grade Item</th>
+            <th>Calculated Weight</th>
+            <th>Grade</th>
+            <th>Range</th>
+            <th>Percentage</th>
+            <th>Feedback</th>
+            <th>Contribution to Course Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Course Name Row with Toggle Button -->
+        <tr>
+            <td th:text="${grades.courseName}"></td>
+            <td colspan="6">
+                Course Name
+<!--                <button id="toggleButton" onclick="toggleItems()">Hide Items</button>-->
+            </td>
+        </tr>
+        <!-- Grade Items Rows -->
+        <tr th:each="gradeItem : ${grades.gradeItems}" class="grade-item-row">
+            <td>
+                <span th:text="${#strings.startsWith(gradeItem.itemName, 'Quiz') ? 'Quiz' : 'Test'}" class="item-type"></span>
+                <span th:text="${gradeItem.itemName.replace('Quiz', '').replace('Test', '').trim()}" class="item-name"></span>
+            </td>
+            <td th:text="${gradeItem.weight}"></td>
+            <td th:text="${gradeItem.grade}"></td>
+            <td th:text="${gradeItem.range}"></td>
+            <td th:text="${gradeItem.percentage}"></td>
+            <td th:text="${gradeItem.feedback}"></td>
+            <td th:text="${gradeItem.contributionToCourseTotal}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<p th:if="${grades == null || grades.gradeItems.isEmpty()}">Không có điểm nào cho sinh viên trong khóa học này.</p>
+
+<script>
+    function toggleItems() {
+        // Select all grade item rows
+        const gradeItemRows = document.querySelectorAll(".grade-item-row");
+        const toggleButton = document.getElementById("toggleButton");
+
+        // Toggle the display for each grade item row
+        gradeItemRows.forEach(row => {
+            row.style.display = (row.style.display === "none" ? "" : "none");
+        });
+
+        // Change button text based on the current state
+        toggleButton.textContent = (toggleButton.textContent === "Hide Items") ? "Show Items" : "Hide Items";
+    }
+
+    // Ensure grade items are initially shown when the page loads
+    document.addEventListener("DOMContentLoaded", function() {
+        const gradeItemRows = document.querySelectorAll(".grade-item-row");
+        gradeItemRows.forEach(row => row.style.display = "");  // Set initial state to visible
+    });
+</script>
+
 </body>
 </html>
