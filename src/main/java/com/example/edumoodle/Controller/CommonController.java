@@ -5,6 +5,7 @@ import com.example.edumoodle.Model.*;
 import com.example.edumoodle.Repository.*;
 import com.example.edumoodle.Service.CategoriesService;
 import com.example.edumoodle.Service.CoursesService;
+import com.example.edumoodle.Service.QuizService;
 import com.example.edumoodle.Service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,6 +36,8 @@ public class CommonController {
     private CoursesService coursesService;
     @Autowired
     private UsersService usersService;
+    @Autowired
+    private QuizService quizService;
 
     @Autowired
     private CoursesRepository coursesRepository;
@@ -253,5 +256,13 @@ public class CommonController {
             model.addAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
             return "common/UploadEnrolUsers";
         }
+    }
+
+    // url = /manage/courses/report?courseId=&quizId= --> trả ra trang kết quả điểm của một quiz
+    @GetMapping("/manage/courses/report")
+    public String getReportGradeOfQuiz(@RequestParam Integer courseId, @RequestParam Integer quizId, Model model) {
+        List<QuizAttemptListDTO.AttemptDTO> attempts = quizService.getAllAttemptStudents(quizId, courseId);
+        model.addAttribute("attempts", attempts);
+        return "common/ResultGrade";
     }
 }

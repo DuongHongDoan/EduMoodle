@@ -151,8 +151,6 @@ public class UsersService {
             List<Integer> userIdsGV = new ArrayList<>(List.of());
             List<Integer> userIdsHV = new ArrayList<>(List.of());
             //tìm gv
-
-//            String teacherCode00 = "00" + teacherCode;
             String teacherCode00 = teacherCode.length() == 4 ? "00" + teacherCode : teacherCode;
             System.out.println("Lấy thông tin gv và course: " + teacherCode00 + ", " + courseCode + ", " + courseGroup);
             UsersDTO usersDTOGV = getUserByUsername(teacherCode00.trim());
@@ -690,6 +688,22 @@ public class UsersService {
         return (response != null && response.getUsers() != null && !response.getUsers().isEmpty())
                 ? response.getUsers().get(0)
                 : null;
+    }
+    public List<UsersDTO> getUsersByIds(List<Integer> userIds) {
+        String url = "https://yourmoodlesite.com/webservice/rest/server.php"
+                + "?wstoken=your_token"
+                + "&wsfunction=core_user_get_users_by_field"
+                + "&field=id"
+                + "&moodlewsrestformat=json";
+
+        for (int i = 0; i < userIds.size(); i++) {
+            url += "&values[" + i + "]=" + userIds.get(i);
+        }
+
+        // Gọi API và ánh xạ kết quả trả về vào List<UsersDTO>
+        UsersDTO[] usersArray = restTemplate.getForObject(url, UsersDTO[].class);
+        assert usersArray != null;
+        return Arrays.asList(usersArray);
     }
 
     //    cập nhật người dùng
