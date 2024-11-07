@@ -1,5 +1,6 @@
 package com.example.edumoodle.Repository;
 
+import com.example.edumoodle.Model.CourseGroupsEntity;
 import com.example.edumoodle.Model.SchoolYearSemesterEntity;
 import com.example.edumoodle.Model.SchoolYearsEntity;
 import com.example.edumoodle.Model.SemestersEntity;
@@ -12,5 +13,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface SchoolYearSemesterRepository extends JpaRepository<SchoolYearSemesterEntity, Integer> {
     SchoolYearSemesterEntity findBySchoolYearsEntityAndSemestersEntity(SchoolYearsEntity schoolYearName, SemestersEntity semesterName);
-//    SchoolYearSemesterEntity findByIdSchoolYearSemester(Integer x);
+    SchoolYearSemesterEntity findByCourseGroups(CourseGroupsEntity courseGroups);
 }

@@ -5,7 +5,7 @@
       xmlns:sec="http://www.w3.org/1999/xhtml"
       layout:decorate="~{layout}">
 <head>
-  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Kết quả làm bài</title>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE" th:text="${quiz.name}">Kết quả làm bài</title>
   <style>
     .btn-reset:hover {
       background-color: #aeaeae !important;
@@ -32,15 +32,15 @@
 <div class="container mt-3 mb-3" layout:fragment="body" >
   <div class="row">
     <div class="col d-sm-flex align-items-center justify-content-between">
-      <h1 class="list-courses-name h3 mb-0 text-gray-800">Kết quả làm bài(số bài làm/số người đky)</h1>
+      <h1 class="list-courses-name h3 mb-0 text-gray-800" th:text="${quiz.name}">Kết quả làm bài(số bài làm/số người đky)</h1>
     </div>
     <div class="col d-flex justify-content-end">
-      <form method="get">
-        <a class="link-cate" th:href="@{/admin/users/upload-users}">
-          <button type="submit" class="btn btn-cate btn-edit text-white" style="margin-left: 5px; background-color: #00afef;">
-            <i class="bi bi-upload"></i> Tải danh sách điểm sinh viên
-          </button>
-        </a>
+      <form method="get" th:action="@{/manage/courses/export}">
+        <input type="hidden" name="courseId" th:value="${courseId}">
+        <input type="hidden" name="quizId" th:value="${quizId}">
+        <button type="submit" class="btn btn-cate btn-edit text-white" style="margin-left: 5px; background-color: #00afef;">
+          <i class="bi bi-upload"></i> Tải danh sách điểm sinh viên
+        </button>
       </form>
     </div>
   </div>
@@ -123,7 +123,7 @@
         <th style="">Tên đầy đủ</th>
         <th style="">Email</th>
         <th style="">Trạng thái</th>
-        <th style="">Điểm</th>
+        <th style="" th:text="'Điểm/' + ${quiz.getFormattedGrade}">Điểm</th>
         <th style="">Tổng thời gian</th>
         <th style="">Thời gian bắt đầu</th>
         <th style="">Thời gian kết thúc</th>

@@ -10,17 +10,25 @@ import com.example.edumoodle.Service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -263,6 +271,39 @@ public class CommonController {
     public String getReportGradeOfQuiz(@RequestParam Integer courseId, @RequestParam Integer quizId, Model model) {
         List<QuizAttemptListDTO.AttemptDTO> attempts = quizService.getAllAttemptStudents(quizId, courseId);
         model.addAttribute("attempts", attempts);
+
+        QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
+        model.addAttribute("quiz", quiz);
+
+        model.addAttribute("courseId", courseId);
+        model.addAttribute("quizId", quizId);
         return "common/ResultGrade";
     }
+
+    //url = /manage/courses/export?courseId=&quizId= --> xuất file điểm excel của 1 bài quiz
+    @GetMapping("/manage/courses/export")
+    public ResponseEntity<Resource> exportAttemptListResult(@RequestParam Integer courseId, @RequestParam Integer quizId) {
+        List<QuizAttemptListDTO.AttemptDTO> attempts = quizService.getAllAttemptStudents(quizId, courseId);
+        QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
+
+        try {
+            // Đường dẫn file tạm thời trong server
+            String tempFilePath = System.getProperty("java.io.tmpdir") + "exported_results.xlsx";
+            quizService.exportAttemptToExcel(quiz, attempts, tempFilePath, courseId);
+
+            // Tạo InputStreamResource từ file để gửi phản hồi
+            File file = new File(tempFilePath);
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+
+            // Tạo response với header Content-Disposition
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(file.length())
+                    .body(resource);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 }

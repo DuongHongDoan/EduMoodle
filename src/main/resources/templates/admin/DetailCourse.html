@@ -176,7 +176,7 @@
 <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                                 <input type="text" class="edit-activity-input" style="display: none;" />
                                             </a>
-                                            <a th:href="@{/manage/courses/report(courseId=${courseDetails.id}, quizId=${module.instance})}" title="Xem kết quả các bài kiểm tra">
+                                            <a th:if="${module.modname == 'quiz'}" th:href="@{/manage/courses/report(courseId=${courseDetails.id}, quizId=${module.instance})}" title="Xem kết quả các bài kiểm tra">
                                                 <i class="bi bi-eye-fill"></i>
                                             </a>
                                             <a href="" th:onclick="editActivity(this); return false;" class="edit-activity">
