@@ -268,15 +268,68 @@ public class CommonController {
 
     // url = /manage/courses/report?courseId=&quizId= --> trả ra trang kết quả điểm của một quiz
     @GetMapping("/manage/courses/report")
-    public String getReportGradeOfQuiz(@RequestParam Integer courseId, @RequestParam Integer quizId, Model model) {
+    public String getReportGradeOfQuiz(@RequestParam Integer courseId, @RequestParam Integer quizId,
+                                       @RequestParam(value = "page", defaultValue = "1") Integer page,
+                                       @RequestParam(value = "size", defaultValue = "30") Integer size, Model model) {
         List<QuizAttemptListDTO.AttemptDTO> attempts = quizService.getAllAttemptStudents(quizId, courseId);
         model.addAttribute("attempts", attempts);
+        int attemptCnt = attempts.size();
+        model.addAttribute("attemptCnt", attemptCnt);
+
+        List<UsersDTO> usersEnrolled = usersService.getEnrolledUsers(courseId);
+        List<UsersDTO> studentsEnrolled = usersEnrolled.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> role.getRoleid() == 5))
+                .toList();
+        model.addAttribute("userEnrolledCnt", studentsEnrolled.size());
+
+        //kiểm tra số lượng attempts để phân trang
+        if(attemptCnt > size) {
+            int pageIndex = page - 1;
+            int start = pageIndex * size;
+            int end = Math.min(start + size, attemptCnt);
+            List<QuizAttemptListDTO.AttemptDTO> pagedCourses = attempts.subList(start, end);
+            Page<QuizAttemptListDTO.AttemptDTO> attemptPage = new PageImpl<>(pagedCourses, PageRequest.of(pageIndex, size), attemptCnt);
+            model.addAttribute("attemptPage", attemptPage);
+        } else {
+            model.addAttribute("attemptPage", null);
+        }
 
         QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
         model.addAttribute("quiz", quiz);
 
         model.addAttribute("courseId", courseId);
         model.addAttribute("quizId", quizId);
+        return "common/ResultGrade";
+    }
+
+    //url = /manage/attempts/search --> tìm kiếm bài thi theo tên sinh viên đăng ký vào khóa học
+    @GetMapping("/manage/attempts/search")
+    public String searchAttempts(@RequestParam(value = "keyword", required = false) String keyword,
+                                 @RequestParam Integer courseId, @RequestParam Integer quizId, Model model) {
+        List<QuizAttemptListDTO.AttemptDTO> attempts;
+        if(keyword != null && !keyword.isEmpty()) {
+            attempts = quizService.getSearchAttemptByStudentName(keyword, courseId, quizId);
+        } else {
+            attempts = List.of();
+        }
+        model.addAttribute("attempts", attempts);
+        List<QuizAttemptListDTO.AttemptDTO> attemptsAll = quizService.getAllAttemptStudents(quizId, courseId);
+        int attemptCnt = attemptsAll.size();
+        model.addAttribute("attemptCnt", attemptCnt);
+
+        List<UsersDTO> usersEnrolled = usersService.getEnrolledUsers(courseId);
+        List<UsersDTO> studentsEnrolled = usersEnrolled.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> role.getRoleid() == 5))
+                .toList();
+        model.addAttribute("userEnrolledCnt", studentsEnrolled.size());
+
+        QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
+        model.addAttribute("quiz", quiz);
+
+        model.addAttribute("courseId", courseId);
+        model.addAttribute("quizId", quizId);
+
+        model.addAttribute("keyword", keyword);
         return "common/ResultGrade";
     }
 
@@ -309,5 +362,4 @@ public class CommonController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
 }

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizService {
@@ -254,5 +255,20 @@ public class QuizService {
         for (int i = 0; i < row.getPhysicalNumberOfCells(); i++) {
             row.getCell(i).setCellStyle(cellStyle);
         }
+    }
+
+    //ô tìm kiếm bài thi
+    public List<QuizAttemptListDTO.AttemptDTO> getSearchAttemptByStudentName(String keyword, Integer courseId, Integer quizId) {
+        List<QuizAttemptListDTO.AttemptDTO> attempts = getAllAttemptStudents(quizId, courseId);
+        if (keyword != null && !keyword.isEmpty()) {
+            String lowerCaseQuery = keyword.toLowerCase();
+            attempts = attempts.stream()
+                    .filter(attempt -> attempt.getUsersDTO().getLastname().toLowerCase().contains(lowerCaseQuery)
+                            || attempt.getUsersDTO().getFirstname().toLowerCase().contains(lowerCaseQuery)
+                            || attempt.getUsersDTO().getId().toString().contains(lowerCaseQuery))
+                    .collect(Collectors.toList());
+        }
+
+        return attempts;
     }
 }
