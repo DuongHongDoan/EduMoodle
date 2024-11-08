@@ -117,7 +117,7 @@ public class QuizService {
     }
 
     //export thông tin quiz ra file excel
-    public void exportAttemptToExcel(QuizzesDTO.QuizzesListDTO quizDTO, List<QuizAttemptListDTO.AttemptDTO> attemptDTO, String filePath, Integer courseId) throws IOException {
+    public void exportAttemptToExcel(QuizzesDTO.QuizzesListDTO quizDTO, List<QuizAttemptListDTO.AttemptDTO> attemptDTO, List<UsersDTO>enrolledStudents, String filePath, Integer courseId) throws IOException {
         //lấy ra gv đã đăng ký vào course
         List<UsersDTO> usersEnrolled = usersService.getEnrolledUsers(courseId);
         UsersDTO selectedTeacher = usersEnrolled.stream()
@@ -208,25 +208,31 @@ public class QuizService {
         //Ghi dữ liệu vào bảng
         int rowTableData = 7;
         int stt = 1;
-        for(QuizAttemptListDTO.AttemptDTO attempt : attemptDTO) {
+        for(UsersDTO student : enrolledStudents) {
             Row row = sheet.createRow(rowTableData++);
             Cell cell0 = row.createCell(0);
             cell0.setCellValue(stt++);
             cell0.setCellStyle(tableDataStyle);
 
             Cell cell1 = row.createCell(1);
-            cell1.setCellValue(attempt.getUsersDTO().getLastname());
+            cell1.setCellValue(student.getLastname());
             cell1.setCellStyle(tableDataStyle);
 
             Cell cell2 = row.createCell(2);
-            cell2.setCellValue(attempt.getUsersDTO().getFirstname());
+            cell2.setCellValue(student.getFirstname());
             cell2.setCellStyle(tableDataStyle);
 
             Cell gradeCell = row.createCell(3);
-            if (attempt.getGrade() != null) {
-                gradeCell.setCellValue(attempt.getGrade().doubleValue()); // Đảm bảo giá trị là số
+            Optional<QuizAttemptListDTO.AttemptDTO> studentAttempt = attemptDTO.stream()
+                    .filter(attempt -> attempt.getUserid().equals(student.getId()))
+                    .findFirst();
+            if (studentAttempt.isPresent()) {
+                if (studentAttempt.get().getGrade() != null) {
+                    gradeCell.setCellValue(studentAttempt.get().getGrade().doubleValue());
+                }
             } else {
-                gradeCell.setCellValue(-5); // Giá trị mặc định nếu điểm null
+                // Nếu sinh viên không có bài thi
+                gradeCell.setCellValue(-5.00);
             }
             gradeCell.setCellStyle(numberStyle);
         }

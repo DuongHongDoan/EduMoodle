@@ -285,11 +285,15 @@ public class CommonController {
     public ResponseEntity<Resource> exportAttemptListResult(@RequestParam Integer courseId, @RequestParam Integer quizId) {
         List<QuizAttemptListDTO.AttemptDTO> attempts = quizService.getAllAttemptStudents(quizId, courseId);
         QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
+        List<UsersDTO> usersEnrolled = usersService.getEnrolledUsers(courseId);
+        List<UsersDTO> studentsEnrolled = usersEnrolled.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> role.getRoleid() == 5))
+                .toList();
 
         try {
             // Đường dẫn file tạm thời trong server
             String tempFilePath = System.getProperty("java.io.tmpdir") + "exported_results.xlsx";
-            quizService.exportAttemptToExcel(quiz, attempts, tempFilePath, courseId);
+            quizService.exportAttemptToExcel(quiz, attempts, studentsEnrolled, tempFilePath, courseId);
 
             // Tạo InputStreamResource từ file để gửi phản hồi
             File file = new File(tempFilePath);
