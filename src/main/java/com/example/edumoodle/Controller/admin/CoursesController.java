@@ -21,10 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin")
@@ -86,6 +83,19 @@ public class CoursesController {
         //đồng bộ dữ liệu course web-moodle
         coursesService.synchronizeCourses(coursesList);
 
+        Map<Integer, List<CategoriesDTO>> categories = categoriesService.getCategoriesGroupedByParent();
+        if (categories == null || categories.isEmpty()) {
+            // Khởi tạo một Map rỗng để tránh lỗi null pointer
+            categories = new HashMap<>();
+        }
+        // Lấy tổng số khóa học cho từng danh mục cha
+        Map<Integer, Integer> totalCoursesByParent = categoriesService.getTotalCoursesByParent();
+        if (totalCoursesByParent == null) {
+            totalCoursesByParent = new HashMap<>();
+        }
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalCoursesByParent", totalCoursesByParent);
+
         return "admin/ManageCourses";
     }
 
@@ -124,6 +134,18 @@ public class CoursesController {
             model.addAttribute("coursePage", null);
         }
 
+        Map<Integer, List<CategoriesDTO>> categories = categoriesService.getCategoriesGroupedByParent();
+        if (categories == null || categories.isEmpty()) {
+            // Khởi tạo một Map rỗng để tránh lỗi null pointer
+            categories = new HashMap<>();
+        }
+        // Lấy tổng số khóa học cho từng danh mục cha
+        Map<Integer, Integer> totalCoursesByParent = categoriesService.getTotalCoursesByParent();
+        if (totalCoursesByParent == null) {
+            totalCoursesByParent = new HashMap<>();
+        }
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalCoursesByParent", totalCoursesByParent);
         return "admin/ManageCourses";
     }
 
