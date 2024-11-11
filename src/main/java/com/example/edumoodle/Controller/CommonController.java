@@ -362,4 +362,32 @@ public class CommonController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    //url = /manage/courses/review?attempt= --> hiển thị bài thi chi tiết của từng sv
+    @GetMapping("/manage/courses/review")
+    public String getAttemptDetail(@RequestParam Integer attemptId, @RequestParam Integer courseId,
+                                   @RequestParam Integer quizId, Model model) {
+        AttemptViewDTO questionsDetail = quizService.getAttemptDetailInfo(attemptId, courseId, quizId);
+        model.addAttribute("questionsDetail", questionsDetail);
+
+        QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
+        model.addAttribute("quiz", quiz);
+
+        // Gọi service để lấy thông tin chi tiết của quiz dựa trên attemptId
+        List<QuestionDetail> questionDetails = quizService.getAttemptDetails(attemptId);
+
+        // Tính số câu đúng và sai
+        long correctCount = questionDetails.stream().filter(QuestionDetail::isCorrect).count();
+        long totalQuestions = questionDetails.size();
+        long incorrectCount = totalQuestions - correctCount;
+
+        // Thêm các thông tin cần thiết vào model để hiển thị trên view
+        model.addAttribute("questionDetails", questionDetails);
+        model.addAttribute("correctCount", correctCount);
+        model.addAttribute("incorrectCount", incorrectCount);
+        model.addAttribute("totalQuestions", totalQuestions);
+        model.addAttribute("attemptId", attemptId); // Truyền attemptId qua view nếu cần
+
+        return "common/AttemptDetail";
+    }
 }
