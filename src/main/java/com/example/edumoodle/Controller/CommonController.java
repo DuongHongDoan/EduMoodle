@@ -3,10 +3,7 @@ package com.example.edumoodle.Controller;
 import com.example.edumoodle.DTO.*;
 import com.example.edumoodle.Model.*;
 import com.example.edumoodle.Repository.*;
-import com.example.edumoodle.Service.CategoriesService;
-import com.example.edumoodle.Service.CoursesService;
-import com.example.edumoodle.Service.QuizService;
-import com.example.edumoodle.Service.UsersService;
+import com.example.edumoodle.Service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +43,8 @@ public class CommonController {
     private UsersService usersService;
     @Autowired
     private QuizService quizService;
+    @Autowired
+    private PDFService pdfService;
 
     @Autowired
     private CoursesRepository coursesRepository;
@@ -373,6 +372,9 @@ public class CommonController {
         QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
         model.addAttribute("quiz", quiz);
 
+        model.addAttribute("courseId", courseId);
+        model.addAttribute("quizId", quizId);
+
         // Gọi service để lấy thông tin chi tiết của quiz dựa trên attemptId
         List<QuestionDetail> questionDetails = quizService.getAttemptDetails(attemptId);
 
@@ -389,5 +391,37 @@ public class CommonController {
         model.addAttribute("attemptId", attemptId); // Truyền attemptId qua view nếu cần
 
         return "common/AttemptDetail";
+    }
+
+    //url = /manage/courses/review/export?courseId=&quizId= --> xuất file pdf bài thi chi tiêt
+    @GetMapping("/manage/courses/review/export")
+    public ResponseEntity<Resource> exportAttemptDetailPDF(@RequestParam Integer courseId,
+                                                           @RequestParam Integer quizId,
+                                                           @RequestParam Integer attemptId) {
+        AttemptViewDTO questionsDetail = quizService.getAttemptDetailInfo(attemptId, courseId, quizId);
+        QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
+        List<QuestionDetail> questionDetails = quizService.getAttemptDetails(attemptId);
+
+        try {
+            // Đường dẫn file tạm thời trong server
+            String tempFilePath = System.getProperty("java.io.tmpdir") + "exported_attempt_detail.pdf";
+            pdfService.exportAttemptDetailPDF(questionsDetail, quiz, questionDetails, tempFilePath);
+
+            // Tạo InputStreamResource từ file để gửi phản hồi
+            File file = new File(tempFilePath);
+            InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
+
+            // Tạo response với header Content-Disposition
+            ResponseEntity<Resource> res = ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(file.length())
+                    .body(resource);
+            file.delete();
+            return res;
+        } catch (IOException e) {
+            e.printStackTrace(); // Ghi log lỗi
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 }

@@ -100,6 +100,11 @@
             color: red;
             font-weight: bold;
         }
+
+        .review-link:hover {
+            text-decoration: underline;
+            color: #094478;
+        }
     </style>
 </head>
 <body>
@@ -124,13 +129,31 @@
             </tr>
             <tr>
                 <th class="cell">Thời gian làm bài</th>
-                <td th:text="${questionsDetail.attempt.duration}">17 giây</td>
+                <td th:text="${questionsDetail.attempt.getDurationFormat}">17 giây</td>
             </tr>
             <tr>
                 <th class="cell">Điểm</th>
                 <td th:text="${questionsDetail.attempt.getFormattedGrade} + '/' + ${quiz.getFormattedGrade}"></td>
             </tr>
         </table>
+    </div>
+
+    <div class="row mt-3 mb-3">
+        <div class="col">
+            <a class="review-link text-decoration-none" th:href="@{/manage/courses/report(courseId=${courseId}, quizId=${quizId})}">
+                <i class="bi bi-caret-left-fill"></i> Hoàn thành xem lại
+            </a>
+        </div>
+        <div class="col d-flex justify-content-end">
+            <form method="get" th:action="@{/manage/courses/review/export}">
+                <input type="hidden" name="courseId" th:value="${courseId}">
+                <input type="hidden" name="quizId" th:value="${quizId}">
+                <input type="hidden" name="attemptId" th:value="${attemptId}">
+                <button type="submit" class="btn btn-cate btn-edit text-white" style="margin-left: 5px; background-color: #00afef;">
+                    <i class="bi bi-download"></i> Tải bài thi PDF
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="content-wrapper" id="content-wrapper">
