@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thêm câu hỏi</title>
+</head>
+<body>
+<h1>Thêm câu hỏi mới</h1>
+
+<form th:action="@{/teacher/courses/view/categories/{categoryId}/add-question(categoryId=${categoryId})}" method="post" th:object="${questionsDTO}">
+    <label for="name">Tên câu hỏi:</label>
+    <input type="text" th:field="*{name}" required />
+
+    <label for="questionText">Nội dung câu hỏi:</label>
+    <textarea th:field="*{questionText}" required></textarea>
+
+    <label for="qtype">Loại câu hỏi:</label>
+    <select th:field="*{qtype}">
+        <option value="multichoice">Trắc nghiệm</option>
+        <option value="truefalse">Đúng/Sai</option>
+    </select>
+
+    <label for="correctAnswerIndex">Chỉ mục đáp án đúng:</label>
+    <input type="number" th:field="*{correctAnswerIndex}" required min="0" />
+
+    <div th:each="answer, iterStat : *{answers}">
+        <label>Đáp án:</label>
+        <input type="text" th:field="*{answers[__${iterStat.index}__].answerText}" required />
+
+        <label>Đúng:</label>
+        <input type="checkbox" th:field="*{answers[__${iterStat.index}__].correct}" />
+    </div>
+
+    <button type="submit">Lưu câu hỏi</button>
+</form>
+</body>
+</html>

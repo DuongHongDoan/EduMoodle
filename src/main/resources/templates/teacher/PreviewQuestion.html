@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách đáp án</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .answer-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .answer-item {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #d4edda;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Danh sách đáp án cho câu hỏi: <span th:text="${question.title}"></span></h1>
+
+    <ul class="answer-list">
+        <li th:each="answer : ${answers}"
+            th:class="${answer.correct} ? 'answer-item correct' : 'answer-item incorrect'">
+            <span th:text="${answer.answerText}"></span>
+        </li>
+    </ul>
+
+    <a th:href="@{/questions}" class="btn btn-primary">Quay lại danh sách câu hỏi</a>
+</div>
+</body>
+</html>

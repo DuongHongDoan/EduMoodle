@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cập Nhật Danh Mục Câu Hỏi</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Cập Nhật Danh Mục Câu Hỏi</h2>
+
+    <!-- Hiển thị thông báo nếu có -->
+    <div th:if="${message}" class="alert alert-success">
+        <span th:text="${message}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger">
+        <span th:text="${error}"></span>
+    </div>
+
+    <!-- Form cập nhật danh mục -->
+    <form th:action="@{/teacher/courses/view/update/{moodleId}(moodleId=${moodleId})}" method="post">
+        <input type="hidden" name="moodleId" th:value="${moodleId}"> <!-- Truyền moodleId để xác định danh mục cần cập nhật -->
+        <input type="hidden" name="courseId" th:value="${courseId}">
+
+        <div class="form-group">
+            <label for="name">Tên Danh Mục</label>
+            <input type="text" class="form-control" id="name" name="name" th:value="${name}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="info">Mô Tả</label>
+            <textarea class="form-control" id="info" name="info" rows="3" th:text="${info}"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="contextId">Context ID</label>
+            <input type="number" class="form-control" id="contextId" name="contextId" th:value="${contextId}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="parent">Danh Mục Cha (Parent ID)</label>
+            <input type="number" class="form-control" id="parent" name="parent" th:value="${parent}">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Lưu Cập Nhật</button>
+        <a th:href="@{/teacher/courses/view/list_question(courseId=${courseId})}" class="btn btn-secondary">Hủy</a>
+    </form>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách câu hỏi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .add-question-button {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .add-question-button a {
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .add-question-button a:hover {
+            opacity: 0.9;
+        }
+
+        .question-table {
+            width: 200%;
+            max-width: 1400px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-table th, .question-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .question-table th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .question-table td {
+            color: #444;
+        }
+
+        .question-name {
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            text-align: center;
+        }
+
+        .action-buttons button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .action-buttons .delete-button {
+            background-color: #dc3545;
+        }
+
+        .action-buttons .preview-button {
+            background-color: #007BFF;
+        }
+
+        .action-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        .no-questions {
+            text-align: center;
+            font-size: 18px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Danh sách câu hỏi</h1>
+
+<!-- Nút Thêm câu hỏi -->
+<div class="add-question-button">
+    <a th:href="@{/teacher/courses/view/categories/{categoryId}/add-question(categoryId=${categoryId})}">
+        Thêm câu hỏi
+    </a>
+</div>
+
+
+
+<table class="question-table">
+    <thead>
+    <tr>
+        <th>Tên câu hỏi</th>
+        <th>Loại câu hỏi</th>
+        <th>Nội dung câu hỏi</th>
+        <th>Thao tác</th>
+    </tr>
+    </thead>
+    <tbody th:if="${questions != null}" th:each="question : ${questions}">
+    <tr>
+        <td class="question-name">
+            <a href="#" th:text="${question.name}"
+               onclick="getAnswers(${question.id}); return false;">Tên câu hỏi</a>
+        </td>
+        <td th:text="${question.qtype}">Loại câu hỏi</td>
+        <td th:text="${question.questionText}">Nội dung câu hỏi</td>
+        <td class="action-buttons">
+            <button type="button" onclick="editQuestion(${question.id})">Sửa</button>
+            <button type="button" class="delete-button" onclick="deleteQuestion(${question.id})">Xóa</button>
+            <button type="button" class="preview-button">Xem trước</button>
+        </td>
+    </tr>
+    </tbody>
+    <tbody th:if="${questions == null}">
+    <tr>
+        <td colspan="4" class="no-questions">Không có câu hỏi nào.</td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    function editQuestion(questionId) {
+        alert('Chỉnh sửa câu hỏi với ID: ' + questionId);
+    }
+
+    function deleteQuestion(questionId) {
+        if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
+            alert('Đã xóa câu hỏi với ID: ' + questionId);
+        }
+    }
+</script>
+
+</body>
+</html>
