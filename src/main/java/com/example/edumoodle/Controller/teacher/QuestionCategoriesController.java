@@ -71,21 +71,29 @@ public class QuestionCategoriesController {
         return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;
     }
 //    import file Excel
-    @PostMapping("/uploadExcel")
-    public String uploadExcelFile(@RequestParam("file") MultipartFile file,
-                                  @RequestParam("courseId") int courseId,
-                                  RedirectAttributes redirectAttributes) {
-        String response = categoriesService.importCategoriesFromExcel(file, courseId);
+@PostMapping("/uploadExcel")
+public String uploadExcel(@RequestParam("file") MultipartFile file,
+                          @RequestParam("courseId") int courseId,
+                          @RequestParam("parentCategoryForColumn2") int parentCategoryForColumn2) {
+    String result = categoriesService.importCategoriesFromExcel(file, courseId, parentCategoryForColumn2);
+    return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;// Hiển thị thông báo kết quả import
+}
 
-        // Thêm thông báo thành công hoặc lỗi
-        if (response.contains("Lỗi")) {
-            redirectAttributes.addFlashAttribute("error", response);
-        } else {
-            redirectAttributes.addFlashAttribute("response", response);
-        }
-
-        return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;
-    }
+//    @PostMapping("/uploadExcel")
+//    public String uploadExcelFile(@RequestParam("file") MultipartFile file,
+//                                  @RequestParam("courseId") int courseId,
+//                                  RedirectAttributes redirectAttributes) {
+//        String response = categoriesService.importCategoriesFromExcel(file, courseId);
+//
+//        // Thêm thông báo thành công hoặc lỗi
+//        if (response.contains("Lỗi")) {
+//            redirectAttributes.addFlashAttribute("error", response);
+//        } else {
+//            redirectAttributes.addFlashAttribute("response", response);
+//        }
+//
+//        return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;
+//    }
 //    Xóa danh mục
     @PostMapping("/teacher/courses/view/Delete_QuestionCategory/{moodle_id}")
     public String deleteCategory(@PathVariable Integer moodle_id, @RequestParam("courseId") int courseId, Model model) {
@@ -102,48 +110,7 @@ public class QuestionCategoriesController {
         // Redirect lại trang danh sách với courseId
         return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;
     }
-
-    // Hiển thị form sửa danh mục câu hỏi
-//    @GetMapping("/teacher/courses/view/update/{moodleId}")
-//    public String listQuestions(@RequestParam("courseId") int courseId, Model model) {
-//        // Lấy danh sách câu hỏi theo courseId
-//        List<QuestionCategoriesDTO> categories = categoriesService.getQuestionCategories(courseId);
-//        model.addAttribute("questionCategories", categories);
-//        model.addAttribute("courseId", courseId);
-//        return "teacher/list_question";  // Chuyển hướng đến trang danh sách câu hỏi
-//    }
-//    @GetMapping("/teacher/courses/view/update/{moodleId}")
-//    public String editcategoryQuestions(@PathVariable("moodleId") int moodleId, @RequestParam("courseId") int courseId, Model model) {
-//        List<QuestionCategoriesDTO> categories = categoriesService.getQuestionCategories(courseId);
-//        model.addAttribute("questionCategories", categories);
-//        model.addAttribute("courseId", courseId);
-//        model.addAttribute("moodleId", moodleId);
-//        return "teacher/Edit_QuestionCategory";  // Chuyển hướng đến trang chỉnh sửa
-//    }
-//    @GetMapping("/teacher/courses/view/update")
-//    public String editCategory(@PathVariable("moodleId") int moodleId,
-//                               @RequestParam("courseId") int courseId,
-//                               Model model) {
-//        // Chuyển tiếp đến trang chỉnh sửa danh mục câu hỏi
-//        System.out.println("Moodle ID from GET: " + moodleId);
-//        System.out.println("Course ID from GET: " + courseId);
-//        model.addAttribute("moodleId", moodleId);
-//        model.addAttribute("courseId", courseId);
-//        return "teacher/Edit_QuestionCategory";  // Trang chỉnh sửa danh mục câu hỏi
-//    }
-    // This is your GET method, which works fine
-//    @GetMapping("/teacher/courses/view/update/{moodleId}")
-//    public String editCategory(@PathVariable("moodleId") int moodleId,
-//                               @RequestParam("courseId") int courseId,
-//                               Model model) {
-//        // Chuyển tiếp đến trang chỉnh sửa danh mục câu hỏi
-//        System.out.println("Moodle ID from GET: " + moodleId);
-//        System.out.println("Course ID from GET: " + courseId);
-//        model.addAttribute("moodleId", moodleId);
-//        model.addAttribute("courseId", courseId);
-//        return "teacher/Edit_QuestionCategory";  // Trang chỉnh sửa danh mục câu hỏi
-//    }
-
+    //cập nhật thông tin danh mục
     @GetMapping("/teacher/courses/view/update/{moodleId}")
     public String editCategory(@PathVariable("moodleId") int moodleId,
                                @RequestParam("courseId") int courseId,
@@ -212,32 +179,5 @@ public class QuestionCategoriesController {
         // Quay lại trang danh sách câu hỏi
         return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;
     }
-
-//
-//    @PostMapping("/teacher/courses/view/update")
-//    public String updateCategory(@RequestParam("moodleId") int moodleId,
-//                                 @RequestParam("courseId") int courseId,
-//                                 @RequestParam("name") String name,
-//                                 @RequestParam("contextId") int contextId,
-//                                 @RequestParam("info") String info,
-//                                 @RequestParam("parent") int parent,
-//                                 RedirectAttributes redirectAttributes) {
-//        // Ghi log để kiểm tra tất cả các tham số
-//        System.out.println("Updating category - moodleId: " + moodleId + ", courseId: " + courseId + ", name: " + name + ", contextId: " + contextId + ", info: " + info + ", parent: " + parent);
-//
-//        // Cập nhật danh mục
-//        String result = categoriesService.updateCategory(moodleId, name, contextId, info, parent);
-//
-//        if (result != null) {
-//            redirectAttributes.addFlashAttribute("message", "Cập nhật danh mục thành công!");
-//        } else {
-//            redirectAttributes.addFlashAttribute("error", "Cập nhật danh mục thất bại!");
-//        }
-//
-//        return "redirect:/teacher/courses/view/list_question?courseId=" + courseId;
-//    }
-
-
-
 
 }

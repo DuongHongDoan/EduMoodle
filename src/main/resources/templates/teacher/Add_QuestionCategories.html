@@ -93,14 +93,51 @@
     <h1>Thêm Danh Mục Câu Hỏi</h1>
 
     <!-- Form upload file Excel -->
+<!--    <form th:action="@{/uploadExcel}" method="post" enctype="multipart/form-data">-->
+<!--        <input type="hidden" name="courseId" th:value="${courseId}" />-->
+<!--        <div class="form-group">-->
+<!--            <label for="file">Chọn file Excel:</label>-->
+<!--            <input type="file" id="file" name="file" class="form-control" required />-->
+<!--        </div>-->
+<!--        <button type="submit" class="btn btn-primary">Tải lên</button>-->
+<!--    </form>-->
     <form th:action="@{/uploadExcel}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="courseId" th:value="${courseId}" />
+
+        <!-- Chọn danh mục cha cho cột 2 hàng 2 -->
+        <div class="form-group">
+            <label for="parentCategoryForColumn2">Chọn danh mục cha cho cột 2 hàng 2:</label>
+            <select name="parentCategoryForColumn2" id="parentCategoryForColumn2" class="form-control" required>
+                <option value="">-- Chọn danh mục --</option>
+                <th:block th:each="category : ${categories}">
+                    <option th:value="${category.id}" th:text="${category.name}"></option>
+                </th:block>
+                <option value="0">-- Không có --</option>
+                <th:block th:each="category : ${parentCategories}">
+                    <option th:value="${category.id}" th:text="${category.name}"></option>
+                    <th:block th:if="${category.children != null}">
+                        <th:block th:each="child : ${category.children}">
+                            <option th:value="${child.id}" th:text="'  &nbsp;&nbsp;&nbsp;&nbsp;  ' + ${child.name}"></option>
+                            <th:block th:if="${child.children != null}">
+                                <th:block th:each="subChild : ${child.children}">
+                                    <option th:value="${subChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subChild.name}"></option>
+                                </th:block>
+                            </th:block>
+                        </th:block>
+                    </th:block>
+                </th:block>
+            </select>
+        </div>
+
         <div class="form-group">
             <label for="file">Chọn file Excel:</label>
             <input type="file" id="file" name="file" class="form-control" required />
         </div>
+
         <button type="submit" class="btn btn-primary">Tải lên</button>
     </form>
+
+
     <!-- Form thêm danh mục câu hỏi -->
     <form th:action="@{/teacher/courses/view/Add_QuestionCategories}" method="post">
         <input type="hidden" name="courseid" th:value="${courseId}" />

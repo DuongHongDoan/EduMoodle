@@ -103,6 +103,11 @@
 
 <h1>Danh sách câu hỏi</h1>
 
+<!-- Hiển thị số lượng câu hỏi -->
+<div th:if="${questions != null}">
+    <p><strong>Số lượng câu hỏi:</strong> <span th:text="${questions.size()}">0</span></p>
+</div>
+
 <!-- Nút Thêm câu hỏi -->
 <div class="add-question-button">
     <a th:href="@{/teacher/courses/view/categories/{categoryId}/add-question(categoryId=${categoryId})}">

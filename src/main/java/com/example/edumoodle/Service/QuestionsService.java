@@ -33,38 +33,62 @@ public class QuestionsService {
     @Autowired
 //    private RestTemplate restTemplate;
     private final RestTemplate restTemplate;
-    private final String MOODLE_API_URL =
-            "http://localhost/moodle/webservice/rest/server.php"
-                    + "?wstoken=1e9f4e6a7041b1d5badeeda8e183df5c"
-                    + "&wsfunction=local_question_get_question_by_category"
-                    + "&moodlewsrestformat=json"
-                    + "&questioncategoryid=";
 
     @Autowired
     public QuestionsService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
-
 //    public QuestionsResponseDTO getQuestionsByCategory(Long categoryId) {
-//        String url = MOODLE_API_URL + categoryId;
+//        // Định nghĩa tên hàm API của Moodle
+//        String apiMoodleFunc = "local_question_get_question_by_category";
 //
-//        System.out.println(url);
-//        return restTemplate.getForObject(url, QuestionsResponseDTO.class);
+//        // Tạo URL động bằng các biến `domainName`, `token`, và `apiMoodleFunc`
+//        String url = domainName + "/webservice/rest/server.php"
+//                + "?wstoken=" + token
+//                + "&wsfunction=" + apiMoodleFunc
+//                + "&moodlewsrestformat=json"
+//                + "&questioncategoryid=" + categoryId;
+//
+//        System.out.println("URL nè: " + url);
+//        try {
+//            return restTemplate.getForObject(url, QuestionsResponseDTO.class);
+//        } catch (RestClientException e) {
+//            // Xử lý lỗi và trả về null hoặc ném ngoại lệ
+//            System.err.println("Lỗi khi gọi API Moodle: " + e.getMessage());
+//            return null;
+//        }
 //    }
 
     public QuestionsResponseDTO getQuestionsByCategory(Long categoryId) {
-        String url = MOODLE_API_URL + categoryId;
+        // Định nghĩa tên hàm API của Moodle
+        String apiMoodleFunc = "local_question_get_question_by_category";
 
-        System.out.println(url);
+        // Tạo URL động bằng các biến `domainName`, `token`, và `apiMoodleFunc`
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&questioncategoryid=" + categoryId;
+
+        System.out.println("URL nè: " + url);
         try {
-            return restTemplate.getForObject(url, QuestionsResponseDTO.class);
+            QuestionsResponseDTO response = restTemplate.getForObject(url, QuestionsResponseDTO.class);
+
+            // Kiểm tra nếu response không null và có danh sách câu hỏi
+            if (response != null && response.getQuestions() != null) {
+                int questionCount = response.getQuestions().size();
+                System.out.println("Số lượng câu hỏi: " + questionCount);
+            } else {
+                System.out.println("Không có câu hỏi nào trong danh mục này.");
+            }
+
+            return response;
         } catch (RestClientException e) {
             // Xử lý lỗi và trả về null hoặc ném ngoại lệ
             System.err.println("Lỗi khi gọi API Moodle: " + e.getMessage());
             return null;
         }
     }
-
 
 
 

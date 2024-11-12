@@ -223,53 +223,75 @@ public class QuestionCategoriesService {
             return -1;
         }
     }
-
-    public String importCategoriesFromExcel(MultipartFile file, int courseId) {
+    public String importCategoriesFromExcel(MultipartFile file, int courseId, int selectedParentCategoryId) {
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
             return "Lỗi: File không đúng định dạng .xlsx";
         }
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
-            int parentCategoryId = 0;
 
-            for (int i = 3; i <= sheet.getLastRowNum(); i++) { // Bắt đầu từ hàng thứ 4
+            // Đọc ô B2 để tạo danh mục cha với `parent` là `selectedParentCategoryId`
+            Row rowB2 = sheet.getRow(1); // Hàng thứ 2
+            String parentCategoryNameFromB2 = null;
+            int parentCategoryIdFromB2 = selectedParentCategoryId; // Sử dụng `selectedParentCategoryId` làm cha của B2
+            if (rowB2 != null) {
+                Cell parentCellB2 = rowB2.getCell(1); // Cột B, tức là cột 2
+                if (parentCellB2 != null && !parentCellB2.getStringCellValue().trim().isEmpty()) {
+                    parentCategoryNameFromB2 = parentCellB2.getStringCellValue().trim();
+                }
+            }
+
+            // Nếu ô B2 có thông tin, tạo danh mục với parent là `selectedParentCategoryId`
+            if (parentCategoryNameFromB2 != null) {
+                parentCategoryIdFromB2 = addCategory1(parentCategoryNameFromB2, "", selectedParentCategoryId, courseId);
+                if (parentCategoryIdFromB2 == -1) {
+                    return "Lỗi khi thêm danh mục cha từ ô B2 vào Moodle.";
+                }
+            }
+
+            int currentParentIdFromColumnA = parentCategoryIdFromB2; // Giữ ID danh mục cha gần nhất từ cột A
+            int currentParentIdFromColumnB = -1; // Giữ ID danh mục cha gần nhất từ cột B
+
+            // Bắt đầu từ hàng thứ 7 để xử lý các danh mục
+            for (int i = 6; i <= sheet.getLastRowNum(); i++) { // Bắt đầu từ hàng thứ 7
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
-                // Cột 1 - danh mục cha (parent = 0)
+                // Cột 1 (A) - danh mục cha gần nhất
                 Cell parentCell = row.getCell(0);
                 if (parentCell != null && !parentCell.getStringCellValue().trim().isEmpty()) {
                     String parentCategoryName = parentCell.getStringCellValue().trim();
-                    parentCategoryId = addCategory1(parentCategoryName, "", 0, courseId);
-                    if (parentCategoryId == -1) {
+                    currentParentIdFromColumnA = addCategory1(parentCategoryName, "", parentCategoryIdFromB2, courseId);
+                    if (currentParentIdFromColumnA == -1) {
                         return "Lỗi khi thêm danh mục cha vào Moodle.";
                     }
+                    currentParentIdFromColumnB = -1; // Reset danh mục cha gần nhất của cột B
                 }
 
-                // Cột 2 - danh mục con của cột 1
+                // Cột 2 (B) - danh mục con của cột 1 gần nhất
                 Cell childCell = row.getCell(1);
-                int childCategoryId = parentCategoryId; // ID của danh mục cha cho các danh mục con tiếp theo
                 if (childCell != null && !childCell.getStringCellValue().trim().isEmpty()) {
                     String childCategoryName = childCell.getStringCellValue().trim();
-                    childCategoryId = addCategory1(childCategoryName, "", parentCategoryId, courseId);
-                    if (childCategoryId == -1) {
+                    currentParentIdFromColumnB = addCategory1(childCategoryName, "", currentParentIdFromColumnA, courseId);
+                    if (currentParentIdFromColumnB == -1) {
                         return "Lỗi khi thêm danh mục con vào Moodle.";
                     }
                 }
 
-                // Cột 3 đến cột 6 - các danh mục con của cột 2
+                // Cột 3 đến cột 6 (C-F) - các danh mục con của cột 2 gần nhất
                 for (int j = 2; j <= 5; j++) { // Tương ứng với cột 3 đến cột 6
                     Cell subChildCell = row.getCell(j);
                     if (subChildCell != null && !subChildCell.getStringCellValue().trim().isEmpty()) {
                         String subChildCategoryName = subChildCell.getStringCellValue().trim();
-                        int subChildCategoryId = addCategory1(subChildCategoryName, "", childCategoryId, courseId);
+                        int subChildCategoryId = addCategory1(subChildCategoryName, "", currentParentIdFromColumnB, courseId);
                         if (subChildCategoryId == -1) {
                             return "Lỗi khi thêm danh mục phụ vào Moodle.";
                         }
                     }
                 }
             }
+
             return "Import thành công.";
         } catch (IOException e) {
             return "Lỗi khi đọc file Excel: " + e.getMessage();
@@ -316,7 +338,6 @@ public class QuestionCategoriesService {
             return -1;
         }
     }
-
 
     // Phương thức để thêm danh mục vào CSDL
     private void addCategoryToDatabase(String name, String info, int parent, int courseId, int moodleId) {
@@ -401,80 +422,7 @@ public class QuestionCategoriesService {
             return false;
         }
     }
-//    public QuestionCategoriesEntity getCategoryById(Integer categoryId) {
-//        return QuestionCategoriesRepository.findById(categoryId)
-//                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại với ID: " + categoryId));
-//    }
 
-
-    private static final String MOODLE_API_URL = "http://localhost/moodle/webservice/rest/server.php";
-
-    // Phương thức để cập nhật danh mục câu hỏi trong Moodle
-
-
-    // Lấy danh mục theo ID
-//    public QuestionCategoriesEntity getCategoryById(Integer categoryId) {
-//        return QuestionCategoriesRepository.findById(categoryId)
-//                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại với ID: " + categoryId));
-//    }
-
-    // Cập nhật danh mục trong Moodle
-
-//    public String updateCategory(int categoryId, String name, String info, Integer parent, String token) {
-//        // Chỉnh sửa URL để đưa thông tin 'info' vào chuỗi
-//        String url = String.format("%s?wstoken=%s&moodlewsrestformat=json&wsfunction=local_question_update_category&categoryid=%d&name=%s&info=%s&parent=%d",
-//                MOODLE_API_URL, token, categoryId, name, info, parent);
-//
-//        // Gọi API Moodle và nhận phản hồi
-//        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
-//
-//        return response.getBody();
-//    }
-//    private static final String MOODLE_API_URL = "http://localhost/moodle/webservice/rest/server.php";
-//    private final RestTemplate restTemplate = new RestTemplate();
-
-
-
-//    public QuestionCategoriesEntity getCategoryByMoodleId(int moodle_id) {
-//        return QuestionCategoriesRepository.findByMoodle_id(moodle_id)
-//                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại với Moodle ID: " + moodle_id));
-//    }
-
-//    public Optional<QuestionCategoriesEntity> getCategoryByMoodleId(int moodleId) {
-//        return QuestionCategoriesRepository.findByMoodle_id(moodleId); // Gọi đúng phương thức
-//    }
-//    public String updateCategory(int moodle_id, String name, String info, Integer parent, String token) {
-//        String url = String.format(
-//                "%s?wstoken=%s&moodlewsrestformat=json&wsfunction=local_question_update_category&categoryid=%d&name=%s&info=%s&parent=%d",
-//                MOODLE_API_URL, token, moodle_id, name, info, parent
-//        );
-//
-//        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-//        return response.getBody();
-
-//    public boolean updateCategory(int categoryId, String name, int contextId, String info, int parent) {
-//        // Tạo tham số cho API
-//        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(MOODLE_API_URL)
-//                .queryParam("wstoken", token)
-//                .queryParam("moodlewsrestformat", "json")
-//                .queryParam("wsfunction", "local_question_update_category")
-//                .queryParam("categoryid", categoryId)
-//                .queryParam("name", name)
-//                .queryParam("contextid", contextId)
-//                .queryParam("info", info)
-//                .queryParam("parent", parent);
-//
-//        try {
-//            // Gửi yêu cầu HTTP
-//            ResponseEntity<String> response = restTemplate.getForEntity(builder.toUriString(), String.class);
-//
-//            // Kiểm tra kết quả từ API Moodle
-//            return response.getStatusCode() == HttpStatus.OK;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//    }
 
     private static final String MOODLE_API_URLq = "http://localhost/moodle/webservice/rest/server.php?wstoken=54df098d9366c247f13f81e27f6dddb2&moodlewsrestformat=json&wsfunction=local_question_update_category";
 
