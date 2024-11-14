@@ -77,8 +77,17 @@
 </head>
 <body id="page-top" layout:fragment="body">
 <div class="container">
-  <h2 style="text-align: center">Chi tiết bài kiểm tra</h2>
 
+
+  <!-- Nút Preview Quiz để bắt đầu làm bài -->
+  <form th:action="@{/user/quiz/start}" method="get">
+    <input type="hidden" name="quizId" th:value="${quizId}" />
+    <input type="hidden" name="userId" th:value="${userId}" />
+    <input type="hidden" name="attemptId" th:value="${attemptId}" /> <!-- Truyền attemptId khi bắt đầu lại bài kiểm tra -->
+    <button type="submit" class="btn">Requiz</button>
+  </form>
+
+  <h2 style="text-align: center">Chi tiết bài kiểm tra</h2>
   <table>
     <thead>
     <tr>
@@ -108,10 +117,8 @@
         </form>
       </td>
     </tr>
-
     </tbody>
   </table>
-
 </div>
 </body>
 </html>

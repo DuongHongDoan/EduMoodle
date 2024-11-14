@@ -4,18 +4,53 @@
     <meta charset="UTF-8">
     <title>Student Grades</title>
     <style>
+        /* General table styling */
+        #gradesTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #gradesTable th, #gradesTable td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        #gradesTable thead {
+            background-color: #f2f2f2;
+        }
+
+        /* Course Name Row */
+        .course-name-row {
+            font-weight: bold;
+            background-color: #e7f3ff;
+        }
+
+        /* Indent for Quiz/Test rows */
+        .grade-item-row .item-name {
+            padding-left: 20px;
+        }
+
+        /* Item type and name styling */
         .item-type {
             display: block;
             font-weight: bold;
         }
-        .item-name {
-            display: block;
-            margin-top: 2px;
+
+        /* Student name styling */
+        .student-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
         }
     </style>
 </head>
 <body>
 <h1>Điểm số của sinh viên</h1>
+
+<!-- Displaying Student Name -->
+<div th:if="${studentName != null}" class="student-name">
+    <p>Student: <span th:text="${studentName}"></span></p>
+</div>
 
 <div th:if="${grades != null}">
     <table border="1" id="gradesTable">
@@ -24,7 +59,6 @@
             <th>Grade Item</th>
             <th>Calculated Weight</th>
             <th>Grade</th>
-            <th>Range</th>
             <th>Percentage</th>
             <th>Feedback</th>
             <th>Contribution to Course Total</th>
@@ -32,22 +66,24 @@
         </thead>
         <tbody>
         <!-- Course Name Row with Toggle Button -->
-        <tr>
-            <td th:text="${grades.courseName}"></td>
-            <td colspan="6">
+        <tr class="course-name-row">
+            <td th:text="${grades.courseName}" colspan="6">
                 Course Name
-<!--                <button id="toggleButton" onclick="toggleItems()">Hide Items</button>-->
+                <button id="toggleButton" onclick="toggleItems()">Hide Items</button>
             </td>
         </tr>
-        <!-- Grade Items Rows -->
+
+        <!-- Grade Items Rows with Indentation -->
         <tr th:each="gradeItem : ${grades.gradeItems}" class="grade-item-row">
             <td>
-                <span th:text="${#strings.startsWith(gradeItem.itemName, 'Quiz') ? 'Quiz' : 'Test'}" class="item-type"></span>
+                <!-- Display "Quiz" or "Test" only if it’s not "Course total" -->
+                <span th:if="${!gradeItem.itemName.contains('Course total')}"
+                      th:text="${#strings.startsWith(gradeItem.itemName, 'Quiz') ? 'Quiz' : 'Test'}"
+                      class="item-type"></span>
                 <span th:text="${gradeItem.itemName.replace('Quiz', '').replace('Test', '').trim()}" class="item-name"></span>
             </td>
             <td th:text="${gradeItem.weight}"></td>
             <td th:text="${gradeItem.grade}"></td>
-            <td th:text="${gradeItem.range}"></td>
             <td th:text="${gradeItem.percentage}"></td>
             <td th:text="${gradeItem.feedback}"></td>
             <td th:text="${gradeItem.contributionToCourseTotal}"></td>
@@ -60,23 +96,19 @@
 
 <script>
     function toggleItems() {
-        // Select all grade item rows
         const gradeItemRows = document.querySelectorAll(".grade-item-row");
         const toggleButton = document.getElementById("toggleButton");
 
-        // Toggle the display for each grade item row
         gradeItemRows.forEach(row => {
             row.style.display = (row.style.display === "none" ? "" : "none");
         });
 
-        // Change button text based on the current state
         toggleButton.textContent = (toggleButton.textContent === "Hide Items") ? "Show Items" : "Hide Items";
     }
 
-    // Ensure grade items are initially shown when the page loads
     document.addEventListener("DOMContentLoaded", function() {
         const gradeItemRows = document.querySelectorAll(".grade-item-row");
-        gradeItemRows.forEach(row => row.style.display = "");  // Set initial state to visible
+        gradeItemRows.forEach(row => row.style.display = "");
     });
 </script>
 

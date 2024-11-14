@@ -1,6 +1,7 @@
 package com.example.edumoodle.Controller.student;
 
 import com.example.edumoodle.DTO.*;
+import com.example.edumoodle.Model.RecentlyAccessedCoursesEntity;
 import com.example.edumoodle.Service.MyCoursesStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -25,9 +26,8 @@ public class StudentCoursesController {
     @Autowired
     private MyCoursesStudentService myCoursesStudentService;
 
-    @GetMapping("/user/my-student-courses") // Ensure this matches the URL you are trying to access
+    @GetMapping("/user/my-student-courses")
     public String showStudentCourses(Model model) {
-        // Get the current user's information
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = null;
 
@@ -40,22 +40,18 @@ public class StudentCoursesController {
             }
         }
 
-        // Ensure username is not null
+        // Kiểm tra nếu không có username
         if (username == null) {
             model.addAttribute("error", "Không thể xác định được người dùng hiện tại.");
-            return "my-courses"; // Return view with error message
+            return "my-courses";
         }
 
-        // Set username in the model
-        model.addAttribute("username", username);
-
-        // Call the service to get user courses
+        // Lấy danh sách khóa học của người dùng
         List<CoursesDTO> userCourses = myCoursesStudentService.getUserCourses(username);
+        model.addAttribute("username", username);
         model.addAttribute("userCourses", userCourses);
-        System.out.println("User Courses: " + userCourses);
 
-        // Add any necessary attributes to the model
-        return "student/mystudent_courses"; // Make sure this matches the template name
+        return "student/mystudent_courses";
     }
 
     @PostMapping("/user/my-courses-student")
@@ -69,12 +65,11 @@ public class StudentCoursesController {
             return "student/mystudent_courses";
         }
 
-        // Get all user courses
+        // Lấy tất cả khóa học của người dùng
         List<CoursesDTO> userCourses = myCoursesStudentService.getUserCourses(username);
 
-        // Handle "showAll" button click
+        // Nếu không chọn "Hiển thị tất cả" thì lọc theo từ khóa tìm kiếm
         if (showAll == null) {
-            // Filter by search query if provided and not showing all
             if (searchQuery != null && !searchQuery.isEmpty()) {
                 userCourses = myCoursesStudentService.filterCoursesByName(userCourses, searchQuery);
                 if (userCourses.isEmpty()) {
@@ -83,56 +78,70 @@ public class StudentCoursesController {
             }
         }
 
-        // Sort if requested
+        // Sắp xếp theo tên nếu chọn
         if ("name".equals(sort)) {
             userCourses.sort(Comparator.comparing(CoursesDTO::getFullname, String.CASE_INSENSITIVE_ORDER));
         }
 
-        // Print out the filtered and/or sorted courses (with Moodle course IDs)
-        for (CoursesDTO course : userCourses) {
-            System.out.println("Course Moodle ID: " + course.getMoodleCourseId() + ", Course Name: " + course.getFullname());
-        }
-
-        // Update model
+        // Cập nhật lại model với các khóa học sau khi lọc và sắp xếp
         model.addAttribute("searchQuery", searchQuery);
         model.addAttribute("userCourses", userCourses);
 
         return "student/mystudent_courses";
     }
 
-
-
     // Lấy chi tiết một khóa học dựa trên moodleCourseId
     @GetMapping("/user/student_course_details")
     public String getCourseDetails(@RequestParam("moodleCourseId") Integer moodleCourseId, Model model) {
-        // Get the current username from Spring Security
+        // Lấy tên người dùng hiện tại từ Spring Security
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Fetch userId based on the username
+        // Lấy userId dựa trên username
         int userId = myCoursesStudentService.getUserIdByUsername(username);
 
-        // Log details for debugging
+        // Log chi tiết để gỡ lỗi
         System.out.println("Username: " + username);
         System.out.println("UserID (GET): " + userId);
         System.out.println("Moodle Course ID: " + moodleCourseId);
 
-        // Fetch course details based on moodleCourseId
+        // Lấy thông tin chi tiết khóa học dựa trên moodleCourseId
         CoursesDTO courseDetails = myCoursesStudentService.getCourseDetails(moodleCourseId);
+        // Kiểm tra nếu courseDetails không phải là null
+        if (courseDetails != null) {
+            // Log thông tin khóa học
+            System.out.println("Course Details: " + courseDetails);
 
-        // Log course details
-        System.out.println("Course Details: " + courseDetails);
+            // Lấy thông tin chi tiết từ CoursesDTO
+            String courseName = courseDetails.getFullname(); // Tên khóa học
+            String categoryName = courseDetails.getCategoryName(); // Tên danh mục
+            String instructorName = courseDetails.getTeacherName(); // Tên giảng viên
 
-        // Add course details and other attributes to the model
-        model.addAttribute("courseDetails", courseDetails);
-        model.addAttribute("userId", userId);
-        model.addAttribute("moodleCourseId", moodleCourseId);
+            // Log tên giảng viên để kiểm tra giá trị
+            System.out.println("Instructor Name: " + instructorName);
 
-        return "student/mystudent_course_details"; // Return the view name
+            // Lưu thông tin khóa học đã truy cập gần đây
+            myCoursesStudentService.saveAccessedCourse(userId, moodleCourseId, courseName, categoryName, instructorName);
+
+            // Thêm thông tin chi tiết khóa học và các thuộc tính khác vào model
+            model.addAttribute("courseDetails", courseDetails);
+            model.addAttribute("userId", userId);
+            model.addAttribute("moodleCourseId", moodleCourseId);
+            model.addAttribute("instructorName", instructorName); // Thêm tên giảng viên vào model
+        } else {
+            // Nếu courseDetails là null, log thông báo lỗi
+            System.out.println("Không tìm thấy thông tin khóa học cho Moodle Course ID: " + moodleCourseId);
+            // Xử lý lỗi hoặc thông báo người dùng về việc không tìm thấy khóa học
+            model.addAttribute("errorMessage", "Không tìm thấy thông tin khóa học.");
+        }
+
+        return "student/mystudent_course_details"; // Trả về tên view
     }
+
 
     // danh sach sinh vien trong khoa hoc
     @GetMapping("/user/student_list")
     public String getStudentList(@RequestParam("moodleCourseId") Integer moodleCourseId,
+                                 @RequestParam(value = "userId", required = false) Integer userId,
                                  @RequestParam(value = "selectedLetter", required = false, defaultValue = "") String selectedLetter,
                                  @RequestParam(value = "filterType", required = false, defaultValue = "firstName") String filterType,
                                  Model model,
@@ -160,6 +169,7 @@ public class StudentCoursesController {
         // Add data to the model
         model.addAttribute("students", filteredStudents);
         model.addAttribute("moodleCourseId", moodleCourseId);
+        model.addAttribute("userId", userId); // Thêm userId vào model
         model.addAttribute("selectedLetter", filteredLetter);
         model.addAttribute("filterType", filterType);
 
@@ -170,6 +180,7 @@ public class StudentCoursesController {
 
         return "student/course_students_list"; // Trả về toàn bộ view nếu không phải từ student_course_details
     }
+
 
     @GetMapping("/user/student_grades")
     public String getStudentGrades(@RequestParam("moodleCourseId") Integer moodleCourseId,
@@ -237,8 +248,6 @@ public class StudentCoursesController {
         return "student/module_details"; // Trả về view
     }
 
-
-
     @GetMapping("/user/quizCourseStudent")
     public String showQuizDetailsGet(@RequestParam("quizId") Integer quizId,
                                      @RequestParam("moodleCourseId") Integer moodleCourseId,
@@ -262,17 +271,35 @@ public class StudentCoursesController {
         // Lấy danh sách attempts của sinh viên cho quiz
         List<AttemptIDTO> attempts = myCoursesStudentService.getStudentAttempts(userId.toString(), quizId.toString(), maxGrade, numberOfQuestions);
 
-        // Thêm attempts vào model để hiển thị trên giao diện
+        // Thêm dữ liệu vào model để hiển thị trong view
         model.addAttribute("quizId", quizId);
         model.addAttribute("userId", userId);
-        model.addAttribute("quizDetails", attempts); // Đổi từ 'attempts' thành 'quizDetails'
-        model.addAttribute("maxGrade", maxGrade); // Thêm maxGrade vào model nếu cần
-        model.addAttribute("numberOfQuestions", numberOfQuestions); // Thêm số câu hỏi vào model nếu cần
+        model.addAttribute("quizDetails", attempts); // Thêm danh sách attempts vào model
+        model.addAttribute("maxGrade", maxGrade); // Thêm điểm tối đa
+        model.addAttribute("numberOfQuestions", numberOfQuestions); // Thêm số câu hỏi
+
+        // Gọi hàm getAttemptId từ service để lấy attemptId
+        String attemptId = myCoursesStudentService.getAttemptId(quizId.toString(), userId.toString());
+        model.addAttribute("attemptId", attemptId); // Thêm attemptId vào model nếu cần
 
         // Trả về view 'student/quiz_details' để hiển thị chi tiết quiz
         return "student/quiz_details";
     }
 
+
+
+    @GetMapping ("/user/quiz/start")
+    public String startQuiz(@RequestParam("quizId") Integer quizId,
+                            @RequestParam("userId") Integer userId,
+                            @RequestParam("attemptId") String attemptId,
+                            Model model) {
+
+        // In ra để kiểm tra tham số nhận được
+        System.out.println("GET - Start quiz with Quiz ID: " + quizId + ", User ID: " + userId + ", Attempt ID: " + attemptId);
+
+        // Trả về view để hiển thị kết quả
+        return "student/quiz_test_data";
+    }
 
     @GetMapping("/user/quiz/review")
     public String reviewQuiz(@RequestParam("attemptId") int attemptId, Model model) {
@@ -296,5 +323,32 @@ public class StudentCoursesController {
         return "student/quiz_review"; // Trả về view "quiz_review.html"
     }
 
+    @GetMapping("/user/my_recent_courses")
+    public String showRecentlyAccessedCoursesPage(Model model) {
+        // Get the current user's username from Spring Security
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // Retrieve userId based on the username
+        Integer userId = myCoursesStudentService.getUserIdByUsername(username);
+
+        // Get the list of recently accessed courses
+        List<RecentlyAccessedCourseDTO> recentlyAccessedCourses = myCoursesStudentService.getRecentlyAccessedCourses(userId);
+
+        // Log course IDs for debugging
+        recentlyAccessedCourses.forEach(course -> System.out.println("Course ID: " + course.getCourseId()));
+
+        // Lấy tên giảng viên cho từng khóa học đã truy cập gần đây
+        recentlyAccessedCourses.forEach(course -> {
+            String teacherName = myCoursesStudentService.getTeacherName(course.getCourseId());
+            course.setInstructorName(teacherName);  // Gán tên giảng viên vào đối tượng RecentlyAccessedCourseDTO
+        });
+
+        // Add the list of courses and username to the model for the view
+        model.addAttribute("username", username);
+        model.addAttribute("recentlyAccessedCourses", recentlyAccessedCourses);
+
+        // Return the view name
+        return "student/student_personal_page";
+    }
 
 }

@@ -1,7 +1,10 @@
 package com.example.edumoodle.Service;
 import com.example.edumoodle.DTO.*;
+import com.example.edumoodle.Model.RecentlyAccessedCoursesEntity;
 import com.example.edumoodle.Repository.CategoriesRepository;
 import com.example.edumoodle.Repository.CoursesRepository;
+import com.example.edumoodle.Repository.RecentlyAccessedCoursesRepository;
+import jakarta.transaction.Transactional;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +42,12 @@ public class MyCoursesStudentService {
     private CategoriesRepository categoriesRepository;
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private RecentlyAccessedCoursesRepository recentlyAccessedCoursesRepository;
+
+    //gioi han hien thi cac khoa hoc truy cap
+    private static final int MAX_RECENT_COURSES = 10; // Giới hạn tối đa
 
 
     public List<CoursesDTO> getUserCourses(String username) {
@@ -133,7 +142,7 @@ public class MyCoursesStudentService {
         return userCourses;
     }
 
-    private String getTeacherName(int courseMoodleId) {
+    public String getTeacherName(int courseMoodleId) {
         String getEnrolledUsersFunction = "core_enrol_get_enrolled_users";
 
         // URL API để lấy thông tin giảng viên của khóa học
@@ -610,6 +619,52 @@ public class MyCoursesStudentService {
     }
 
 
+    //bat dau 1 bai kiem tra moi
+    public String getAttemptId(String quizId, String userId) {
+        String apiFunction = "local_student_test_custom_start_attempt";
+        String attemptId = null;
+
+        try {
+            // Tạo URL với các tham số quizId và userId
+            String requestUrl = domainName + "/webservice/rest/server.php" +
+                    "?wstoken=" + token +
+                    "&wsfunction=" + apiFunction +
+                    "&moodlewsrestformat=json" +
+                    "&quizid=" + quizId +
+                    "&userid=" + userId;
+
+            // Gửi yêu cầu GET và nhận phản hồi từ API
+            String response = restTemplate.getForObject(requestUrl, String.class);
+            System.out.println("Request URL: " + requestUrl);
+            System.out.println("Response: " + response);
+
+            // Parse JSON để lấy attemptId từ response
+            JSONObject responseJson = new JSONObject(response);
+
+            // Kiểm tra nếu có lỗi trong response JSON
+            if (responseJson.has("exception")) {
+                String error = responseJson.optString("exception");
+                System.out.println("Error in response: " + error);
+                return null;
+            }
+
+            // Kiểm tra và lấy attempt từ response
+            attemptId = responseJson.optString("attempt");
+            if (attemptId == null || attemptId.isEmpty()) {
+                System.out.println("Attempt ID not found or is empty in response.");
+            } else {
+                System.out.println("Attempt ID retrieved: " + attemptId);
+            }
+
+        } catch (Exception e) {
+            // Log error chi tiết hơn
+            System.out.println("Error retrieving attempt ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return attemptId;
+    }
+
 
     // Hàm tính điểm (grade) từ score và maxGrade
     private Double calculateGrade(Double score, Double maxGrade) {
@@ -808,7 +863,7 @@ public class MyCoursesStudentService {
                     "&userid=" + userId;
 
             String gradesResponse = restTemplate.getForObject(getGradesUrl, String.class);
-            System.out.println("Grades API Response: " + gradesResponse);  // Print the entire JSON response
+            System.out.println("Grades API Response: " + gradesResponse);
 
             JSONObject responseJson = new JSONObject(gradesResponse);
             JSONArray tablesArray = responseJson.getJSONArray("tables");
@@ -820,70 +875,59 @@ public class MyCoursesStudentService {
                 List<GradeItemDTO> gradeItems = new ArrayList<>();
                 for (int i = 0; i < tableData.length(); i++) {
                     JSONObject item = tableData.getJSONObject(i);
-
-                    // Print each item JSON object to see its structure
-                    System.out.println("Item JSON Object: " + item);
-
                     String htmlContent = item.optString("itemname", "");
-                    System.out.println("HTML Content of itemname: " + htmlContent);  // Print HTML content before parsing
 
                     if (!htmlContent.isEmpty()) {
                         Document doc = Jsoup.parse(htmlContent);
                         Elements spans = doc.select("span");
 
-                        // Extract, clean, and format the item name
                         String itemName = spans.size() > 0 ? spans.get(spans.size() - 1).text() : "N/A";
-                        itemName = itemName.replaceAll("<[^>]*>", "") // Remove any remaining HTML tags
-                                .replace("\\/", "/")      // Replace escaped slashes
-                                .replaceAll("\\s+", " ")  // Replace multiple spaces/newlines with a single space
-                                .replaceAll("[\"\\{\\}\\n]", "") // Remove quotes, braces, and newlines
-                                .replaceAll("\\\\", "")    // Remove any backslashes
+                        itemName = itemName.replaceAll("<[^>]*>", "")
+                                .replaceAll("\\\\n", "")
+                                .replaceAll("\\\\", "")
+                                .replaceAll("\\s+", " ")
+                                .replaceAll("[\"{}]", "")
                                 .trim();
 
-                        // Format itemName to add a line break between type and name if it starts with "Quiz" or "Test"
-                        String formattedItemName;
-                        if (itemName.startsWith("Quiz")) {
-                            formattedItemName = "Quiz\n" + itemName.substring(4).trim();  // Adds line break after "Quiz"
-                        } else if (itemName.startsWith("Test")) {
-                            formattedItemName = "Test\n" + itemName.substring(4).trim();  // Adds line break after "Test"
+                        // Check if it's the course total and ensure no prefixes like "Test" or "Quiz"
+                        if (itemName.contains("Course total")) {
+                            itemName = "Aggregation Course total";
                         } else {
-                            formattedItemName = itemName; // For other items, keep as is
+                            // Format itemName for line breaks if starting with "Quiz" or "Test"
+                            if (itemName.startsWith("Quiz")) {
+                                itemName = "Quiz\n" + itemName.substring(4).trim();
+                            } else if (itemName.startsWith("Test")) {
+                                itemName = "Test\n" + itemName.substring(4).trim();
+                            }
                         }
-                        System.out.println("Formatted itemName: " + formattedItemName);  // Print formatted item name for verification
 
-                        // Check if this is the first item (assumed to be the course name)
+                        System.out.println("Final itemName: " + itemName);
+
+                        // Set the first item as course name
                         if (i == 0) {
-                            gradesDTO.setCourseName(itemName);  // Set course name in GradesDTO
-                            System.out.println("Set Course Name: " + itemName);
-                            continue;  // Skip adding this as a grade item
+                            gradesDTO.setCourseName(itemName);
+                            continue;
                         }
 
-                        // Extract and log each data field for grade items
                         Double grade = item.optJSONObject("grade") != null ?
                                 item.getJSONObject("grade").optDouble("content", 0.0) : 0.0;
-                        System.out.println("Grade: " + grade);
 
                         Double maxGrade = item.optJSONObject("grademax") != null ?
                                 item.getJSONObject("grademax").optDouble("content", 0.0) : 0.0;
-                        System.out.println("Max Grade: " + maxGrade);
 
                         String percentage = item.optJSONObject("percentage") != null ?
                                 item.getJSONObject("percentage").optString("content", "N/A") : "N/A";
-                        System.out.println("Percentage: " + percentage);
 
                         String weight = item.optJSONObject("weight") != null ?
                                 item.getJSONObject("weight").optString("content", "N/A") : "N/A";
-                        System.out.println("Weight: " + weight);
 
                         String range = maxGrade != 0 ? "0-" + maxGrade : "N/A";
-                        System.out.println("Range: " + range);
 
                         String feedback = item.optJSONObject("feedback") != null ?
                                 item.getJSONObject("feedback").optString("content", "").replace("&nbsp;", "").trim() : "";
 
                         String contributionToCourseTotal = item.optJSONObject("contributiontocoursetotal") != null ?
                                 item.getJSONObject("contributiontocoursetotal").optString("content", "N/A") : "N/A";
-                        System.out.println("Contribution to Course Total: " + contributionToCourseTotal);
 
                         // Add the grade item to the list
                         GradeItemDTO gradeItemDTO = new GradeItemDTO(
@@ -903,5 +947,57 @@ public class MyCoursesStudentService {
         }
         return gradesDTO;
     }
+
+    // Lưu khóa học vừa truy cập vào cơ sở dữ liệu
+    public void saveAccessedCourse(Integer userId, Integer courseId, String courseName, String categoryName, String instructorName) {
+        // Kiểm tra xem khóa học đã được người dùng truy cập chưa
+        Optional<RecentlyAccessedCoursesEntity> existingCourseOpt = recentlyAccessedCoursesRepository
+                .findByUserIdAndCourseId(userId, courseId);
+
+        // Nếu khóa học đã tồn tại trong cơ sở dữ liệu
+        if (existingCourseOpt.isPresent()) {
+            // Cập nhật timestamp và các chi tiết khác cho bản ghi hiện có
+            RecentlyAccessedCoursesEntity existingCourse = existingCourseOpt.get();
+            existingCourse.setAccessedAt(LocalDateTime.now());
+
+            // Chỉ cập nhật khi các giá trị không phải null
+            existingCourse.setCourseName(courseName != null ? courseName : existingCourse.getCourseName());
+            existingCourse.setCategoryName(categoryName != null ? categoryName : existingCourse.getCategoryName());
+            existingCourse.setInstructorName(instructorName != null ? instructorName : "Chưa có giảng viên");
+
+            recentlyAccessedCoursesRepository.save(existingCourse);
+            System.out.println("Updated accessed time for course with userId: " + userId + " and courseId: " + courseId);
+        } else {
+            // Tạo một bản ghi mới nếu chưa có bản ghi nào tồn tại
+            RecentlyAccessedCoursesEntity accessedCourse = new RecentlyAccessedCoursesEntity(userId, courseId);
+            accessedCourse.setAccessedAt(LocalDateTime.now());
+            accessedCourse.setCourseName(courseName);
+            accessedCourse.setCategoryName(categoryName);
+            accessedCourse.setInstructorName(instructorName != null ? instructorName : "Chưa có giảng viên");
+
+            recentlyAccessedCoursesRepository.save(accessedCourse);
+            System.out.println("Saved accessed course with userId: " + userId + " and courseId: " + courseId);
+        }
+    }
+
+    // Lấy danh sách các khóa học vừa truy cập của một người dùng
+    public List<RecentlyAccessedCourseDTO> getRecentlyAccessedCourses(Integer userId) {
+        List<RecentlyAccessedCoursesEntity> courses = recentlyAccessedCoursesRepository.findByUserIdOrderByAccessedAtDesc(userId);
+        System.out.println("Recently accessed courses for user " + userId + ": " + courses);
+
+        // Chuyển đổi các entities thành DTO và thêm thông tin chi tiết
+        return courses.stream()
+                .map(course -> {
+                    RecentlyAccessedCourseDTO dto = course.toDTO();
+                    // Bạn có thể bổ sung thêm các thông tin chi tiết vào DTO nếu cần
+                    // Ví dụ: thiết lập tên khóa học, danh mục, giảng viên từ entity
+                    dto.setCourseName(course.getCourseName());
+                    dto.setCategoryName(course.getCategoryName());
+                    dto.setInstructorName(course.getInstructorName());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
 
 }
