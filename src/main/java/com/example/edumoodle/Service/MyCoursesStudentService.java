@@ -620,50 +620,50 @@ public class MyCoursesStudentService {
 
 
     //bat dau 1 bai kiem tra moi
-    public String getAttemptId(String quizId, String userId) {
-        String apiFunction = "local_student_test_custom_start_attempt";
-        String attemptId = null;
-
-        try {
-            // Tạo URL với các tham số quizId và userId
-            String requestUrl = domainName + "/webservice/rest/server.php" +
-                    "?wstoken=" + token +
-                    "&wsfunction=" + apiFunction +
-                    "&moodlewsrestformat=json" +
-                    "&quizid=" + quizId +
-                    "&userid=" + userId;
-
-            // Gửi yêu cầu GET và nhận phản hồi từ API
-            String response = restTemplate.getForObject(requestUrl, String.class);
-            System.out.println("Request URL: " + requestUrl);
-            System.out.println("Response: " + response);
-
-            // Parse JSON để lấy attemptId từ response
-            JSONObject responseJson = new JSONObject(response);
-
-            // Kiểm tra nếu có lỗi trong response JSON
-            if (responseJson.has("exception")) {
-                String error = responseJson.optString("exception");
-                System.out.println("Error in response: " + error);
-                return null;
-            }
-
-            // Kiểm tra và lấy attempt từ response
-            attemptId = responseJson.optString("attempt");
-            if (attemptId == null || attemptId.isEmpty()) {
-                System.out.println("Attempt ID not found or is empty in response.");
-            } else {
-                System.out.println("Attempt ID retrieved: " + attemptId);
-            }
-
-        } catch (Exception e) {
-            // Log error chi tiết hơn
-            System.out.println("Error retrieving attempt ID: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return attemptId;
-    }
+//    public String getAttemptId(String quizId, String userId) {
+//        String apiFunction = "local_student_test_custom_start_attempt";
+//        String attemptId = null;
+//
+//        try {
+//            // Tạo URL với các tham số quizId và userId
+//            String requestUrl = domainName + "/webservice/rest/server.php" +
+//                    "?wstoken=" + token +
+//                    "&wsfunction=" + apiFunction +
+//                    "&moodlewsrestformat=json" +
+//                    "&quizid=" + quizId +
+//                    "&userid=" + userId;
+//
+//            // Gửi yêu cầu GET và nhận phản hồi từ API
+//            String response = restTemplate.getForObject(requestUrl, String.class);
+//            System.out.println("Request URL: " + requestUrl);
+//            System.out.println("Response: " + response);
+//
+//            // Parse JSON để lấy attemptId từ response
+//            JSONObject responseJson = new JSONObject(response);
+//
+//            // Kiểm tra nếu có lỗi trong response JSON
+//            if (responseJson.has("exception")) {
+//                String error = responseJson.optString("exception");
+//                System.out.println("Error in response: " + error);
+//                return null;
+//            }
+//
+//            // Kiểm tra và lấy attempt từ response
+//            attemptId = responseJson.optString("attempt");
+//            if (attemptId == null || attemptId.isEmpty()) {
+//                System.out.println("Attempt ID not found or is empty in response.");
+//            } else {
+//                System.out.println("Attempt ID retrieved: " + attemptId);
+//            }
+//
+//        } catch (Exception e) {
+//            // Log error chi tiết hơn
+//            System.out.println("Error retrieving attempt ID: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//
+//        return attemptId;
+//    }
 
 
     // Hàm tính điểm (grade) từ score và maxGrade

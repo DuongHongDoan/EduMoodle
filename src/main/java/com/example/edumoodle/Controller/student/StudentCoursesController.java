@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -43,7 +45,7 @@ public class StudentCoursesController {
         // Kiểm tra nếu không có username
         if (username == null) {
             model.addAttribute("error", "Không thể xác định được người dùng hiện tại.");
-            return "my-courses";
+            return "student/mystudent_courses";
         }
 
         // Lấy danh sách khóa học của người dùng
@@ -55,11 +57,22 @@ public class StudentCoursesController {
     }
 
     @PostMapping("/user/my-courses-student")
-    public String processCourseSearch(@RequestParam("username") String username,
-                                      @RequestParam(value = "searchQuery", required = false) String searchQuery,
+    public String processCourseSearch(@RequestParam(value = "searchQuery", required = false) String searchQuery,
                                       @RequestParam(value = "sort", required = false) String sort,
                                       @RequestParam(value = "showAll", required = false) String showAll,
                                       Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                username = userDetails.getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+        }
+
         if (username == null) {
             model.addAttribute("error", "Không thể xác định được người dùng hiện tại.");
             return "student/mystudent_courses";
@@ -68,13 +81,17 @@ public class StudentCoursesController {
         // Lấy tất cả khóa học của người dùng
         List<CoursesDTO> userCourses = myCoursesStudentService.getUserCourses(username);
 
+        // Kiểm tra nếu "Hiển thị tất cả" được chọn
+        if (showAll != null && showAll.equals("true")) {
+            // Nếu được chọn, bỏ qua phần tìm kiếm
+            searchQuery = null;
+        }
+
         // Nếu không chọn "Hiển thị tất cả" thì lọc theo từ khóa tìm kiếm
-        if (showAll == null) {
-            if (searchQuery != null && !searchQuery.isEmpty()) {
-                userCourses = myCoursesStudentService.filterCoursesByName(userCourses, searchQuery);
-                if (userCourses.isEmpty()) {
-                    model.addAttribute("error", "Không tìm thấy khóa học phù hợp.");
-                }
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            userCourses = myCoursesStudentService.filterCoursesByName(userCourses, searchQuery);
+            if (userCourses.isEmpty()) {
+                model.addAttribute("error", "Không tìm thấy khóa học phù hợp.");
             }
         }
 
@@ -89,6 +106,8 @@ public class StudentCoursesController {
 
         return "student/mystudent_courses";
     }
+
+
 
     // Lấy chi tiết một khóa học dựa trên moodleCourseId
     @GetMapping("/user/student_course_details")
@@ -279,30 +298,47 @@ public class StudentCoursesController {
         model.addAttribute("numberOfQuestions", numberOfQuestions); // Thêm số câu hỏi
 
         // Gọi hàm getAttemptId từ service để lấy attemptId
-        String attemptId = myCoursesStudentService.getAttemptId(quizId.toString(), userId.toString());
-        model.addAttribute("attemptId", attemptId); // Thêm attemptId vào model nếu cần
+//        String attemptId = myCoursesStudentService.getAttemptId(quizId.toString(), userId.toString());
+//        model.addAttribute("attemptId", attemptId); // Thêm attemptId vào model nếu cần
 
         // Trả về view 'student/quiz_details' để hiển thị chi tiết quiz
         return "student/quiz_details";
     }
 
+//    @GetMapping ("/user/quiz/start")
+//    public String startQuiz(@RequestParam("quizId") Integer quizId,
+//                            @RequestParam("userId") Integer userId,
+//                            @RequestParam("attemptId") String attemptId,
+//                            Model model) {
+//
+//        // In ra để kiểm tra tham số nhận được
+//        System.out.println("GET - Start quiz with Quiz ID: " + quizId + ", User ID: " + userId + ", Attempt ID: " + attemptId);
+//
+//        // Trả về view để hiển thị kết quả
+//        return "student/quiz_test_data";
+//    }
 
+    // xem lai bai kem tra
+    @GetMapping("/user/quiz/review")
+    public String reviewQuiz() {
 
-    @GetMapping ("/user/quiz/start")
-    public String startQuiz(@RequestParam("quizId") Integer quizId,
-                            @RequestParam("userId") Integer userId,
-                            @RequestParam("attemptId") String attemptId,
-                            Model model) {
-
-        // In ra để kiểm tra tham số nhận được
-        System.out.println("GET - Start quiz with Quiz ID: " + quizId + ", User ID: " + userId + ", Attempt ID: " + attemptId);
-
-        // Trả về view để hiển thị kết quả
-        return "student/quiz_test_data";
+        return "student/quiz_review"; // Trả về view "quiz_review.html"
     }
 
-    @GetMapping("/user/quiz/review")
-    public String reviewQuiz(@RequestParam("attemptId") int attemptId, Model model) {
+    @PostMapping("/user/quiz/review")
+    public String reviewQuizAttempt(
+            @RequestParam(value = "attemptId", required = true) int attemptId,
+            @RequestParam(value = "maxGrade", required = true) Double maxGrade,
+            @RequestParam(value = "numberOfQuestions", required = true) Integer numberOfQuestions,
+            @RequestParam(value = "score", required = true) Double score,
+            @RequestParam(value = "startTime", required = true) String startTime,
+            @RequestParam(value = "finishTime", required = true) String finishTime,
+            @RequestParam(value = "status", required = true) String status,
+            @RequestParam(value = "calculatedScore", required = false) Double calculatedScore,
+            @RequestParam(value = "formattedScore", required = false) String formattedScore,
+            @RequestParam(value = "scoreMaxGrade", required = false) String scoreMaxGrade,
+            Model model) {
+
         // Gọi service để lấy thông tin chi tiết của quiz dựa trên attemptId
         List<QuestionDetail> questionDetails = myCoursesStudentService.getAttemptDetails(attemptId);
 
@@ -311,18 +347,46 @@ public class StudentCoursesController {
         long totalQuestions = questionDetails.size();
         long incorrectCount = totalQuestions - correctCount;
 
-        // Thêm các thông tin cần thiết vào model để hiển thị trên view
+        // Tính thời gian đã trôi qua
+        Duration timeTaken = Duration.between(LocalDateTime.parse(startTime), LocalDateTime.parse(finishTime));
+        String formattedTimeTaken = formatDuration(timeTaken);
+
+        // Thêm các thông tin vào model để hiển thị trên view
         model.addAttribute("questionDetails", questionDetails);
         model.addAttribute("correctCount", correctCount);
         model.addAttribute("incorrectCount", incorrectCount);
         model.addAttribute("totalQuestions", totalQuestions);
-        model.addAttribute("attemptId", attemptId); // Truyền attemptId qua view nếu cần
 
-        System.out.println("Attempt ID: " + attemptId);
+        // Thêm thông tin quiz (maxGrade, numberOfQuestions, score, etc.)
+        model.addAttribute("attemptId", attemptId);
+        model.addAttribute("maxGrade", maxGrade);
+        model.addAttribute("numberOfQuestions", numberOfQuestions);
+        model.addAttribute("score", score);
+        model.addAttribute("startTime", startTime);
+        model.addAttribute("finishTime", finishTime);
+        model.addAttribute("status", status);
+        model.addAttribute("timeTaken", formattedTimeTaken); // Thêm thời gian đã trôi qua
 
-        return "student/quiz_review"; // Trả về view "quiz_review.html"
+        // Thêm thông tin tính toán đã truyền từ form
+        model.addAttribute("calculatedScore", calculatedScore);
+        model.addAttribute("formattedScore", formattedScore);
+        model.addAttribute("scoreMaxGrade", scoreMaxGrade);
+
+        // Trả về trang review để hiển thị chi tiết bài kiểm tra
+        return "student/quiz_review";
     }
 
+    // Hàm định dạng thời gian đã trôi qua thành chuỗi dễ đọc
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
+
+
+    //Trang ca nhan
     @GetMapping("/user/my_recent_courses")
     public String showRecentlyAccessedCoursesPage(Model model) {
         // Get the current user's username from Spring Security
@@ -348,7 +412,7 @@ public class StudentCoursesController {
         model.addAttribute("recentlyAccessedCourses", recentlyAccessedCourses);
 
         // Return the view name
-        return "student/student_personal_page";
+        return "student/student_personal_page1";
     }
 
 }

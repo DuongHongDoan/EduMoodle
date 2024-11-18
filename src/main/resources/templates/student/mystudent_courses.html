@@ -133,37 +133,36 @@
     <input type="text" name="searchQuery" placeholder="Tìm kiếm khóa học..." th:value="${searchQuery}" />
 
     <!-- Search Button -->
-    <button type="submit" style="border: none; background: none; cursor: pointer;">
+    <button type="submit" name="action" value="search" style="border: none; background: none; cursor: pointer;">
         <i class="fas fa-search" style="font-size: 20px; color: #007bff;"></i>
     </button>
 
     <!-- Sort Button -->
-    <button type="submit" name="sort" value="name">Sắp xếp theo tên</button>
+    <button type="submit" name="sort" value="name" style="border: none;">Sắp xếp theo tên</button>
 
     <!-- Show All Button -->
-    <button type="submit" name="showAll" value="true">Hiển thị tất cả</button>
+    <button type="submit" name="showAll" value="true" style="border: none;">Hiển thị tất cả</button>
 </form>
-
 
 <!-- Display error message if no courses found -->
 <p th:if="${error}" style="color: red; text-align: center;">[[${error}]]</p>
+
+<!-- Hiển thị thông báo nếu không có khóa học -->
+<div th:if="${userCourses.empty}" style="text-align: center; color: red;">
+    Không có khóa học nào để hiển thị.
+</div>
 
 <!-- Course cards -->
 <div class="course-container" th:if="${userCourses}">
     <div class="course-card" th:each="course : ${userCourses}">
         <img th:src="@{/imgs/courses.png}" alt="Course Image"/>
         <h3 th:text="${course.fullname}">Tên khóa học</h3>
-
-<!--        <p>Moodle Course ID: <span th:text="${course.moodleCourseId}">ID khóa học</span></p> &lt;!&ndash; In ra Moodle Course ID &ndash;&gt;-->
-
-        <!-- Hiển thị danh mục -->
         <p>Danh mục: <span th:text="${course.categoryName}">Tên Category</span></p>
         <p>Giảng viên: <span th:text="${course.teacherName}">Không xác định</span></p>
-
-        <!-- Sử dụng thẻ a để tạo liên kết -->
         <a th:href="@{/user/student_course_details(moodleCourseId=${course.moodleCourseId})}" class="btn btn-primary">Xem chi tiết</a>
     </div>
 </div>
+
 
 </body>
 </html>

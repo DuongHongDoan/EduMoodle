@@ -18,7 +18,7 @@
             text-align: center;
         }
 
-        .question-container {
+        .quiz-review-container {
             max-width: 800px;
             margin: 0 auto 30px;
             padding: 20px;
@@ -116,11 +116,13 @@
             background-color: #0056b3;
         }
 
-        .navigation-panel {
+        /* Phạm vi chỉ cho bài review quiz */
+        .quiz-navigation-panel {
             position: fixed;
             top: 20px;
             left: 20px;
-            width: 275px;
+            width: 320px;
+            overflow-x: auto;
             height: calc(100vh - 40px);
             background-color: #f9f9f9;
             border-right: 2px solid #ddd;
@@ -130,35 +132,34 @@
             transition: transform 0.3s ease, margin-left 0.3s ease;
         }
 
-        .hidden-panel {
+        .quiz-hidden-panel {
             transform: translateX(-100%);
             margin-left: -250px;
         }
 
-        .show-button {
+        .quiz-show-button {
             position: fixed;
             top: 20px;
             left: 20px;
-            background-color: #007bff; /* Màu nền xanh */
-            color: white; /* Màu chữ trắng */
-            border: none; /* Xóa viền */
-            padding: 15px; /* Tăng padding để nút trông lớn hơn */
-            border-radius: 50%; /* Nút tròn */
-            cursor: pointer; /* Con trỏ hiển thị như nút nhấn */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Tạo bóng lớn hơn để có hiệu ứng nổi */
-            font-size: 18px; /* Tăng kích thước chữ cho dấu ☰ */
-            transition: background-color 0.3s ease, transform 0.2s ease; /* Thêm hiệu ứng chuyển đổi mượt */
-            z-index: 1000; /* Đảm bảo nút nằm trên tất cả các thành phần khác */
-            display: none; /* Mặc định ẩn */
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            z-index: 1000;
+            display: none;
         }
 
-        .show-button:hover {
-            background-color: #0056b3; /* Đổi màu khi hover */
-            transform: scale(1.1); /* Tăng kích thước một chút khi hover */
+        .quiz-show-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
         }
 
-
-        .navigation-header {
+        .quiz-navigation-header {
             font-weight: bold;
             text-align: center;
             margin-bottom: 20px;
@@ -166,13 +167,13 @@
             color: #333;
         }
 
-        .navigation-grid {
+        .quiz-navigation-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); /* Điều chỉnh số lượng cột linh hoạt */
             gap: 12px;
         }
 
-        .nav-item {
+        .quiz-nav-item {
             width: 45px;
             height: 45px;
             display: flex;
@@ -186,47 +187,61 @@
             transition: background-color 0.3s ease;
         }
 
-        .nav-item.correct {
+        .quiz-nav-item.correct {
             background-color: #4caf50;
             color: white;
         }
 
-        .nav-item.incorrect {
+        .quiz-nav-item.incorrect {
             background-color: #f44336;
             color: white;
         }
 
-        .nav-item:hover {
+        .quiz-nav-item:hover {
             background-color: #007bff;
             color: white;
         }
 
-        .shifted {
+        .quiz-shifted {
             margin-left: 0;
             transition: margin-left 0.3s ease;
         }
 
-        /* Close icon "X" cho việc ẩn panel */
-        .close-icon {
+        .quiz-close-icon {
             position: absolute;
             top: 10px;
-            left: 10px; /* Đẩy sát vào góc trái */
-            font-size: 24px; /* Tăng kích thước của dấu X */
+            left: 10px;
+            font-size: 24px;
             cursor: pointer;
-            color: #333; /* Màu của dấu X */
+            color: #333;
             font-weight: bold;
-            z-index: 1000; /* Đảm bảo dấu X nằm trên tất cả các thành phần khác */
+            z-index: 1000;
         }
 
-        .close-icon:hover {
-            color: #f44336; /* Đổi màu khi hover */
+        .quiz-close-icon:hover {
+            color: #f44336;
         }
 
-        /* Điều chỉnh lại khoảng cách khi có close icon */
-        .navigation-header {
-            margin-top: 30px; /* Tạo khoảng trống phía trên để tránh đè lên close icon */
+        .quiz-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
         }
 
+        .quiz-details td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .quiz-details td:first-child {
+            font-weight: bold;
+            width: 150px;
+        }
+
+        .quiz-details tr:last-child td {
+            border-bottom: none;
+        }
 
     </style>
 </head>
@@ -234,28 +249,56 @@
 
 <h1>Quiz Review</h1>
 
-<button class="show-button" id="show-button" style="display: none;" onclick="toggleNavigation()">☰</button>
+<button class="quiz-show-button" id="quiz-show-button" onclick="toggleQuizNavigation()">☰</button>
+<div class="quiz-review-container">
+    <div class="quiz-details">
+        <table>
+            <tr>
+                <td><strong>Started on</strong></td>
+                <td><span th:text="${startTime}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>State</strong></td>
+                <td><span th:text="${status}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Completed on</strong></td>
+                <td><span th:text="${finishTime}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Time taken</strong></td>
+                <td><span th:text="${timeTaken}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Marks</strong></td>
+                <td><span th:text="${formattedScore}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Grade</strong></td>
+                <td><span th:text="${scoreMaxGrade}"></span></td>
+            </tr>
+        </table>
+    </div>
+</div>
 
-<div class="navigation-panel" id="navigation-panel">
-    <!-- Thêm dấu X -->
-    <span class="close-icon" onclick="toggleNavigation()">✖</span>
 
-    <div class="navigation-header">Quiz Navigation</div>
-    <div class="navigation-grid">
+<div class="quiz-navigation-panel" id="quiz-navigation-panel">
+    <span class="quiz-close-icon" onclick="toggleQuizNavigation()">✖</span>
+    <div class="quiz-navigation-header">Quiz Navigation</div>
+    <div class="quiz-navigation-grid">
         <div th:each="questionDetail, iterStat : ${questionDetails}"
-             class="nav-item"
+             class="quiz-nav-item"
              th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
-             th:onclick="'scrollToQuestion(' + ${iterStat.index} + ')'">
+             th:onclick="'scrollToQuizQuestion(' + ${iterStat.index} + ')'">
             <span th:text="${iterStat.index + 1}"></span>
         </div>
     </div>
 </div>
 
-
-<div class="content-wrapper" id="content-wrapper">
+<div class="content-wrapper" id="quiz-content-wrapper">
     <div th:each="questionDetail, iterStat : ${questionDetails}"
-         class="question-container"
-         th:id="'question-' + ${iterStat.index}">
+         class="quiz-review-container"
+         th:id="'quiz-question-' + ${iterStat.index}">
 
         <div class="question-status"
              th:classappend="${questionDetail.isCorrect ? 'correct-status' : 'incorrect-status'}"
@@ -294,31 +337,27 @@
 </div>
 
 <script>
-    function toggleNavigation() {
-        const nav = document.getElementById('navigation-panel');
-        const content = document.getElementById('content-wrapper');
-        const showBtn = document.getElementById('show-button');
+    function toggleQuizNavigation() {
+        const navPanel = document.getElementById('quiz-navigation-panel');
+        const showBtn = document.getElementById('quiz-show-button');
 
-        nav.classList.toggle('hidden-panel');
-        content.classList.toggle('shifted');
+        navPanel.classList.toggle('quiz-hidden-panel');
 
-        if (nav.classList.contains('hidden-panel')) {
+        if (navPanel.classList.contains('quiz-hidden-panel')) {
             showBtn.style.display = 'block';
         } else {
             showBtn.style.display = 'none';
         }
     }
 
-    function scrollToQuestion(index) {
-        const question = document.getElementById(`question-${index}`);
+    function scrollToQuizQuestion(index) {
+        const question = document.getElementById('quiz-question-' + index);
         if (question) {
-            question.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            console.error(`Question with ID 'question-${index}' not found.`);
+            question.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
-
 </script>
+
 
 </body>
 </html>
