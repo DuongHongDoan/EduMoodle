@@ -8,98 +8,239 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Danh sách câu hỏi</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
             padding: 20px;
         }
 
         h1 {
             text-align: center;
             color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
         }
 
-        .add-question-button {
-            display: flex;
-            justify-content: center;
+        .form-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-container h2 {
+            font-size: 28px;
+            color: #0056b3;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
             margin-bottom: 20px;
         }
 
-        .add-question-button a {
-            background-color: #007BFF;
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+        .form-group label {
             font-size: 16px;
-            text-align: center;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
         }
 
-        .add-question-button a:hover {
-            opacity: 0.9;
-        }
-
-        .question-table {
-            width: 200%;
-            max-width: 2000px;
-            margin: 20px auto;
-            border-collapse: collapse;
-            background-color: #fff;
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: #f7f7f7;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
 
-        .question-table th, .question-table td {
-            padding: 12px 15px;
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #0056b3;
+            background-color: #fff;
+            outline: none;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group button {
+            background-color: #28a745;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-group button:hover {
+            background-color: #218838;
+        }
+
+        .form-group .cancel-button {
+            background-color: #dc3545;
+            margin-top: 10px;
+        }
+
+        .form-group .cancel-button:hover {
+            background-color: #c82333;
+        }
+
+        .answer-container {
+            margin-top: 40px;
+        }
+
+        .answer-container h3 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .answer-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .answer-list li {
+            background-color: #f4f4f4;
+            margin-bottom: 12px;
+            padding: 12px;
             border: 1px solid #ddd;
-            text-align: left;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
         }
 
-        .question-table th {
-            background-color: #007BFF;
+        .answer-list li.correct {
+            background-color: #28a745;
             color: white;
         }
 
-        .question-table td {
-            color: #444;
+        .answer-list li span {
+            margin-left: 10px;
         }
 
-        .question-name {
-            font-weight: bold;
+        .answer-list input[type="radio"] {
+            margin-right: 15px;
         }
 
         .action-buttons {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
         }
 
         .action-buttons button {
-            background-color: #28a745;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 48%;
+        }
+
+        .action-buttons .edit-button {
+            background-color: #007bff;
             color: white;
             border: none;
-            padding: 6px 12px;
-            margin: 0 5px;
-            border-radius: 4px;
-            cursor: pointer;
         }
 
         .action-buttons .delete-button {
             background-color: #dc3545;
-        }
-
-        .action-buttons .preview-button {
-            background-color: #007BFF;
+            color: white;
+            border: none;
         }
 
         .action-buttons button:hover {
-            opacity: 0.9;
+            opacity: 0.8;
+        }
+
+        /* Cải tiến giao diện các nút sửa, xóa, thêm */
+        .add-question-button {
+            display: inline-block;
+            background-color: white;
+            color: #adb5bd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-question-button:hover {
+            background-color: #adb5bd;
+        }
+
+        .question-name a {
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .question-name a:hover {
+            text-decoration: underline;
+        }
+
+        .question-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .question-table th, .question-table td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .question-table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 5px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
         }
 
         .no-questions {
             text-align: center;
+            color: #777;
             font-size: 18px;
-            color: #888;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
         }
+
     </style>
 </head>
 <body layout:fragment="body">
@@ -134,6 +275,7 @@
         <th>Tên câu hỏi</th>
         <th>Loại câu hỏi</th>
         <th>Nội dung câu hỏi</th>
+        <th>Đáp án</th>
         <th>Thao tác</th>
     </tr>
     </thead>
@@ -168,9 +310,9 @@
                 </button>
             </form>
 
-            <button type="button" class="preview-button">
-                <a th:href="@{/teacher/questions/preview/{id}(id=${question.id})}" style="color: white; text-decoration: none;">Xem trước</a>
-            </button>
+<!--            <button type="button" class="preview-button">-->
+<!--                <a th:href="@{/teacher/questions/preview/{id}(id=${question.id})}" style="color: white; text-decoration: none;">Xem trước</a>-->
+<!--            </button>-->
 
         </td>
     </tr>

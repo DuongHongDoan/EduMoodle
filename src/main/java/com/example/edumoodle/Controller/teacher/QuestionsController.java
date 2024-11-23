@@ -189,6 +189,17 @@ public String deleteQuestion(@PathVariable Integer moodle_id,
         return "teacher/preview";
     }
 
+//    @GetMapping("teacher/edit-question/{moodleId}")
+//    public String editQuestion(@PathVariable int moodleId, Model model) {
+//        // Lấy câu hỏi từ Moodle ID
+//        QuestionsEntity question = questionsService.getQuestionByMoodleId(moodleId);
+//        List<QuestionAnswersEntity> answers = question.getAnswers();
+//
+//        // Thêm câu hỏi và danh sách đáp án vào model
+//        model.addAttribute("question", question);
+//        model.addAttribute("answers", answers);
+//        return "teacher/Edit_Questions";
+//    }
     @GetMapping("teacher/edit-question/{moodleId}")
     public String editQuestion(@PathVariable int moodleId, Model model) {
         // Lấy câu hỏi từ Moodle ID
@@ -198,8 +209,16 @@ public String deleteQuestion(@PathVariable Integer moodle_id,
         // Thêm câu hỏi và danh sách đáp án vào model
         model.addAttribute("question", question);
         model.addAttribute("answers", answers);
+
+        // Nếu bạn muốn chọn đáp án đúng từ danh sách trả về
+        model.addAttribute("correctAnswer", answers.stream()
+                .filter(a -> a.correct())
+                .findFirst()
+                .orElse(null)); // Nếu không có đáp án đúng, trả về null
+
         return "teacher/Edit_Questions";
     }
+
     @PostMapping("teacher/edit-question/{moodleId}")
     public String updateQuestion(@PathVariable int moodleId,
                                  @RequestParam String name,

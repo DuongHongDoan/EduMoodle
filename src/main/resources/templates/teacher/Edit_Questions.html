@@ -117,8 +117,9 @@
     <div layout:fragment="body">
         <form th:action="@{/teacher/edit-question/{id}(id=${question.moodleId})}" method="post">
             <h1>Chỉnh sửa câu hỏi</h1>
-            <input type="hidden" name="moodleId" th:value="${question.moodleId}">
+            <input type="hidden" name="moodleId" th:value="${moodleId}">
             <input type="hidden" name="categoryId" th:value="${categoryId}">
+
 
             <div>
                 <label for="name">Tên câu hỏi:</label>

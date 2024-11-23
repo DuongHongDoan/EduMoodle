@@ -31,6 +31,7 @@ public class QuestionsEntity {
 //    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
 //    private List<QuestionAnswersEntity> answers;
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+
     private List<QuestionAnswersEntity> answers = new ArrayList<>(); // Khởi tạo tại đây
 
     // Constructor mặc định

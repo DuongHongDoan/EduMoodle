@@ -89,6 +89,43 @@ public class QuestionsService {
         }
     }
 
+
+    public void addQuestionToMoodle(QuestionsDTO questionsDTO) {
+        String apiUrl = "http://localhost/moodle/webservice/rest/server.php";
+//        String token = "18d6473e1bdd37f3738045a175fd94e7"; // Đảm bảo token đúng và hợp lệ
+
+        // Tạo RestTemplate
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Tạo MultiValueMap thay vì HashMap
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("wstoken", token);
+        params.add("wsfunction", "local_question_add_question");
+        params.add("moodlewsrestformat", "json");
+        params.add("category_id", String.valueOf(questionsDTO.getCategoryId()));
+        params.add("name", questionsDTO.getName());
+        params.add("questiontext", questionsDTO.getQuestionText());
+        params.add("qtype", "multichoice"); // Đảm bảo giá trị đúng với Moodle
+        params.add("correctanswerindex", String.valueOf(questionsDTO.getCorrectAnswerIndex()));
+
+        // Thêm các câu trả lời vào params
+        for (int i = 0; i < questionsDTO.getAnswers().size(); i++) {
+            params.add("answers[" + i + "]", questionsDTO.getAnswers().get(i).getAnswerText());
+        }
+
+        // Sử dụng POST request thay vì GET
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+
+        // Gửi yêu cầu POST
+        ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+
+        // Kiểm tra kết quả
+        System.out.println("Response Status: " + response.getStatusCode());
+        System.out.println("Response Body: " + response.getBody());
+    }
+
     public void importQuestionsFromTxt(String filePath, int categoryId) {
         List<QuestionsDTO> questionsList = new ArrayList<>();
 
@@ -168,6 +205,8 @@ public class QuestionsService {
 
     }
 
+
+
     private void addQuestionToWebDatabase(QuestionsDTO questionsDTO) {
         // Lấy thông tin danh mục câu hỏi từ cơ sở dữ liệu
         QuestionCategoriesEntity categoryEntity = QuestionCategoriesRepository.findByMoodleId(questionsDTO.getCategoryId())
@@ -209,9 +248,8 @@ public class QuestionsService {
             return; // Dừng việc thực hiện nếu dữ liệu không hợp lệ
         }
 
-
         String apiUrl = "http://localhost/moodle/webservice/rest/server.php";
-
+        String token = "18d6473e1bdd37f3738045a175fd94e7"; // Đảm bảo token đúng và hợp lệ
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -272,6 +310,7 @@ public class QuestionsService {
         }
     }
 
+
     private int extractMoodleId(String jsonResponse) {
         try {
             JsonNode rootNode = new ObjectMapper().readTree(jsonResponse);
@@ -288,6 +327,20 @@ public class QuestionsService {
             logger.error("Lỗi khi phân tích JSON: {}", e.getMessage());
             return -1;
         }
+    }
+
+    public String deleteQuestionFromMoodle(int questionId) {
+        String url = String.format("%s/webservice/rest/server.php?wsfunction=local_question_delete_question&moodlewsrestformat=json&wstoken=%s&question_id=%d",
+                domainName, token, questionId);
+
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            return response.getBody();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Có lỗi khi xóa câu hỏi từ Moodle: " + e.getMessage();
+        }
+
     }
 
     private boolean parseDeleteResponse(String jsonResponse) {
@@ -350,6 +403,8 @@ public class QuestionsService {
             return "Lỗi: Không thể xóa câu hỏi. Chi tiết: " + e.getMessage();
         }
     }
+
+
 
     private static final String MOODLE_API_URL = "http://localhost/moodle/webservice/rest/server.php";
 
@@ -498,8 +553,8 @@ public class QuestionsService {
         System.out.println("Current qtype before sending to API: " + question.getQtype());
 
         // Xây dựng URL API với các tham số
-        StringBuilder apiUrlBuilder = new StringBuilder(domainName + "/webservice/rest/server.php")
-                .append("?wstoken=").append(token)
+        StringBuilder apiUrlBuilder = new StringBuilder(domainName+ "/webservice/rest/server.php")
+                .append("?wstoken=54df098d9366c247f13f81e27f6dddb2")
                 .append("&wsfunction=local_question_update_question")
                 .append("&moodlewsrestformat=json")
                 .append("&qtype=").append(question.getQtype())
@@ -531,7 +586,6 @@ public class QuestionsService {
             System.err.println("Lỗi khi gửi yêu cầu API: " + e.getMessage());
         }
     }
-
 
 }
 
