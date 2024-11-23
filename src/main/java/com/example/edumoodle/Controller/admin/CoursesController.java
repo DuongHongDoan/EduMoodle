@@ -377,7 +377,8 @@ public class CoursesController {
     public String createCourseList(@RequestParam("file")MultipartFile file,
                                    @RequestParam("type") String type,
                                    @RequestParam("schoolYearName") Integer schoolYearName,
-                                   @RequestParam("semesterName") Integer semesterName, Model model) {
+                                   @RequestParam("semesterName") Integer semesterName, Model model,
+                                   RedirectAttributes redirectAttributes) {
         if (file.isEmpty()) {
             model.addAttribute("errorMessage", "File không được để trống");
             return "admin/UploadCourseList";
@@ -446,8 +447,8 @@ public class CoursesController {
                     return "admin/UploadCourseList";
                 }
             }
-            model.addAttribute("successMessage", "Tạo danh sách khóa học thành công!");
-            return "admin/UploadCourseList";
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo danh sách khóa học thành công!");
+            return "redirect:/admin/courses";
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
 
