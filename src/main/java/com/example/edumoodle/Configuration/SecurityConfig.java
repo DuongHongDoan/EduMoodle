@@ -40,7 +40,8 @@ public class SecurityConfig {
         http.csrf().disable().authorizeHttpRequests()
                 .requestMatchers("/user/home", "/user/courses/search", "/user/courses", "/user/courses/category").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
-                .requestMatchers("/user/**").hasAnyAuthority("editingteach", "student")
+                .requestMatchers("/manage/**").hasAnyAuthority("editingteacher", "ADMIN")
+                .requestMatchers("/user/**").hasAnyAuthority("editingteacher", "student")
                 .anyRequest().authenticated().and()
                 .formLogin()
                 .loginPage("/login")
@@ -63,7 +64,7 @@ public class SecurityConfig {
     @Bean
     WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.debug(true).ignoring()
-                .requestMatchers("/imgs/**", "/images/**","/home", "/css/**", "/js/**", "/assets/**");
+                .requestMatchers("/imgs/**", "/images/**","/home", "/css/**", "/js/**", "/assets/**", "/CSV/**");
     }
 
     @Bean

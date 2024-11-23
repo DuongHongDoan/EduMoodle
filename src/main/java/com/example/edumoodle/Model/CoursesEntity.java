@@ -3,6 +3,8 @@ package com.example.edumoodle.Model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 @Entity
 @Table(name = "tbl_courses")
 public class CoursesEntity {
@@ -22,6 +24,9 @@ public class CoursesEntity {
     private String shortname;
 
     private String summary;
+
+    @OneToMany(mappedBy = "coursesEntity")
+    private List<CourseGroupsEntity> courseGroupsEntities;
 
     @NotNull
     @ManyToOne
@@ -85,5 +90,13 @@ public class CoursesEntity {
 
     public void setCategoriesEntity(CategoriesEntity categoriesEntity) {
         this.categoriesEntity = categoriesEntity;
+    }
+
+    public List<CourseGroupsEntity> getCourseGroupsEntities() {
+        return courseGroupsEntities;
+    }
+
+    public void setCourseGroupsEntities(List<CourseGroupsEntity> courseGroupsEntities) {
+        this.courseGroupsEntities = courseGroupsEntities;
     }
 }

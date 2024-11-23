@@ -1,15 +1,15 @@
 package com.example.edumoodle.Service;
 
+import com.example.edumoodle.DTO.ModuleDTO;
 import com.example.edumoodle.DTO.SectionsDTO;
 import com.example.edumoodle.DTO.CategoriesDTO;
 import com.example.edumoodle.DTO.CoursesDTO;
-import com.example.edumoodle.Model.CategoriesEntity;
-import com.example.edumoodle.Model.CoursesEntity;
-import com.example.edumoodle.Repository.CategoriesRepository;
-import com.example.edumoodle.Repository.CoursesRepository;
+import com.example.edumoodle.Model.*;
+import com.example.edumoodle.Repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -20,8 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Inet4Address;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,7 +44,15 @@ public class CoursesService {
     @Autowired
     private CategoriesRepository categoriesRepository;
     @Autowired
+    private SchoolYearRepository schoolYearRepository;
+    @Autowired
+    private SemesterRepository semesterRepository;
+    @Autowired
+    private SchoolYearSemesterRepository schoolYearSemesterRepository;
+
+    @Autowired
     private CategoriesService categoriesService;
+
 
     //lấy tất cả khóa học
     public List<CoursesDTO> getAllCourses() {
@@ -273,10 +286,16 @@ public class CoursesService {
     }
 
     //xóa khóa học trên csdl web
-    public boolean deleteCourseFromDatabase(int courseId) {
+    public boolean deleteCourseFromDatabase(Integer courseId) {
         try {
-            if (coursesRepository.existsById(courseId)) {
-                coursesRepository.deleteById(courseId);
+            Optional<CoursesEntity> coursesEntity = coursesRepository.findByMoodleId(courseId);
+            if (coursesEntity.isPresent()) {
+                CoursesEntity course = coursesEntity.get();
+                List<CourseGroupsEntity> courseGroups = courseGroupsRepository.findAllByCoursesEntity(course);
+                for (CourseGroupsEntity courseGroup : courseGroups) {
+                    courseGroupsRepository.deleteById(courseGroup.getId_course_group());
+                }
+                coursesRepository.deleteById(course.getId_courses());
                 return true;
             } else {
                 System.out.println("Course with ID " + courseId + " does not exist in the database.");
@@ -312,6 +331,280 @@ public class CoursesService {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    @Autowired
+    private CourseGroupsRepository courseGroupsRepository;
+
+    public CourseGroupsEntity findByCoursesId(CoursesEntity courseId) {
+        CourseGroupsEntity courseGroupsEntity = courseGroupsRepository.findByCoursesEntity(courseId);
+        if (courseGroupsEntity != null) {
+            System.out.println("Tìm nhóm HP đc service: " + courseGroupsEntity.getCourseCode());
+        } else {
+            System.out.println("Không tìm thấy nhóm HP cho khóa học này.");
+        }
+        return courseGroupsEntity;
+    }
+
+    public SchoolYearSemesterEntity findByIdSchoolYearSemester(Integer schoolYearSemesterId) {
+        Optional<SchoolYearSemesterEntity> schoolYearSemesterEntity = schoolYearSemesterRepository.findById(schoolYearSemesterId);
+        if (schoolYearSemesterEntity.isPresent()) {
+            System.out.println("Tìm NH_HK đc service: " + schoolYearSemesterEntity.get().getId_schoolYear_semester());
+            return schoolYearSemesterEntity.get();
+        } else {
+            System.out.println("Không tìm thấy NH_HK với ID này.");
+            return null; // Có thể xử lý thêm nếu cần
+        }
+    }
+
+    //get ds năm học
+    public List<SchoolYearsEntity> getAllSchoolYear() {
+        return schoolYearRepository.findAll();
+    }
+    //tìm kiếm năm học
+    public SchoolYearsEntity getSchoolYearName(Integer schoolYearName) {
+        return schoolYearRepository.findById(schoolYearName).get();
+    }
+
+    //get ds học kì
+    public List<SemestersEntity> getAllSemester() {
+        return semesterRepository.findAll();
+    }
+    public SemestersEntity getSemesterName(Integer semesterName) {
+        return semesterRepository.findById(semesterName).get();
+    }
+
+    //tìm kiếm, nếu thấy thì trả về NH_HK, ngược lại thì tạo mới nó
+    public SchoolYearSemesterEntity getOrCreateSchoolYearSemester(Integer schoolYearName, Integer semesterName) {
+        SchoolYearsEntity schoolYear = getSchoolYearName(schoolYearName);
+        SemestersEntity semester = getSemesterName(semesterName);
+
+        if (schoolYear != null && semester != null) {
+            SchoolYearSemesterEntity schoolYearSemesterEntity = schoolYearSemesterRepository.findBySchoolYearsEntityAndSemestersEntity(schoolYear, semester);
+            if(schoolYearSemesterEntity != null) {
+                return schoolYearSemesterEntity;
+            }
+            SchoolYearSemesterEntity newSchoolYearSemesterEntity = new SchoolYearSemesterEntity();
+            newSchoolYearSemesterEntity.setSchoolYearsEntity(getSchoolYearName(schoolYearName));
+            newSchoolYearSemesterEntity.setSemestersEntity(getSemesterName(semesterName));
+            return schoolYearSemesterRepository.save(newSchoolYearSemesterEntity);
+        } else {
+            return null;
+        }
+    }
+
+    //tạo khóa học bằng upload file
+    public List<Map<String, String>> parseCSVFileCreateCourse(MultipartFile file, String fileType) throws IOException{
+        List<Map<String, String>> courses = new ArrayList<>();
+        Set<String> validFields;
+
+        // Kiểm tra loại file đường dùng để nhập
+        if ("basicCourse".equalsIgnoreCase(fileType)) {
+            validFields = Set.of("fullname", "shortname", "courseCode", "courseGroupCode", "category", "description");
+        } else if ("DHCTCourse".equalsIgnoreCase(fileType)) {
+            validFields = Set.of("fullname");
+        } else {
+            throw new IllegalArgumentException("Loại file không hợp lệ: " + fileType);
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine(); //đọc dòng đầu tiên của file
+            if (headerLine == null) {
+                throw new IllegalArgumentException("File CSV không có nội dung");
+            }
+
+            String[] headers = headerLine.split(",");
+            for (String header : headers) {
+                if (!validFields.contains(header.trim())) {
+                    throw new IllegalArgumentException("Trường " + header + " không hợp lệ!");
+                }
+            }
+
+            //đọc từng dòng
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] fields = line.split(",");
+
+                Map<String, String> courseMap = new HashMap<>();
+                for (int i = 0; i < headers.length; i++) {
+                    if (i < fields.length) {
+                        courseMap.put(headers[i].trim(), fields[i].trim());
+                    } else {
+                        courseMap.put(headers[i].trim(), "");
+                    }
+                }
+
+                if (courseMap.get("fullname") == null || courseMap.get("fullname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'fullname' không được để trống");
+                }
+                if (courseMap.get("shortname") == null || courseMap.get("shortname").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'shortname' không được để trống");
+                }
+                if (courseMap.get("courseCode") == null || courseMap.get("courseCode").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'courseCode' không được để trống");
+                }
+                if (courseMap.get("courseGroupCode") == null || courseMap.get("courseGroupCode").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'courseGroupCode' không được để trống");
+                }
+                if (courseMap.get("category") == null || courseMap.get("category").isEmpty()) {
+                    throw new IllegalArgumentException("Trường 'category' không được để trống");
+                }
+
+                List<CategoriesDTO> findCategoryByFullName = categoriesService.getSearchCategory(courseMap.get("category"));
+                if(findCategoryByFullName != null && !findCategoryByFullName.isEmpty()) {
+                    for (CategoriesDTO category : findCategoryByFullName) {
+                        String categoryId = String.valueOf(category.getId());
+                        courseMap.put("category", categoryId);
+                    }
+                }else {
+                    throw new IllegalArgumentException("Danh mục '" + courseMap.get("category") + "' không tồn tại. Hãy điền thông tin danh mục đúng như đã cung cấp trên web!");
+                }
+
+                courses.add(courseMap);
+            }
+        }
+        return courses;
+    }
+
+    //tạo topic trong khóa học
+    public void createTopicInCourse(Integer courseId, String name) {
+        String apiMoodleFunc = "local_topic_create_topic";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&courseid=" + courseId
+                + "&name=" + name;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //cập nhật topic trong khóa học
+    public void updateTopicInCourse(Integer sectionId, Integer courseId, String sectionName) {
+        String apiMoodleFunc = "local_topic_update_topic";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&topicid=" + sectionId
+                + "&courseid=" + courseId
+                + "&name=" + sectionName;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //xóa topic trong khóa học
+    public void deleteTopicInCourse(Integer sectionId, Integer courseId) {
+        String apiMoodleFunc = "local_topic_delete_topic";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&topicid=" + sectionId
+                + "&courseid=" + courseId;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //lấy danh sách module
+    public List<ModuleDTO> getModuleList() {
+        String apiMoodleFunc = "local_module_get_modules";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json";
+        RestTemplate restTemplate = new RestTemplate();
+        ModuleDTO[] moduleArray = restTemplate.getForObject(url, ModuleDTO[].class);
+
+        assert moduleArray != null;
+        return Arrays.asList(moduleArray);
+    }
+
+    //add activity vào moodle
+    public void addActivity(Integer courseId, String type, String name, Integer sectionId, String intro) {
+        String apiMoodleFunc = "local_module_add_activity";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&courseid=" + courseId
+                + "&type=" + type
+                + "&name=" + name
+                + "&sectionid=" + sectionId
+                + "&intro=" + intro;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //update activity in moodle
+    public void updateActivity(Integer cmid, String type, Integer courseId, String name) {
+        String apiMoodleFunc = "local_module_update_activity";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&cmid=" + cmid
+                + "&type=" + type
+                + "&courseid=" + courseId
+                + "&name=" + name;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
+        }
+    }
+
+    //delete activity trong moodle
+    public void deleteActivity(Integer cmid, String type, Integer courseId) {
+        String apiMoodleFunc = "local_module_delete_activity";
+        String url = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiMoodleFunc
+                + "&moodlewsrestformat=json"
+                + "&cmid=" + cmid
+                + "&type=" + type
+                + "&courseid=" + courseId;
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+            // Xử lý phản hồi từ Moodle
+            System.out.println("Response: " + response.getBody());
+        } catch (Exception e) {
+            // Xử lý ngoại lệ
+            e.printStackTrace();
         }
     }
 }

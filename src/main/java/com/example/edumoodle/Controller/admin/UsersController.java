@@ -23,10 +23,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/admin")
@@ -62,7 +64,7 @@ public class UsersController {
         model.addAttribute("usersList", usersListFilter);
         model.addAttribute("userCount", userCount);
 
-        if (userCount >= size) {
+        if (userCount > size) {
             // Phân trang
             int pageIndex = page - 1;
             int start = pageIndex * size;
@@ -185,6 +187,61 @@ public class UsersController {
     public String getFormAddNewUser(Model model) {
         model.addAttribute("usersDTO", new UsersDTO());
         return "admin/AddNewUser";
+    }
+
+    //url = /admin/users/upload-users --> trả view nhập form tải file ds user
+    @GetMapping("/users/upload-users")
+    public String getFormUploadUsers(Model model) {
+        return "admin/UploadUsers";
+    }
+
+    @Operation(summary = "Upload user list", description = "Handle form upload user list")
+    @ApiResponse(responseCode = "200", description = "Successfully created user list")
+    //url = /admin/users/upload-users
+    @PostMapping("/users/upload-users")
+    public String createUserList(@RequestParam("file") MultipartFile file, Model model, RedirectAttributes redirectAttributes) {
+        if (file.isEmpty()) {
+            model.addAttribute("errorMessage", "File không được để trống");
+            return "admin/UploadUsers";
+        }
+
+        String fileType = file.getContentType();
+        if (!"text/csv".equals(fileType)) {
+            model.addAttribute("errorMessage", "Chỉ chấp nhận file định dạng CSV");
+            return "admin/UploadUsers";
+        }
+
+        try {
+            // Đọc và xử lý file CSV
+            List<UsersDTO> users = usersService.parseCSVFileCreateUser(file);
+
+            for (UsersDTO user : users) {
+                // Lưu thông tin người dùng vào cơ sở dữ liệu của ứng dụng web
+                UsersEntity savedUser = userInterface.save(user);
+
+                // Nếu không có lỗi, gọi service để tạo người dùng mới trên moodle
+                String moodleUserId = usersService.createNewUser(user);
+
+                // Kiểm tra phản hồi từ Moodle để check moodleUserId trong csdl web
+                if (moodleUserId != null) {
+                    savedUser.setMoodleId(Integer.parseInt(moodleUserId));
+                    userInterface.update(savedUser);
+                } else {
+                    userInterface.delete(savedUser.getId_user());
+                }
+            }
+
+            // Nếu thành công, chuyển hướng tới trang danh sách thành viên
+            redirectAttributes.addFlashAttribute("successMessage", "Thêm danh sách người dùng thành công!");
+            return "redirect:/admin/users";
+
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
+            return "admin/UploadUsers";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            return "admin/UploadUsers";
+        }
     }
 
     @Operation(summary = "Handle form edit user", description = "handle form edit user")

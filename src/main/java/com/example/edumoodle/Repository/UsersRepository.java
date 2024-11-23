@@ -26,4 +26,23 @@ public interface UsersRepository extends JpaRepository<UsersEntity, Integer> {
     @Query("SELECT u FROM UsersEntity u WHERE u.id_user NOT IN " +
             "(SELECT ur.usersEntity.id_user FROM UserRoleEntity ur JOIN ur.rolesEntity r WHERE r.name = 'ADMIN')")
     List<UsersEntity> findUsersWithoutAdminRole();
+
+    //lấy giảng viên và học viên theo nhhk
+    @Query("SELECT u FROM UsersEntity u " +
+            "JOIN u.userRole dkvt " +
+            "JOIN dkvt.courseAssign dkhp " +
+            "JOIN dkhp.courseGroupsEntity nh " +
+            "JOIN nh.schoolYearSemesterEntity nhhk " +
+            "WHERE nhhk.schoolYearsEntity.id_school_year = :id_school_year AND nhhk.semestersEntity.id_semester = :id_semester AND dkvt.rolesEntity.name = 'editingteacher'")
+    List<UsersEntity> findTeachersBySchoolYearSemester(@Param("id_school_year") Integer id_school_year,
+                                                   @Param("id_semester") Integer id_semester);
+
+    @Query("SELECT u FROM UsersEntity u " +
+            "JOIN u.userRole dkvt " +
+            "JOIN dkvt.courseAssign dkhp " +
+            "JOIN dkhp.courseGroupsEntity nh " +
+            "JOIN nh.schoolYearSemesterEntity nhhk " +
+            "WHERE nhhk.schoolYearsEntity.id_school_year = :id_school_year AND nhhk.semestersEntity.id_semester = :id_semester AND dkvt.rolesEntity.name = 'student'")
+    List<UsersEntity> findStudentsBySchoolYearSemester(@Param("id_school_year") Integer id_school_year,
+                                                       @Param("id_semester") Integer id_semester);
 }
