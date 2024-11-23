@@ -1,5 +1,7 @@
 package com.example.edumoodle.DTO;
 
+import java.util.List;
+
 public class CoursesDTO {
     private Integer id;
     private Integer categoryid;
@@ -7,6 +9,67 @@ public class CoursesDTO {
     private String shortname;
     private String summary;
 
+    private Integer moodleCourseId;
+
+    private String description;
+    private String categoryName;
+    private String teacherName;
+    private List<SectionsDTO> sections; // Danh sách các section trong khóa học
+
+    public CoursesDTO() {}
+
+    public CoursesDTO(Integer categoryid, String fullname, String shortname, String summary) {
+        this.categoryid = categoryid;
+        this.fullname = fullname;
+        this.shortname = shortname;
+        this.summary = summary;
+    }
+
+
+
+    public Integer getMoodleCourseId() {
+        return moodleCourseId;
+    }
+
+    public void setMoodleCourseId(Integer moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
+    }
+
+
+
+
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    public List<SectionsDTO> getSections() {
+        return sections;
+    }
+
+    public void setSections(List<SectionsDTO> sections) {
+        this.sections = sections;
+    }
     public Integer getId() {
         return id;
     }

@@ -6,6 +6,7 @@ import com.example.edumoodle.Repository.*;
 import com.example.edumoodle.Service.CategoriesService;
 //import com.example.edumoodle.Service.QuestionCategoriesService;
 import com.example.edumoodle.Service.CoursesService;
+import com.example.edumoodle.Service.TeacherCoursesService;
 import com.example.edumoodle.Service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,12 +16,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,10 +35,11 @@ import java.util.Optional;
 @Tag(name = "Courses Management", description = "APIs for managing Moodle courses")
 public class TeacherCoursesController {
     @Autowired
-//    private QuestionCategoriesService questionCategoriesService;
-//    @Autowired
-    private CategoriesService categoriesService;
 
+    private CategoriesService categoriesService;
+    @Autowired
+
+    private TeacherCoursesService TeacherCoursesService;
     @Autowired
     private CoursesService coursesService;
     @Autowired
@@ -56,7 +62,7 @@ public class TeacherCoursesController {
     //    url = /teacher/courses
     @GetMapping("/courses")
     public String getCategoriesForSelect(@RequestParam(value = "page", defaultValue = "1") int page,
-                                         @RequestParam(value = "size", defaultValue = "3") int size,Model model) {
+                                         @RequestParam(value = "size", defaultValue = "3") int size, Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
 
@@ -74,7 +80,7 @@ public class TeacherCoursesController {
             List<CoursesDTO> pagedCourses = coursesList.subList(start, end);
             Page<CoursesDTO> coursePage = new PageImpl<>(pagedCourses, PageRequest.of(pageIndex, size), coursesList.size());
             model.addAttribute("coursePage", coursePage);
-        }else {
+        } else {
             model.addAttribute("coursePage", null);
         }
         //đồng bộ dữ liệu course web-moodle
@@ -87,14 +93,14 @@ public class TeacherCoursesController {
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list")
     //   url = /teacher/courses/category?categoryId=2
     @GetMapping("/courses/category")
-    public String  getCoursesByParentCategory(@RequestParam(value = "categoryId", required = false) Integer categoryId,
-                                              @RequestParam(value = "page", defaultValue = "1") int page,
-                                              @RequestParam(value = "size", defaultValue = "3") int size, Model model) {
+    public String getCoursesByParentCategory(@RequestParam(value = "categoryId", required = false) Integer categoryId,
+                                             @RequestParam(value = "page", defaultValue = "1") int page,
+                                             @RequestParam(value = "size", defaultValue = "3") int size, Model model) {
         List<CoursesDTO> coursesOfParent;
 
         if (categoryId != null) {
             coursesOfParent = coursesService.getCoursesByParentCategory(categoryId);  // Lấy khóa học theo category
-        }else {
+        } else {
             coursesOfParent = coursesService.getAllCourses();  // Lấy tất cả khóa học nếu không chọn danh mục
         }
 
@@ -106,7 +112,7 @@ public class TeacherCoursesController {
 
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
-        if(coursesOfParent.size() > size) {
+        if (coursesOfParent.size() > size) {
             // Phân trang
             int pageIndex = page - 1;
             int start = pageIndex * size;
@@ -133,10 +139,10 @@ public class TeacherCoursesController {
         model.addAttribute("courseDetails", courseDetails);
         List<UsersDTO> enrolledUsers = usersService.getEnrolledUsers(courseId);
         model.addAttribute("enrolledUsers", enrolledUsers);
-        long studentCount = enrolledUsers.stream()
-                .filter(user -> user.getRoles().stream().anyMatch(role -> "student".equals(role.getShortname())))
+        long teacherCount = enrolledUsers.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "teacher".equals(role.getShortname())))
                 .count();
-        model.addAttribute("studentCount", studentCount);
+        model.addAttribute("teacherCount", teacherCount);
 
         List<UsersDTO> usersList = usersService.getAllUsers();
         // Lọc ra những sinh viên chưa đăng ký khóa học
@@ -164,8 +170,8 @@ public class TeacherCoursesController {
         enrolUserDTO.setCourseid(courseId);
         usersService.enrolUser(enrolUserDTO);
 
-        //đăng ký vai trò student-teacher cho việc xác định role để đăng nhập
-        for(Integer userId : userIds) {
+        //đăng ký vai trò teacher-teacher cho việc xác định role để đăng nhập
+        for (Integer userId : userIds) {
             UsersEntity user = usersRepository.findByMoodleId(userId).orElse(null);
             if (user == null) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Người dùng không tồn tại.");
@@ -249,7 +255,7 @@ public class TeacherCoursesController {
     @PostMapping("/courses/create-course")
     public String createCourse(@Valid @ModelAttribute CoursesDTO coursesDTO, BindingResult bindingResult,
                                RedirectAttributes redirectAttributes, Model model) {
-        if(bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
             model.addAttribute("categoriesHierarchy", categoriesHierarchy);
             model.addAttribute("coursesDTO", coursesDTO);
@@ -374,4 +380,110 @@ public class TeacherCoursesController {
         }
         return "redirect:/teacher/courses";
     }
+    @GetMapping("/user/my-teacher-courses") // Ensure this matches the URL you are trying to access
+    public String showteacherCourses(Model model) {
+        // Get the current user's information
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                username = userDetails.getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+        }
+
+        // Ensure username is not null
+        if (username == null) {
+            model.addAttribute("error", "Không thể xác định được người dùng hiện tại.");
+            return "my-courses"; // Return view with error message
+        }
+
+        // Set username in the model
+        model.addAttribute("username", username);
+
+        // Call the service to get user courses
+        List<CoursesDTO> userCourses = TeacherCoursesService.getUserCourses(username);
+        model.addAttribute("userCourses", userCourses);
+        System.out.println("User Courses: " + userCourses);
+
+        // Add any necessary attributes to the model
+        return "teacher/mys_courses"; // Make sure this matches the template name
+    }
+
+    @PostMapping("/teacher/my-courses-teacher")
+    public String processCourseSearch(@RequestParam("username") String username,
+                                      @RequestParam(value = "searchQuery", required = false) String searchQuery,
+                                      @RequestParam(value = "sort", required = false) String sort,
+                                      @RequestParam(value = "showAll", required = false) String showAll,
+                                      Model model) {
+        if (username == null) {
+            model.addAttribute("error", "Không thể xác định được người dùng hiện tại.");
+            return "teacher/myteacher_courses";
+        }
+
+        // Get all user courses
+        List<CoursesDTO> userCourses = TeacherCoursesService.getUserCourses(username);
+
+        // Handle "showAll" button click
+        if (showAll == null) {
+            // Filter by search query if provided and not showing all
+            if (searchQuery != null && !searchQuery.isEmpty()) {
+                userCourses = TeacherCoursesService.filterCoursesByName(userCourses, searchQuery);
+                if (userCourses.isEmpty()) {
+                    model.addAttribute("error", "Không tìm thấy khóa học phù hợp.");
+                }
+            }
+        }
+
+        // Sort if requested
+        if ("name".equals(sort)) {
+            userCourses.sort(Comparator.comparing(CoursesDTO::getFullname, String.CASE_INSENSITIVE_ORDER));
+        }
+
+        // Print out the filtered and/or sorted courses (with Moodle course IDs)
+        for (CoursesDTO course : userCourses) {
+            System.out.println("Course Moodle ID: " + course.getMoodleCourseId() + ", Course Name: " + course.getFullname());
+        }
+
+        // Update model
+        model.addAttribute("searchQuery", searchQuery);
+        model.addAttribute("userCourses", userCourses);
+
+        return "teacher/myteacher_courses";
+    }
+
+
+
+    // Lấy chi tiết một khóa học dựa trên moodleCourseId
+    @GetMapping("/user/teacher_course_details")
+    public String getCourseDetails(@RequestParam("moodleCourseId") Integer moodleCourseId, Model model) {
+        // Get the current username from Spring Security
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // Fetch userId based on the username
+        int userId = TeacherCoursesService.getUserIdByUsername(username);
+
+        // Log details for debugging
+        System.out.println("Username: " + username);
+        System.out.println("UserID (GET): " + userId);
+        System.out.println("Moodle Course ID: " + moodleCourseId);
+
+        // Fetch course details based on moodleCourseId
+//        CoursesDTO courseDetails = TeacherCoursesService.getCourseDetails(moodleCourseId);
+
+        // Log course details
+//        System.out.println("Course Details: " + courseDetails);
+//
+//        // Add course details and other attributes to the model
+//        model.addAttribute("courseDetails", courseDetails);
+//        model.addAttribute("userId", userId);
+//        model.addAttribute("moodleCourseId", moodleCourseId);
+
+        return "teacher/myteacher_course_details"; // Return the view name
+    }
 }
+
+

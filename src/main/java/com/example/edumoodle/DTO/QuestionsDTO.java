@@ -9,12 +9,21 @@ import java.util.List;
 public class QuestionsDTO {
     private Integer categoryId;
     private String name;
-    private String moodleId;
+    private Integer moodleId;
     private String questionText;
     private String qtype;
     private List<QuestionAnswersDTO> answers = new ArrayList<>(); // Khởi tạo danh sách answers
     private Integer correctAnswerIndex;
-   
+    private int id;  // Thuộc tính id
+
+    // Getter và setter cho id
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
 
 
@@ -28,11 +37,11 @@ public class QuestionsDTO {
         this.categoryId = categoryId;
     }
 
-    public String getMoodleId() {
+    public Integer getMoodleId() {
         return moodleId;
     }
 
-    public void setMoodleId(String moodleId) {
+    public void setMoodleId(Integer moodleId) {
         this.moodleId = moodleId;
     }
 

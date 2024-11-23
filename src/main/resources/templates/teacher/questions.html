@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,7 +42,7 @@
 
         .question-table {
             width: 200%;
-            max-width: 1400px;
+            max-width: 2000px;
             margin: 20px auto;
             border-collapse: collapse;
             background-color: #fff;
@@ -99,7 +102,7 @@
         }
     </style>
 </head>
-<body>
+<body layout:fragment="body">
 
 <h1>Danh sách câu hỏi</h1>
 
@@ -114,6 +117,14 @@
         Thêm câu hỏi
     </a>
 </div>
+<div th:if="${response != null}">
+    <div class="alert alert-success" th:text="${response}"></div>
+</div>
+
+<div th:if="${error != null}">
+    <div class="alert alert-danger" th:text="${error}"></div>
+</div>
+
 
 
 
@@ -134,10 +145,33 @@
         </td>
         <td th:text="${question.qtype}">Loại câu hỏi</td>
         <td th:text="${question.questionText}">Nội dung câu hỏi</td>
+        <td>
+            <ul>
+                <li th:each="answer : ${question.answers}">
+                    <span th:text="${answer.answerText}"></span>
+                    <span th:if="${answer.correct}" style="color: green;">(Đúng)</span>
+                </li>
+            </ul>
+        </td>
         <td class="action-buttons">
-            <button type="button" onclick="editQuestion(${question.id})">Sửa</button>
-            <button type="button" class="delete-button" onclick="deleteQuestion(${question.id})">Xóa</button>
-            <button type="button" class="preview-button">Xem trước</button>
+
+            <a th:href="@{/teacher/edit-question/{id}(id=${question.id})}"
+               class="btn btn-primary">Chỉnh sửa</a>
+
+
+
+
+            <form th:action="@{/teacher/questions/delete/{id}(id=${question.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?');">
+                <input type="hidden" name="categoryId" th:value="${categoryId}" />
+                <button type="submit" class="btn-delete">
+                    <i class="fas fa-trash-alt"></i> Xóa
+                </button>
+            </form>
+
+            <button type="button" class="preview-button">
+                <a th:href="@{/teacher/questions/preview/{id}(id=${question.id})}" style="color: white; text-decoration: none;">Xem trước</a>
+            </button>
+
         </td>
     </tr>
     </tbody>

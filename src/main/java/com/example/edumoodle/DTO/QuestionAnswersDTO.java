@@ -8,6 +8,9 @@ public class QuestionAnswersDTO {
     // Constructors
     public QuestionAnswersDTO() {
     }
+    public QuestionAnswersDTO(String answerText) {
+        this.answerText = answerText;
+    }
 
     public QuestionAnswersDTO(int id, String answerText, boolean correct) {
         this.id = id;

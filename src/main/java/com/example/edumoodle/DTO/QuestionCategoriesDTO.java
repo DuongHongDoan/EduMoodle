@@ -1,5 +1,7 @@
 package com.example.edumoodle.DTO;
 
+import com.example.edumoodle.Model.QuestionCategoriesEntity;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,9 +10,10 @@ public class QuestionCategoriesDTO {
     private String name;
     private int contextid;
     private String info;
-    private int parent;
+    private Integer parent;
     private  int moodle_id;
     private  int courseid;
+    private int questionCount;
     private List<QuestionCategoriesDTO> children = new ArrayList<>();
 
     // Getters và Setters
@@ -31,6 +34,7 @@ public class QuestionCategoriesDTO {
         return entity;
     }
 
+
     // Constructor mặc định (bắt buộc với Jackson)
     public QuestionCategoriesDTO() {
     }
@@ -39,9 +43,15 @@ public class QuestionCategoriesDTO {
     public QuestionCategoriesDTO(int id, String name, String info, int parent) {
         this.id = id;
         this.name = name;
-//        this.contextid = contextid;
         this.info = info;
         this.parent=parent;
+    }
+    public int getQuestionCount() {
+        return questionCount;
+    }
+
+    public void setQuestionCount(int questionCount) {
+        this.questionCount = questionCount;
     }
     public Integer getCourseId() {
         return courseid;
@@ -74,11 +84,11 @@ public class QuestionCategoriesDTO {
     public void setContextid(int contextid) {
         this.contextid = contextid;
     }
-    public void setParent(int parent) {
+    public void setParent(Integer parent) {
         this.parent = parent;
     }
 
-    public int getParent() {
+    public Integer getParent() {
         return parent;
     }
 
@@ -98,4 +108,6 @@ public class QuestionCategoriesDTO {
     public void setMoodleId(int moodle_id) {
         this.moodle_id = moodle_id;
     }
+
+
 }

@@ -92,27 +92,18 @@
 <div class="container1 add-category-form" layout:fragment="body">
     <h1>Thêm Danh Mục Câu Hỏi</h1>
 
-    <!-- Form upload file Excel -->
-<!--    <form th:action="@{/uploadExcel}" method="post" enctype="multipart/form-data">-->
-<!--        <input type="hidden" name="courseId" th:value="${courseId}" />-->
-<!--        <div class="form-group">-->
-<!--            <label for="file">Chọn file Excel:</label>-->
-<!--            <input type="file" id="file" name="file" class="form-control" required />-->
-<!--        </div>-->
-<!--        <button type="submit" class="btn btn-primary">Tải lên</button>-->
-<!--    </form>-->
     <form th:action="@{/uploadExcel}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="courseId" th:value="${courseId}" />
 
-        <!-- Chọn danh mục cha cho cột 2 hàng 2 -->
+        <!-- Chọn danh mục cha -->
         <div class="form-group">
-            <label for="parentCategoryForColumn2">Chọn danh mục cha cho cột 2 hàng 2:</label>
+            <label for="parentCategoryForColumn2">Chọn danh mục cha: </label>
             <select name="parentCategoryForColumn2" id="parentCategoryForColumn2" class="form-control" required>
                 <option value="">-- Chọn danh mục --</option>
                 <th:block th:each="category : ${categories}">
                     <option th:value="${category.id}" th:text="${category.name}"></option>
                 </th:block>
-                <option value="0">-- Không có --</option>
+<!--                <option value="0">&#45;&#45; Không có &#45;&#45;</option>-->
                 <th:block th:each="category : ${parentCategories}">
                     <option th:value="${category.id}" th:text="${category.name}"></option>
                     <th:block th:if="${category.children != null}">
@@ -121,6 +112,13 @@
                             <th:block th:if="${child.children != null}">
                                 <th:block th:each="subChild : ${child.children}">
                                     <option th:value="${subChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subChild.name}"></option>
+                                    <th:block th:each="subSubChild : ${subChild.children}">
+                                        <option th:value="${subSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubChild.name}"></option>
+                                        <th:block th:each="subSubSubChild : ${subSubChild.children}">
+                                            <option th:value="${subSubSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubSubChild.name}"></option>
+
+                                        </th:block>
+                                    </th:block>
                                 </th:block>
                             </th:block>
                         </th:block>
@@ -155,7 +153,11 @@
         <div class="form-group">
             <label for="parent">Danh Mục Cha:</label>
             <select id="parent" name="parent" class="form-control">
-                <option value="0">-- Không có --</option>
+                <option value="">-- Chọn danh mục --</option>
+                <th:block th:each="category : ${categories}">
+                    <option th:value="${category.id}" th:text="${category.name}"></option>
+                </th:block>
+                <!--                <option value="0">&#45;&#45; Không có &#45;&#45;</option>-->
                 <th:block th:each="category : ${parentCategories}">
                     <option th:value="${category.id}" th:text="${category.name}"></option>
                     <th:block th:if="${category.children != null}">
@@ -164,6 +166,13 @@
                             <th:block th:if="${child.children != null}">
                                 <th:block th:each="subChild : ${child.children}">
                                     <option th:value="${subChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subChild.name}"></option>
+                                    <th:block th:each="subSubChild : ${subChild.children}">
+                                        <option th:value="${subSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubChild.name}"></option>
+                                        <th:block th:each="subSubSubChild : ${subSubChild.children}">
+                                            <option th:value="${subSubSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubSubChild.name}"></option>
+
+                                        </th:block>
+                                    </th:block>
                                 </th:block>
                             </th:block>
                         </th:block>

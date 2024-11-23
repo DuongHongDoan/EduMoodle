@@ -15,7 +15,8 @@ public class QuestionCategoriesEntity {
     private int contextid;
     private String info;
     private int parent;
-    private int moodle_id;
+    @Column(name = "moodle_id")
+    private int moodleId;
     private int courseid;
 
     public QuestionCategoriesEntity() {}
@@ -35,11 +36,11 @@ public class QuestionCategoriesEntity {
     }
 
     public int getMoodleId() {
-        return moodle_id;
+        return moodleId;
     }
 
     public void setMoodleId(int moodle_id) {
-        this.moodle_id = moodle_id;
+        this.moodleId = moodle_id;
     }
 
     public int getCourseId() {

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Xem trước câu hỏi</title>
+</head>
+<body>
+<h1>Xem trước câu hỏi</h1>
+
+<!-- Kiểm tra biến question -->
+<div th:if="${question}">
+    <p><strong>Tên câu hỏi:</strong> <span th:text="${question.name}">Tên câu hỏi</span></p>
+    <p><strong>Loại câu hỏi:</strong> <span th:text="${question.qtype}">Loại câu hỏi</span></p>
+    <p><strong>Nội dung câu hỏi:</strong> <span th:text="${question.questionText}">Nội dung câu hỏi</span></p>
+
+    <!-- Hiển thị danh sách đáp án (kiểm tra danh sách trước khi lặp) -->
+    <div th:if="${question.answers != null}">
+        <strong>Đáp án:</strong>
+        <ul>
+            <li th:each="answer : ${question.answers}">
+                <span th:text="${answer.answerText}">Nội dung đáp án</span>
+                <span th:if="${answer.correct}" style="color: green;">(Đúng)</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Hiển thị lỗi nếu không có câu hỏi -->
+<div th:if="${error}">
+    <p style="color: red;" th:text="${error}">Lỗi</p>
+</div>
+
+<a href="/teacher/questions">Quay lại</a>
+</body>
+</html>

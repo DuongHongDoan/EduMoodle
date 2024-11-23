@@ -12,7 +12,7 @@ public class QuestionAnswersEntity {
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
-    private com.example.edumoodle.Model.QuestionsEntity question;
+    private QuestionsEntity question;
 
     @Lob
     @Column(name = "answer_text", nullable = false)

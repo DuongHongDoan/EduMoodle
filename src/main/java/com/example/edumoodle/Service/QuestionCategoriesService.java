@@ -1,22 +1,22 @@
 package com.example.edumoodle.Service;
 
-import com.example.edumoodle.DTO.QuestionCategoriesResponseDTO;
-import com.example.edumoodle.DTO.QuestionCategoriesDTO;
+import com.example.edumoodle.DTO.*;
+import com.example.edumoodle.Mapper.*;
 import com.example.edumoodle.DTO.QuestionCategoriesResponseDTO;
 import com.example.edumoodle.Model.QuestionCategoriesEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -25,67 +25,90 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriUtils;
 import com.example.edumoodle.Repository.QuestionCategoriesRepository; // Thay thế với đường dẫn đúng
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class QuestionCategoriesService {
-
         private static final Logger logger = LoggerFactory.getLogger(QuestionCategoriesService.class);
-
         @Value("${moodle.token}")
         private String token;
-
         @Value("${moodle.domainName}")
         private String domainName;
-
         @Autowired
         private RestTemplate restTemplate;
+        @Autowired
+        private QuestionCategoriesRepository QuestionCategoriesRepository;
+        @Autowired
+        private QuestionCategoriesRepository questionCategoriesRepository;
+//Phân trang
+    public Page<QuestionCategoriesEntity> getPaginatedCategories(int courseId, int page) {
+    // Giới hạn mỗi trang 5 danh mục
+        PageRequest pageRequest = PageRequest.of(page, 5);
+        return questionCategoriesRepository.findByCourseId(courseId, pageRequest);
+    }
 
-    @Autowired
-    private QuestionCategoriesRepository QuestionCategoriesRepository;
+// Đếm số lượng câu hỏi
+    public int getQuestionCountForCategory(int questionCategoryId) {
+        String apiMoodleFunc = "local_question_get_question_by_category";
+        String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&questioncategoryid=%d",
+                domainName, token, apiMoodleFunc, questionCategoryId);
 
-    //    lấy danh mục cu hỏi theo cha-con
+        try {
+            // Gửi yêu cầu đến API và nhận danh sách câu hỏi trong danh mục
+            ResponseEntity<QuestionsResponseDTO> response = restTemplate.getForEntity(url, QuestionsResponseDTO.class);
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                logger.error("Không có câu hỏi trong danh mục hoặc yêu cầu thất bại.");
+                return 0;
+            }
+
+            // Trả về số lượng câu hỏi trong danh mục
+            List<QuestionsDTO> questions = response.getBody().getQuestions();
+            logger.info("Số lượng câu hỏi trong danh mục {}: {}", questionCategoryId, (questions != null) ? questions.size() : 0);
+            logger.info("URL yêu cầu đến API lấy câu hỏi: {}", url);
+            logger.info("Phản hồi từ API: {}", response.getBody());
+            return (questions != null) ? questions.size() : 0;
+        } catch (Exception e) {
+            logger.error("Lỗi khi gọi API Moodle: {}", e.getMessage());
+            return 0;
+        }
+    }
 
     public List<QuestionCategoriesDTO> getQuestionCategories(int courseId) {
         String apiMoodleFunc = "local_question_get_categories";
         String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&courseId=%d",
-                    domainName, token, apiMoodleFunc, courseId);
-
+                domainName, token, apiMoodleFunc, courseId);
         logger.info("Fetching question categories from URL: {}", url);
-
         try {
-           // Gửi yêu cầu đến API và nhận kết quả
+            // Gửi yêu cầu đến API và nhận kết quả
             ResponseEntity<QuestionCategoriesResponseDTO> response = restTemplate.getForEntity(url, QuestionCategoriesResponseDTO.class);
             logger.info("Response Status: {}", response.getStatusCode());
-
             // Kiểm tra nếu phản hồi không thành công
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
                 logger.error("Không có dữ liệu hoặc yêu cầu thất bại.");
                 return Collections.emptyList();
             }
-
             // Kiểm tra trạng thái phản hồi
             if (!"success".equalsIgnoreCase(response.getBody().getStatus())) {
                 logger.error("API trả về trạng thái không thành công: {}", response.getBody().getStatus());
                 return Collections.emptyList();
             }
-
             // Trả về danh sách các danh mục câu hỏi
             List<QuestionCategoriesDTO> categories = response.getBody().getCategories();
             if (categories == null) {
                 logger.error("Trường 'categories' là null.");
-                    return Collections.emptyList();
+                return Collections.emptyList();
             }
             logger.info("Fetched {} question categories.", categories.size());
+            // Cập nhật số lượng câu hỏi trong mỗi danh mục
+            for (QuestionCategoriesDTO category : categories) {
+                category.setQuestionCount(getQuestionCountForCategory(category.getId())); // Chỉ truyền questionCategoryId
+            }
             return buildCategoryTree(categories);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // Xử lý lỗi ngoại lệ nếu xảy ra
             logger.error("Lỗi khi gọi API Moodle: {}", e.getMessage());
             return Collections.emptyList();
@@ -100,15 +123,20 @@ public class QuestionCategoriesService {
 
         for (QuestionCategoriesDTO category : categories) {
             if (category.getParent() == 0) {
-                rootCategories.add(category);  // Thêm danh mục gốc
+                // Thêm danh mục cha vào danh sách gốc (root)
+                rootCategories.add(category);
             } else {
+                // Nếu có parent, thêm vào danh sách children của parent
                 QuestionCategoriesDTO parent = categoryMap.get(category.getParent());
                 if (parent != null) {
-                    // Thêm category vào danh sách children của parent
                     if (parent.getChildren() == null) {
                         parent.setChildren(new ArrayList<>());
                     }
                     parent.getChildren().add(category);
+                } else {
+                    // Nếu không tìm thấy parent, vẫn thêm category vào danh sách root
+                    // Điều này đảm bảo rằng danh mục con không có cha vẫn hiển thị
+                    rootCategories.add(category);
                 }
             }
         }
@@ -116,49 +144,131 @@ public class QuestionCategoriesService {
         return rootCategories;
     }
 
+//    public List<QuestionCategoriesDTO> buildCategoryTree(List<QuestionCategoriesDTO> categories) {
+//        Map<Integer, QuestionCategoriesDTO> categoryMap = categories.stream()
+//                .collect(Collectors.toMap(QuestionCategoriesDTO::getId, category -> category));
+//
+//        List<QuestionCategoriesDTO> rootCategories = new ArrayList<>();
+//
+//        for (QuestionCategoriesDTO category : categories) {
+//            if (category.getParent() == 0) {
+//                rootCategories.add(category);  // Thêm danh mục gốc
+//            } else {
+//                QuestionCategoriesDTO parent = categoryMap.get(category.getParent());
+//                if (parent != null) {
+//                    // Thêm category vào danh sách children của parent
+//                    if (parent.getChildren() == null) {
+//                        parent.setChildren(new ArrayList<>());
+//                    }
+//                    parent.getChildren().add(category);
+//                }
+//            }
+//        }
+//
+//        return rootCategories;
+//    }
+
     //  Lấy tất cả danh mục
+//    public List<QuestionCategoriesDTO> getAllQuestionCategories(int courseId) {
+//        String apiMoodleFunc = "local_question_get_categories";
+//        String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&courseId=%d",
+//                domainName, token, apiMoodleFunc, courseId);
+//
+//        logger.info("Fetching question categories from URL: {}", url);
+//
+//        try {
+//            // Gửi yêu cầu đến API và nhận kết quả
+//            ResponseEntity<QuestionCategoriesResponseDTO> response = restTemplate.getForEntity(url, QuestionCategoriesResponseDTO.class);
+//            logger.info("Response Status: {}", response.getStatusCode());
+//
+//            // Kiểm tra nếu phản hồi không thành công
+//            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+//                logger.error("Không có dữ liệu hoặc yêu cầu thất bại.");
+//                return Collections.emptyList();
+//            }
+//
+//            // Kiểm tra trạng thái phản hồi
+//            if (!"success".equalsIgnoreCase(response.getBody().getStatus())) {
+//                logger.error("API trả về trạng thái không thành công: {}", response.getBody().getStatus());
+//                return Collections.emptyList();
+//            }
+//
+//            // Trả về danh sách các danh mục câu hỏi
+//            List<QuestionCategoriesDTO> categories = response.getBody().getCategories();
+//            if (categories == null) {
+//                logger.error("Trường 'categories' là null.");
+//                return Collections.emptyList();
+//            }
+//            logger.info("Fetched {} question categories.", categories.size());
+//               return categories;
+//
+//        } catch (Exception e) {
+//            // Xử lý lỗi ngoại lệ nếu xảy ra
+//            logger.error("Lỗi khi gọi API Moodle: {}", e.getMessage());
+//            return Collections.emptyList();
+//        }
+//    }
     public List<QuestionCategoriesDTO> getAllQuestionCategories(int courseId) {
         String apiMoodleFunc = "local_question_get_categories";
         String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&courseId=%d",
                 domainName, token, apiMoodleFunc, courseId);
 
-        logger.info("Fetching question categories from URL: {}", url);
-
         try {
             // Gửi yêu cầu đến API và nhận kết quả
             ResponseEntity<QuestionCategoriesResponseDTO> response = restTemplate.getForEntity(url, QuestionCategoriesResponseDTO.class);
-            logger.info("Response Status: {}", response.getStatusCode());
 
-            // Kiểm tra nếu phản hồi không thành công
             if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-                logger.error("Không có dữ liệu hoặc yêu cầu thất bại.");
                 return Collections.emptyList();
             }
 
             // Kiểm tra trạng thái phản hồi
             if (!"success".equalsIgnoreCase(response.getBody().getStatus())) {
-                logger.error("API trả về trạng thái không thành công: {}", response.getBody().getStatus());
                 return Collections.emptyList();
             }
 
             // Trả về danh sách các danh mục câu hỏi
             List<QuestionCategoriesDTO> categories = response.getBody().getCategories();
             if (categories == null) {
-                logger.error("Trường 'categories' là null.");
                 return Collections.emptyList();
             }
-            logger.info("Fetched {} question categories.", categories.size());
-               return categories;
+
+            // Tạo một Map để nhóm các danh mục theo parentId
+            Map<Integer, List<QuestionCategoriesDTO>> categoryMap = new HashMap<>();
+
+            // Nhóm danh mục theo parentId
+            for (QuestionCategoriesDTO category : categories) {
+                categoryMap.computeIfAbsent(category.getParent(), k -> new ArrayList<>()).add(category);
+            }
+
+            // Xây dựng cấu trúc cây cha-con
+            List<QuestionCategoriesDTO> rootCategories = new ArrayList<>();
+            for (QuestionCategoriesDTO category : categories) {
+                if (category.getParent() == 0) { // Danh mục gốc
+                    buildCategoryTree(category, categoryMap);
+                    rootCategories.add(category);
+                }
+            }
+
+            return rootCategories;
 
         } catch (Exception e) {
             // Xử lý lỗi ngoại lệ nếu xảy ra
-            logger.error("Lỗi khi gọi API Moodle: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    // Thêm danh mục câu hỏi vào Moodle
+    // Xây dựng cấu trúc cây cha-con
+    private void buildCategoryTree(QuestionCategoriesDTO category, Map<Integer, List<QuestionCategoriesDTO>> categoryMap) {
+        List<QuestionCategoriesDTO> children = categoryMap.get(category.getId());
+        if (children != null) {
+            category.setChildren(children);
+            for (QuestionCategoriesDTO child : children) {
+                buildCategoryTree(child, categoryMap); // Đệ quy cho các danh mục con
+            }
+        }
+    }
 
+    // Thêm danh mục câu hỏi vào Moodle
     public String addCategory(String name, String info, int parentId, int courseId) {
         String apiMoodleFunc = "local_question_add_categories";
         String url = UriComponentsBuilder.fromHttpUrl(domainName + "/webservice/rest/server.php")
@@ -166,7 +276,6 @@ public class QuestionCategoriesService {
                 .queryParam("wsfunction", apiMoodleFunc)
                 .queryParam("moodlewsrestformat", "json")
                 .toUriString();
-
         // Tạo body yêu cầu dưới dạng MultiValueMap
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add("name", name);
@@ -177,7 +286,6 @@ public class QuestionCategoriesService {
         // Thiết lập Header (application/x-www-form-urlencoded)
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
         // Tạo HttpEntity với body và header
         HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(requestBody, headers);
 
@@ -223,6 +331,7 @@ public class QuestionCategoriesService {
             return -1;
         }
     }
+
     public String importCategoriesFromExcel(MultipartFile file, int courseId, int selectedParentCategoryId) {
         if (!file.getOriginalFilename().endsWith(".xlsx")) {
             return "Lỗi: File không đúng định dạng .xlsx";
@@ -231,44 +340,52 @@ public class QuestionCategoriesService {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Đọc ô B2 để tạo danh mục cha với `parent` là `selectedParentCategoryId`
-            Row rowB2 = sheet.getRow(1); // Hàng thứ 2
-            String parentCategoryNameFromB2 = null;
+            // Đọc ô B2 và B3 để quyết định tên danh mục
+            Row rowB2 = sheet.getRow(1); // Hàng thứ 2 (B2)
+            Row rowB3 = sheet.getRow(2); // Hàng thứ 3 (B3)
+            String parentCategoryName = null;
             int parentCategoryIdFromB2 = selectedParentCategoryId; // Sử dụng `selectedParentCategoryId` làm cha của B2
+
             if (rowB2 != null) {
                 Cell parentCellB2 = rowB2.getCell(1); // Cột B, tức là cột 2
-                if (parentCellB2 != null && !parentCellB2.getStringCellValue().trim().isEmpty()) {
-                    parentCategoryNameFromB2 = parentCellB2.getStringCellValue().trim();
+                String parentCategoryNameFromB2 = (parentCellB2 != null) ? parentCellB2.getStringCellValue().trim() : null;
+
+                Cell parentCellB3 = rowB3 != null ? rowB3.getCell(1) : null; // Cột B của B3
+                String parentCategoryNameFromB3 = (parentCellB3 != null) ? parentCellB3.getStringCellValue().trim() : null;
+
+                // Quyết định tên danh mục dựa trên các điều kiện
+                if (parentCategoryNameFromB2 != null && parentCategoryNameFromB3 == null) {
+                    parentCategoryName = parentCategoryNameFromB2; // Sử dụng B2 nếu B3 trống
+                } else if (parentCategoryNameFromB3 != null && parentCategoryNameFromB2 == null) {
+                    parentCategoryName = parentCategoryNameFromB3; // Sử dụng B3 nếu B2 trống
+                } else if (parentCategoryNameFromB2 != null && parentCategoryNameFromB3 != null) {
+                    parentCategoryName = parentCategoryNameFromB2 + " - " + parentCategoryNameFromB3; // Nối B2 và B3 bằng dấu gạch nối
                 }
             }
-
-            // Nếu ô B2 có thông tin, tạo danh mục với parent là `selectedParentCategoryId`
-            if (parentCategoryNameFromB2 != null) {
-                parentCategoryIdFromB2 = addCategory1(parentCategoryNameFromB2, "", selectedParentCategoryId, courseId);
+            // Nếu có tên danh mục, tạo danh mục mới với parent là `selectedParentCategoryId`
+            if (parentCategoryName != null) {
+                parentCategoryIdFromB2 = addCategory1(parentCategoryName, "", selectedParentCategoryId, courseId);
                 if (parentCategoryIdFromB2 == -1) {
                     return "Lỗi khi thêm danh mục cha từ ô B2 vào Moodle.";
                 }
             }
-
             int currentParentIdFromColumnA = parentCategoryIdFromB2; // Giữ ID danh mục cha gần nhất từ cột A
             int currentParentIdFromColumnB = -1; // Giữ ID danh mục cha gần nhất từ cột B
 
             // Bắt đầu từ hàng thứ 7 để xử lý các danh mục
-            for (int i = 6; i <= sheet.getLastRowNum(); i++) { // Bắt đầu từ hàng thứ 7
+            for (int i = 4; i <= sheet.getLastRowNum(); i++) { // Bắt đầu từ hàng thứ 7
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
-
                 // Cột 1 (A) - danh mục cha gần nhất
                 Cell parentCell = row.getCell(0);
                 if (parentCell != null && !parentCell.getStringCellValue().trim().isEmpty()) {
-                    String parentCategoryName = parentCell.getStringCellValue().trim();
-                    currentParentIdFromColumnA = addCategory1(parentCategoryName, "", parentCategoryIdFromB2, courseId);
+                    String parentCategoryNameFromColumnA = parentCell.getStringCellValue().trim();
+                    currentParentIdFromColumnA = addCategory1(parentCategoryNameFromColumnA, "", parentCategoryIdFromB2, courseId);
                     if (currentParentIdFromColumnA == -1) {
                         return "Lỗi khi thêm danh mục cha vào Moodle.";
                     }
                     currentParentIdFromColumnB = -1; // Reset danh mục cha gần nhất của cột B
                 }
-
                 // Cột 2 (B) - danh mục con của cột 1 gần nhất
                 Cell childCell = row.getCell(1);
                 if (childCell != null && !childCell.getStringCellValue().trim().isEmpty()) {
@@ -278,12 +395,11 @@ public class QuestionCategoriesService {
                         return "Lỗi khi thêm danh mục con vào Moodle.";
                     }
                 }
-
                 // Cột 3 đến cột 6 (C-F) - các danh mục con của cột 2 gần nhất
                 for (int j = 2; j <= 5; j++) { // Tương ứng với cột 3 đến cột 6
                     Cell subChildCell = row.getCell(j);
                     if (subChildCell != null && !subChildCell.getStringCellValue().trim().isEmpty()) {
-                        String subChildCategoryName = subChildCell.getStringCellValue().trim();
+                        String subChildCategoryName = "Mức " + (j - 1) + ": " + subChildCell.getStringCellValue().trim();
                         int subChildCategoryId = addCategory1(subChildCategoryName, "", currentParentIdFromColumnB, courseId);
                         if (subChildCategoryId == -1) {
                             return "Lỗi khi thêm danh mục phụ vào Moodle.";
@@ -291,7 +407,6 @@ public class QuestionCategoriesService {
                     }
                 }
             }
-
             return "Import thành công.";
         } catch (IOException e) {
             return "Lỗi khi đọc file Excel: " + e.getMessage();
@@ -384,13 +499,9 @@ public class QuestionCategoriesService {
             if (response.getStatusCode().is2xxSuccessful()) {
                 boolean isDeleted = parseDeleteResponse(response.getBody());
                 if (isDeleted) {
-                    // Xóa danh mục trên Web sau khi xóa thành công trên Moodle
-                    boolean isWebDeleted = deleteCategoryFromWeb(moodleId);
-                    if (isWebDeleted) {
-                        return "Xóa danh mục thành công trên Moodle và Web.";
-                    } else {
-                        return "Xóa danh mục trên Moodle thành công, nhưng không thể xóa trên Web.";
-                    }
+                    // Xóa danh mục trực tiếp trong cơ sở dữ liệu Web
+                    questionCategoriesRepository.deleteByMoodleId(moodleId);
+                    return "Xóa danh mục thành công trên Moodle và Web.";
                 } else {
                     logger.error("Moodle không xóa được danh mục với ID {}. Phản hồi: {}", moodleId, response.getBody());
                     return "Lỗi: Moodle không xóa được danh mục.";
@@ -404,34 +515,78 @@ public class QuestionCategoriesService {
             return "Lỗi: Không thể xóa danh mục câu hỏi. Chi tiết: " + e.getMessage();
         }
     }
+//     Phương thức xử lý xóa danh mục và cập nhật danh mục con
+    @Autowired
+    private QuestionCategoryMapper categoryMapper; // Inject Mapper vào
 
-    // Phương thức xóa danh mục trên Web (có thể là gọi API hoặc thao tác với cơ sở dữ liệu)
-    private boolean deleteCategoryFromWeb(int moodleId) {
-        try {
-            String url = "http://your-web-api/delete-category?id=" + moodleId;
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, null, String.class);
+//    public String deleteCategory(int moodleId) {
+//        // Lấy danh mục cha từ cơ sở dữ liệu dưới dạng Entity
+//        Optional<QuestionCategoriesEntity> categoryOptional = questionCategoriesRepository.findByMoodleId(moodleId);
+//
+//        if (categoryOptional.isPresent()) {
+//            // Lấy danh mục cha dưới dạng Entity
+//            QuestionCategoriesEntity category = categoryOptional.get();
+//            int parentId = category.getParent();
+//
+//            // Tìm các danh mục con dưới dạng Entity
+//            List<QuestionCategoriesEntity> childCategories = questionCategoriesRepository.findByParent(moodleId);
+//
+//            // Chuyển Entity thành DTO (nếu cần làm việc với DTO)
+//            List<QuestionCategoriesDTO> childCategoriesDTO = new ArrayList<>();
+//            for (QuestionCategoriesEntity childCategory : childCategories) {
+//                QuestionCategoriesDTO dto = categoryMapper.toDTO(childCategory);  // Chuyển Entity thành DTO
+//                childCategoriesDTO.add(dto);
+//            }
+//
+//            // Cập nhật parentId cho các danh mục con (DTO)
+//            for (QuestionCategoriesDTO childDTO : childCategoriesDTO) {
+//                childDTO.setParent(parentId);
+//
+//                // Chuyển lại DTO thành Entity để lưu vào cơ sở dữ liệu
+//                QuestionCategoriesEntity updatedChildEntity = categoryMapper.toEntity(childDTO);
+//                questionCategoriesRepository.save(updatedChildEntity);  // Lưu lại sự thay đổi
+//            }
+//
+//            // Tiến hành gọi API Moodle để xóa danh mục
+//            String apiMoodleFunc = "local_question_delete_category";
+//            String url = UriComponentsBuilder.fromHttpUrl(domainName + "/webservice/rest/server.php")
+//                    .queryParam("wstoken", token)
+//                    .queryParam("wsfunction", apiMoodleFunc)
+//                    .queryParam("moodlewsrestformat", "json")
+//                    .queryParam("category_id", moodleId)
+//                    .toUriString();
+//
+//            try {
+//                ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
+//
+//                if (response.getStatusCode().is2xxSuccessful()) {
+//                    boolean isDeleted = parseDeleteResponse(response.getBody());
+//                    if (isDeleted) {
+//                        // Xóa danh mục trong cơ sở dữ liệu Web
+//                        questionCategoriesRepository.deleteByMoodleId(moodleId);
+//                        return "Xóa danh mục thành công trên Moodle và Web.";
+//                    } else {
+//                        return "Lỗi: Moodle không xóa được danh mục.";
+//                    }
+//                } else {
+//                    return "Lỗi: Không thể xóa danh mục câu hỏi trên Moodle. Mã trạng thái: " + response.getStatusCode();
+//                }
+//            } catch (Exception e) {
+//                return "Lỗi: Không thể xóa danh mục câu hỏi. Chi tiết: " + e.getMessage();
+//            }
+//        } else {
+//            return "Danh mục không tồn tại trong cơ sở dữ liệu.";
+//        }
+//    }
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                return true;
-            } else {
-                logger.error("Không thể xóa danh mục trên Web. Mã trạng thái: {}", response.getStatusCode());
-                return false;
-            }
-        } catch (Exception e) {
-            logger.error("Lỗi khi xóa danh mục trên Web: {}", e.getMessage());
-            return false;
-        }
-    }
 
 
-    private static final String MOODLE_API_URLq = "http://localhost/moodle/webservice/rest/server.php?wstoken=54df098d9366c247f13f81e27f6dddb2&moodlewsrestformat=json&wsfunction=local_question_update_category";
+
 
     public String updateCategory(int moodleId, String name, int contextId, String info, int parent) {
-        String apiUrl = MOODLE_API_URLq + "&categoryid=" + moodleId +
-                "&name=" + name +
-                "&contextid=" + contextId +
-                "&info=" + info +
-                "&parent=" + parent;
+        String apiMoodleFunc = "local_question_update_category";
+        String apiUrl = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&categoryid=%d&name=%s&contextid=%d&info=%s&parent=%d",
+                domainName, token, apiMoodleFunc, moodleId, name, contextId, info, parent);
 
         try {
             // Gọi API Moodle để cập nhật danh mục
@@ -439,16 +594,25 @@ public class QuestionCategoriesService {
 
             // Kiểm tra phản hồi từ API
             String responseBody = response.getBody();
-//            String responseBody = response.getBody();
             System.out.println("Response from Moodle: " + responseBody);
+
             if (response.getStatusCode().is2xxSuccessful() && responseBody.contains("success")) {
-                return "Cập nhật danh mục thành công!";
+                // Cập nhật danh mục trực tiếp trong cơ sở dữ liệu Web
+                int updatedRows = questionCategoriesRepository.updateCategoryByMoodleId(name, contextId, info, parent, moodleId);
+
+                if (updatedRows > 0) {
+                    return "Cập nhật danh mục thành công trên Moodle và Web!";
+                } else {
+                    return "Cập nhật trên Moodle thành công, nhưng không thể cập nhật trên Web.";
+                }
             } else {
-                return "Cập nhật danh mục thất bại! Phản hồi: " + responseBody;
+                return "Cập nhật danh mục thất bại! Phản hồi từ Moodle: " + responseBody;
             }
         } catch (Exception e) {
             return "Lỗi khi gọi API: " + e.getMessage();
         }
     }
+
+
 
 }
