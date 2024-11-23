@@ -143,51 +143,86 @@
             margin-right: 15px;
         }
 
+        /* Cột thao tác */
+        .question-table th:last-child, .question-table td:last-child {
+            width: 180px; /* Giảm chiều rộng cột thao tác */
+            text-align: center; /* Căn giữa nội dung trong cột thao tác */
+        }
+
+        /* Cập nhật lại nút sửa và xóa trong cột thao tác */
         .action-buttons {
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
+            align-items: center;
+            gap: 5px; /* Giảm khoảng cách giữa các nút */
+            margin-top: 0;
         }
 
-        .action-buttons button {
-            padding: 12px 20px;
-            font-size: 16px;
-            border-radius: 8px;
+        .action-buttons a, .action-buttons form button {
+            padding: 6px 12px; /* Giảm padding để nút nhỏ hơn */
+            font-size: 14px; /* Giảm kích thước font */
+            border-radius: 6px; /* Giảm radius để tạo kiểu nhỏ nhắn hơn */
             cursor: pointer;
-            width: 48%;
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-block;
         }
 
-        .action-buttons .edit-button {
+        /* Nút sửa */
+        .action-buttons a {
             background-color: #007bff;
             color: white;
             border: none;
+            text-decoration: none;
         }
 
-        .action-buttons .delete-button {
+        .action-buttons a:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* Nút xóa */
+        .action-buttons .btn-delete {
             background-color: #dc3545;
             color: white;
             border: none;
         }
 
-        .action-buttons button:hover {
-            opacity: 0.8;
+        .action-buttons .btn-delete:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
         }
 
-        /* Cải tiến giao diện các nút sửa, xóa, thêm */
+        .action-buttons button {
+            width: auto;
+            padding: 6px 12px; /* Giảm padding để nút nhỏ hơn */
+            font-size: 14px; /* Giảm kích thước font */
+            border-radius: 6px; /* Giảm radius */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .action-buttons button:active {
+            transform: scale(0.98);
+        }
+
+
         .add-question-button {
             display: inline-block;
             background-color: white;
-            color: #adb5bd;
+            color: #0056b3;
             padding: 10px 15px;
             border-radius: 8px;
             text-decoration: none;
             font-size: 18px;
             margin-bottom: 20px;
+            border: 2px solid #0056b3;
             transition: background-color 0.3s ease;
         }
 
         .add-question-button:hover {
-            background-color: #adb5bd;
+            background-color: #0056b3;
+            color: white;
         }
 
         .question-name a {
@@ -204,6 +239,9 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-color: white;
         }
 
         .question-table th, .question-table td {
@@ -226,6 +264,7 @@
             cursor: pointer;
             font-size: 16px;
             margin-left: 5px;
+            transition: background-color 0.3s ease;
         }
 
         .btn-delete:hover {
@@ -241,7 +280,25 @@
             border-radius: 8px;
         }
 
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        .alert-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .alert-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
     </style>
+
 </head>
 <body layout:fragment="body">
 

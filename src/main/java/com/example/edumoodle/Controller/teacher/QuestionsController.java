@@ -189,35 +189,28 @@ public String deleteQuestion(@PathVariable Integer moodle_id,
         return "teacher/preview";
     }
 
-//    @GetMapping("teacher/edit-question/{moodleId}")
-//    public String editQuestion(@PathVariable int moodleId, Model model) {
-//        // Lấy câu hỏi từ Moodle ID
-//        QuestionsEntity question = questionsService.getQuestionByMoodleId(moodleId);
-//        List<QuestionAnswersEntity> answers = question.getAnswers();
-//
-//        // Thêm câu hỏi và danh sách đáp án vào model
-//        model.addAttribute("question", question);
-//        model.addAttribute("answers", answers);
-//        return "teacher/Edit_Questions";
-//    }
-    @GetMapping("teacher/edit-question/{moodleId}")
-    public String editQuestion(@PathVariable int moodleId, Model model) {
-        // Lấy câu hỏi từ Moodle ID
-        QuestionsEntity question = questionsService.getQuestionByMoodleId(moodleId);
-        List<QuestionAnswersEntity> answers = question.getAnswers();
+@GetMapping("teacher/edit-question/{moodleId}")
+public String editQuestion(@PathVariable int moodleId, Model model) {
+    // Lấy câu hỏi từ Moodle ID
+    QuestionsEntity question = questionsService.getQuestionByMoodleId(moodleId);
+    List<QuestionAnswersEntity> answers = question.getAnswers();
 
-        // Thêm câu hỏi và danh sách đáp án vào model
-        model.addAttribute("question", question);
-        model.addAttribute("answers", answers);
+    // Lấy categoryId từ câu hỏi, vì category là một đối tượng
+    int categoryId = question.getCategoryId().getMoodleId(); // Duyệt qua category để lấy ID
 
-        // Nếu bạn muốn chọn đáp án đúng từ danh sách trả về
-        model.addAttribute("correctAnswer", answers.stream()
-                .filter(a -> a.correct())
-                .findFirst()
-                .orElse(null)); // Nếu không có đáp án đúng, trả về null
+    // Thêm câu hỏi, danh sách đáp án và categoryId vào model
+    model.addAttribute("question", question);
+    model.addAttribute("answers", answers);
+    model.addAttribute("categoryId", categoryId);  // Truyền categoryId vào model
 
-        return "teacher/Edit_Questions";
-    }
+    // Nếu bạn muốn chọn đáp án đúng từ danh sách trả về
+    model.addAttribute("correctAnswer", answers.stream()
+            .filter(a -> a.correct())
+            .findFirst()
+            .orElse(null)); // Nếu không có đáp án đúng, trả về null
+
+    return "teacher/Edit_Questions";
+}
 
     @PostMapping("teacher/edit-question/{moodleId}")
     public String updateQuestion(@PathVariable int moodleId,
@@ -232,14 +225,22 @@ public String deleteQuestion(@PathVariable Integer moodle_id,
             question.setName(name);
             question.setQuestionText(questionText);
             System.out.println("updateQuestionByMoodleId is being called...");
+
+            // Cập nhật câu hỏi và các đáp án
             questionsService.updateQuestionInMoodle(question, answers, correctAnswer);
             questionsService.updateQuestionByMoodleId(moodleId, question, answers, correctAnswer);
-            redirectAttributes.addFlashAttribute("message", "Cập nhật câu hỏi thành công.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật câu hỏi: " + e.getMessage());
-        }
-        return "redirect:/teacher/courses/view/categories/" + categoryId + "/questions";
 
+            // Thêm thông báo thành công
+            redirectAttributes.addFlashAttribute("message", "Cập nhật câu hỏi thành công.");
+
+            // Đảm bảo categoryId không bị null và trả về đúng trang danh sách câu hỏi
+            redirectAttributes.addFlashAttribute("categoryId", categoryId);
+            return "redirect:/teacher/courses/view/categories/" + categoryId + "/questions"; // Đảm bảo categoryId chính xác
+        } catch (Exception e) {
+            // Nếu có lỗi, thông báo lỗi
+//            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật câu hỏi: " + e.getMessage());
+            return "redirect:/teacher/courses/view/categories/" + categoryId + "/questions";
+        }
     }
 
 

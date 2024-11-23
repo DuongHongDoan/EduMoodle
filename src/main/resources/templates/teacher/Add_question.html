@@ -18,19 +18,20 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+            padding: 40px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 30px;
         }
 
         h1 {
             text-align: center;
             color: #007bff;
+            margin-bottom: 20px;
         }
 
         label {
@@ -40,13 +41,14 @@
             margin-top: 10px;
         }
 
-        input[type="text"], select, textarea {
+        input[type="text"], select, textarea, input[type="file"] {
             width: 100%;
-            padding: 10px;
-            margin-top: 5px;
+            padding: 12px;
+            margin-top: 8px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 14px;
+            box-sizing: border-box;
         }
 
         textarea {
@@ -55,19 +57,20 @@
         }
 
         .answers {
-            margin-top: 10px;
+            margin-top: 20px;
         }
 
         button {
-            padding: 10px 15px;
+            padding: 12px 20px;
             background-color: #007bff;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 14px;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 15px;
             transition: background-color 0.3s;
+            width: 100%;
         }
 
         button:hover {
@@ -85,20 +88,40 @@
         .hidden {
             display: none;
         }
+
+        .file-input {
+            padding: 8px;
+        }
+
+        .file-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .question-type-select {
+            margin-top: 15px;
+        }
+
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Import Questions</h1>
+    <h1>Tải file txt</h1>
     <form action="/api/questions/import" method="post" enctype="multipart/form-data">
-        <label for="categoryId">Category ID:</label>
-        <input type="number" id="categoryId" name="categoryId" required>
-        <br><br>
-        <label for="file">Upload .txt file:</label>
+        <input type="hidden" name="categoryId" th:value="${categoryId}" />
+<!--        <label for="categoryId">Category ID:</label>-->
+<!--        <input type="number" id="categoryId" name="categoryId" required>-->
+<!--        <br><br>-->
+        <label for="file">Tải lên .txt file:</label>
         <input type="file" id="file" name="file" accept=".txt" required>
         <br><br>
-        <button type="submit">Import Questions</button>
+        <button type="submit">Tải lên</button>
     </form>
     <h1>Thêm Câu Hỏi</h1>
     <form th:action="@{/api/questions/add}" th:method="post" id="questionForm">
@@ -159,6 +182,8 @@
         <!-- Nút Gửi -->
         <button type="submit">Thêm câu hỏi</button>
     </form>
+    <a class="back-btn" th:href="@{/teacher/courses/view/categories/${categoryId}/questions}">Quay lại trang danh sách</a>
+
 </div>
 
 <script>

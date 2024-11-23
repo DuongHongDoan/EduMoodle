@@ -24,15 +24,15 @@ public class QuestionsEntity {
     private String qtype = "multichoice";
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
-//    @Column(name = "category_id")
+
     private QuestionCategoriesEntity categoryId;
 
 
-//    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<QuestionAnswersEntity> answers;
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-
-    private List<QuestionAnswersEntity> answers = new ArrayList<>(); // Khởi tạo tại đây
+    private List<QuestionAnswersEntity> answers;
+//    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+//
+//    private List<QuestionAnswersEntity> answers = new ArrayList<>(); // Khởi tạo tại đây
 
     // Constructor mặc định
     public QuestionsEntity() {
@@ -55,8 +55,6 @@ public class QuestionsEntity {
     public void setMoodleId(Integer moodleId) {
         this.moodleId = moodleId;
     }
-
-
 
     public void removeAnswer(QuestionAnswersEntity answer) {
         answers.remove(answer);

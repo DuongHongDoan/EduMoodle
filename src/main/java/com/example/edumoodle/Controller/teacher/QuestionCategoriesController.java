@@ -51,20 +51,7 @@ public class QuestionCategoriesController {
         System.out.println("Thông báo lỗi: " + model.getAttribute("error"));
         return "teacher/list_question"; // Trả về template mới
     }
-//@GetMapping("/teacher/courses/view/list_question")
-//public String listQuestionCategories(@RequestParam("courseId") int courseId,
-//                                     @RequestParam(required = false) Integer page,
-//                                     Model model) {
-//    if (page == null) {
-//        page = 0; // Set default page
-//    }
-//
-//    Page<QuestionCategoriesEntity> pageResult = categoriesService.getPaginatedCategories(courseId, page);
-//    model.addAttribute("questionCategories", pageResult.getContent());
-//    model.addAttribute("currentPage", page);
-//    model.addAttribute("totalPages", pageResult.getTotalPages());
-//    return "teacher/list_question";
-//}
+
 
     //    thêm danh mục câu hỏi
     @GetMapping("/teacher/courses/view/Add_QuestionCategories")
@@ -130,44 +117,6 @@ public String uploadExcel(@RequestParam("file") MultipartFile file,
 
     //cập nhật thông tin danh mục
     @GetMapping("/teacher/courses/view/update/{moodleId}")
-//    public String editCategory(@PathVariable("moodleId") int moodleId,
-//                               @RequestParam("courseId") int courseId,
-//                               Model model) {
-//        // Tạo URL cho API lấy thông tin danh mục
-//        String url = "http://localhost/moodle/webservice/rest/server.php";
-//        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
-//                .queryParam("wstoken", "54df098d9366c247f13f81e27f6dddb2")
-//                .queryParam("moodlewsrestformat", "json")
-//                .queryParam("wsfunction", "local_question_get_categories")
-//                .queryParam("courseId", courseId);
-//
-//        // Tạo RestTemplate và gọi API
-//        RestTemplate restTemplate = new RestTemplate();
-//        Map<String, Object> response = restTemplate.getForObject(builder.toUriString(), Map.class);
-//
-//        // Kiểm tra và lấy danh mục cần thiết từ response
-//        if (response != null && response.containsKey("categories")) {
-//            List<Map<String, Object>> categories = (List<Map<String, Object>>) response.get("categories");
-//
-//            // Lấy danh mục tương ứng với `moodleId`
-//            for (Map<String, Object> category : categories) {
-//                if ((int) category.get("id") == moodleId) {
-//                    model.addAttribute("name", category.get("name"));
-//                    model.addAttribute("info", category.get("info"));
-//                    model.addAttribute("contextId", category.get("contextid"));
-//                    model.addAttribute("parent", category.get("parent"));
-//                    break;
-//                }
-//            }
-//        }
-//
-//        // Truyền `moodleId` và `courseId` vào model để sử dụng trong form
-//        model.addAttribute("moodleId", moodleId);
-//        model.addAttribute("courseId", courseId);
-//
-//        return "teacher/Edit_QuestionCategory";  // Trang chỉnh sửa danh mục câu hỏi
-//    }
-//    @GetMapping("/teacher/courses/view/update/{moodleId}")
     public String editCategory(@PathVariable("moodleId") int moodleId,
                                @RequestParam("courseId") int courseId,
                                Model model) {
@@ -396,51 +345,51 @@ public ResponseEntity<InputStreamResource> exportQuestionCategoriesToExcel(@Requ
     }
 
     // Hàm để xuất các danh mục câu hỏi vào file Excel
-//    private int exportCategoriesToExcel(List<QuestionCategoriesDTO> categories, XSSFSheet sheet, int rowNum, int columnIndex) {
-//        if (rowNum == 0) {
-//            // Đặt tên tiêu đề cho các cột trước khi xuất dữ liệu
-//            setColumnHeaders(sheet, columnIndex);
-//            rowNum++;  // Tăng rowNum để bắt đầu xuất dữ liệu từ dòng thứ 2
-//        }
-//
-//        for (QuestionCategoriesDTO category : categories) {
-//            XSSFRow row = sheet.createRow(rowNum);
-//
-//            // Điền tên danh mục cha
-//            String nameWithCount = category.getName() + " (" + category.getQuestionCount() + ")";
-//            row.createCell(columnIndex).setCellValue(nameWithCount);
-//
-//            // Tính tổng số câu hỏi của danh mục cha và tất cả danh mục con, rồi hiển thị bên cạnh ô tên danh mục
-//            int totalQuestionCount = getTotalQuestionCount(category);
-//            row.createCell(columnIndex + 1).setCellValue("Tổng số câu hỏi: " + totalQuestionCount);
-//
-//            rowNum++; // Tăng dòng để ghi các danh mục con nằm dưới danh mục cha
-//
-//            // Nếu danh mục có danh mục con
-//            if (category.getChildren() != null && !category.getChildren().isEmpty()) {
-//                // Kiểm tra nếu tất cả các danh mục con đều là mức nhỏ nhất (không có danh mục con của chúng)
-//                boolean allChildrenAreLeaf = category.getChildren().stream().allMatch(child -> child.getChildren() == null || child.getChildren().isEmpty());
-//
-//                if (allChildrenAreLeaf) {
-//                    // Nếu tất cả danh mục con là mức nhỏ nhất, ghi chúng trên cùng một hàng ngang dưới danh mục cha
-//                    XSSFRow childRow = sheet.createRow(rowNum);
-//                    int childColumn = columnIndex + 2;  // Bắt đầu từ cột "Nhận biết (1)"
-//                    for (QuestionCategoriesDTO child : category.getChildren()) {
-//                        String childNameWithCount = child.getName() + " (" + child.getQuestionCount() + ")";
-//                        childRow.createCell(childColumn).setCellValue(childNameWithCount);
-//                        childColumn++;
-//                    }
-//                    rowNum++; // Tăng dòng sau khi ghi tất cả danh mục con
-//                } else {
-//                    // Nếu có danh mục con lồng thêm, tiếp tục đệ quy gọi hàm cho từng danh mục con
-//                    for (QuestionCategoriesDTO child : category.getChildren()) {
-//                        rowNum = exportCategoriesToExcel(List.of(child), sheet, rowNum, columnIndex + 1);
-//                    }
-//                }
-//            }
-//        }
-//        return rowNum;
-//    }
+    private int exportCategoriesToExcel1(List<QuestionCategoriesDTO> categories, XSSFSheet sheet, int rowNum, int columnIndex) {
+        if (rowNum == 0) {
+            // Đặt tên tiêu đề cho các cột trước khi xuất dữ liệu
+            setColumnHeaders(sheet, columnIndex);
+            rowNum++;  // Tăng rowNum để bắt đầu xuất dữ liệu từ dòng thứ 2
+        }
+
+        for (QuestionCategoriesDTO category : categories) {
+            XSSFRow row = sheet.createRow(rowNum);
+
+            // Điền tên danh mục cha
+            String nameWithCount = category.getName() + " (" + category.getQuestionCount() + ")";
+            row.createCell(columnIndex).setCellValue(nameWithCount);
+
+            // Tính tổng số câu hỏi của danh mục cha và tất cả danh mục con, rồi hiển thị bên cạnh ô tên danh mục
+            int totalQuestionCount = getTotalQuestionCount(category);
+            row.createCell(columnIndex + 1).setCellValue("Tổng số câu hỏi: " + totalQuestionCount);
+
+            rowNum++; // Tăng dòng để ghi các danh mục con nằm dưới danh mục cha
+
+            // Nếu danh mục có danh mục con
+            if (category.getChildren() != null && !category.getChildren().isEmpty()) {
+                // Kiểm tra nếu tất cả các danh mục con đều là mức nhỏ nhất (không có danh mục con của chúng)
+                boolean allChildrenAreLeaf = category.getChildren().stream().allMatch(child -> child.getChildren() == null || child.getChildren().isEmpty());
+
+                if (allChildrenAreLeaf) {
+                    // Nếu tất cả danh mục con là mức nhỏ nhất, ghi chúng trên cùng một hàng ngang dưới danh mục cha
+                    XSSFRow childRow = sheet.createRow(rowNum);
+                    int childColumn = columnIndex + 2;  // Bắt đầu từ cột "Nhận biết (1)"
+                    for (QuestionCategoriesDTO child : category.getChildren()) {
+                        String childNameWithCount = child.getName() + " (" + child.getQuestionCount() + ")";
+                        childRow.createCell(childColumn).setCellValue(childNameWithCount);
+                        childColumn++;
+                    }
+                    rowNum++; // Tăng dòng sau khi ghi tất cả danh mục con
+                } else {
+                    // Nếu có danh mục con lồng thêm, tiếp tục đệ quy gọi hàm cho từng danh mục con
+                    for (QuestionCategoriesDTO child : category.getChildren()) {
+                        rowNum = exportCategoriesToExcel(List.of(child), sheet, rowNum, columnIndex + 1);
+                    }
+                }
+            }
+        }
+        return rowNum;
+    }
     private int exportCategoriesToExcel(List<QuestionCategoriesDTO> categories, XSSFSheet sheet, int rowNum, int columnIndex) {
         if (rowNum == 0) {
             // Đặt tên tiêu đề cho các cột trước khi xuất dữ liệu

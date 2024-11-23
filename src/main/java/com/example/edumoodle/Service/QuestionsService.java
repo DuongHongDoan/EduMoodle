@@ -11,9 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +23,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -89,41 +85,49 @@ public class QuestionsService {
         }
     }
 
+    private void addQuestionToWebDatabase(QuestionsDTO questionsDTO) {
+        // Lấy thông tin danh mục câu hỏi từ cơ sở dữ liệu
+        QuestionCategoriesEntity categoryEntity = QuestionCategoriesRepository.findByMoodleId(questionsDTO.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category ID không tồn tại"));
 
-    public void addQuestionToMoodle(QuestionsDTO questionsDTO) {
-        String apiUrl = "http://localhost/moodle/webservice/rest/server.php";
-//        String token = "18d6473e1bdd37f3738045a175fd94e7"; // Đảm bảo token đúng và hợp lệ
+        // Tạo đối tượng `QuestionsEntity` từ DTO
+        QuestionsEntity questionEntity = new QuestionsEntity();
+        questionEntity.setCategoryId(categoryEntity);
+        questionEntity.setName(questionsDTO.getName());
+        questionEntity.setQuestionText(questionsDTO.getQuestionText());
 
-        // Tạo RestTemplate
-        RestTemplate restTemplate = new RestTemplate();
+        // Kiểm tra và thiết lập giá trị qtype
+        if (questionsDTO.getQtype() == null || questionsDTO.getQtype().isEmpty()) {
+            questionsDTO.setQtype("multichoice"); // Mặc định là câu hỏi trắc nghiệm
+        }
+        questionEntity.setQtype(questionsDTO.getQtype());
 
-        // Tạo MultiValueMap thay vì HashMap
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("wstoken", token);
-        params.add("wsfunction", "local_question_add_question");
-        params.add("moodlewsrestformat", "json");
-        params.add("category_id", String.valueOf(questionsDTO.getCategoryId()));
-        params.add("name", questionsDTO.getName());
-        params.add("questiontext", questionsDTO.getQuestionText());
-        params.add("qtype", "multichoice"); // Đảm bảo giá trị đúng với Moodle
-        params.add("correctanswerindex", String.valueOf(questionsDTO.getCorrectAnswerIndex()));
+        // Lưu Moodle ID vào cơ sở dữ liệu web
+        questionEntity.setMoodleId(questionsDTO.getMoodleId());
 
-        // Thêm các câu trả lời vào params
-        for (int i = 0; i < questionsDTO.getAnswers().size(); i++) {
-            params.add("answers[" + i + "]", questionsDTO.getAnswers().get(i).getAnswerText());
+        // Thêm các câu trả lời vào `QuestionsEntity`
+        if (questionsDTO.getAnswers() != null) {
+            int correctIndex = questionsDTO.getCorrectAnswerIndex(); // Lấy chỉ số đáp án đúng
+            for (int i = 0; i < questionsDTO.getAnswers().size(); i++) {
+                QuestionAnswersDTO answerDTO = questionsDTO.getAnswers().get(i);
+
+                String answerText = answerDTO.getAnswerText();
+                if (answerText == null || answerText.trim().isEmpty()) {
+                    System.out.println("Bỏ qua đáp án rỗng hoặc không hợp lệ.");
+                    continue; // Bỏ qua đáp án không hợp lệ
+                }
+
+                QuestionAnswersEntity answerEntity = new QuestionAnswersEntity();
+                answerEntity.setAnswerText(answerText);
+                answerEntity.setCorrect(i == correctIndex); // Đặt `correct = 1` nếu đáp án là đúng
+                answerEntity.setQuestion(questionEntity); // Liên kết câu trả lời với câu hỏi
+                questionEntity.addAnswer(answerEntity);
+            }
         }
 
-        // Sử dụng POST request thay vì GET
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
-
-        // Gửi yêu cầu POST
-        ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
-
-        // Kiểm tra kết quả
-        System.out.println("Response Status: " + response.getStatusCode());
-        System.out.println("Response Body: " + response.getBody());
+        // Lưu `QuestionsEntity` vào cơ sở dữ liệu
+        QuestionsRepository.save(questionEntity);
+        System.out.println("Thêm câu hỏi vào cơ sở dữ liệu web thành công.");
     }
 
     public void importQuestionsFromTxt(String filePath, int categoryId) {
@@ -171,6 +175,7 @@ public class QuestionsService {
                     if (currentQuestion == null) {
                         currentQuestion = new QuestionsDTO();
                         currentQuestion.setCategoryId(categoryId);
+                        currentQuestion.setQtype("multichoice"); // Thiết lập loại câu hỏi mặc định
                         currentQuestion.setName(line); // Sử dụng dòng đầu tiên làm tên câu hỏi
                     } else {
                         // Ghép nối phần text
@@ -197,48 +202,11 @@ public class QuestionsService {
         // Gửi từng câu hỏi lên Moodle và lưu vào Web
         for (QuestionsDTO question : questionsList) {
             try {
-                addQuestionToMoodleAndWeb(question);
+                addQuestionToMoodleAndWeb(question); // Gửi câu hỏi lên Moodle và lưu vào Web
             } catch (Exception e) {
                 System.err.println("Lỗi khi thêm câu hỏi: " + e.getMessage());
             }
         }
-
-    }
-
-
-
-    private void addQuestionToWebDatabase(QuestionsDTO questionsDTO) {
-        // Lấy thông tin danh mục câu hỏi từ cơ sở dữ liệu
-        QuestionCategoriesEntity categoryEntity = QuestionCategoriesRepository.findByMoodleId(questionsDTO.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("Category ID không tồn tại"));
-
-        // Tạo đối tượng `QuestionEntity` từ DTO
-        QuestionsEntity questionEntity = new QuestionsEntity();
-        questionEntity.setCategoryId(categoryEntity);
-        questionEntity.setName(questionsDTO.getName());
-        questionEntity.setQuestionText(questionsDTO.getQuestionText());
-        questionEntity.setQtype(questionsDTO.getQtype());
-        questionEntity.setMoodleId(questionsDTO.getMoodleId());  // Lưu Moodle ID vào cơ sở dữ liệu web
-
-        // Thêm các câu trả lời vào `QuestionEntity`
-        for (QuestionAnswersDTO answerDTO : questionsDTO.getAnswers()) {
-            String answerText = answerDTO.getAnswerText();
-            if (answerText == null || answerText.trim().isEmpty()) {
-                System.out.println("Bỏ qua đáp án rỗng hoặc không hợp lệ.");
-                continue; // Bỏ qua đáp án không hợp lệ
-            }
-
-            QuestionAnswersEntity answerEntity = new QuestionAnswersEntity();
-            answerEntity.setAnswerText(answerText);
-            answerEntity.setCorrect(answerDTO.isCorrect());
-            answerEntity.setQuestion(questionEntity); // Đảm bảo thiết lập câu hỏi cho câu trả lời
-            questionEntity.addAnswer(answerEntity);
-        }
-
-
-        // Lưu `QuestionEntity` vào cơ sở dữ liệu
-        QuestionsRepository.save(questionEntity);
-        System.out.println("Thêm câu hỏi vào cơ sở dữ liệu web thành công.");
     }
 
     public void addQuestionToMoodleAndWeb(QuestionsDTO questionsDTO) {
@@ -248,8 +216,8 @@ public class QuestionsService {
             return; // Dừng việc thực hiện nếu dữ liệu không hợp lệ
         }
 
-        String apiUrl = "http://localhost/moodle/webservice/rest/server.php";
-        String token = "18d6473e1bdd37f3738045a175fd94e7"; // Đảm bảo token đúng và hợp lệ
+        String apiUrl = domainName + "/webservice/rest/server.php";
+         // Đảm bảo token đúng và hợp lệ
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -310,7 +278,6 @@ public class QuestionsService {
         }
     }
 
-
     private int extractMoodleId(String jsonResponse) {
         try {
             JsonNode rootNode = new ObjectMapper().readTree(jsonResponse);
@@ -327,20 +294,6 @@ public class QuestionsService {
             logger.error("Lỗi khi phân tích JSON: {}", e.getMessage());
             return -1;
         }
-    }
-
-    public String deleteQuestionFromMoodle(int questionId) {
-        String url = String.format("%s/webservice/rest/server.php?wsfunction=local_question_delete_question&moodlewsrestformat=json&wstoken=%s&question_id=%d",
-                domainName, token, questionId);
-
-        try {
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-            return response.getBody();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Có lỗi khi xóa câu hỏi từ Moodle: " + e.getMessage();
-        }
-
     }
 
     private boolean parseDeleteResponse(String jsonResponse) {
@@ -405,66 +358,12 @@ public class QuestionsService {
     }
 
 
-
-    private static final String MOODLE_API_URL = "http://localhost/moodle/webservice/rest/server.php";
-
     public QuestionsEntity getQuestionByMoodleId(int moodleId) {
         return QuestionsRepository.findByMoodleId(moodleId)
                 .orElseThrow(() -> new IllegalArgumentException("Câu hỏi với Moodle ID không tồn tại"));
     }
-//    ublic void updateQuestionByMoodleId(int moodleId, QuestionsEntity question, List<String> answers, int correctAnswerIndex) {
-//        // Lấy câu hỏi hiện tại
-//        System.out.println("updateQuestionByMoodleId is being called...");
-//        QuestionsEntity existingQuestion = getQuestionByMoodleId(moodleId);
-//
-//        // Cập nhật thông tin câu hỏi
-//        existingQuestion.setName(question.getName());
-//        existingQuestion.setQuestionText(question.getQuestionText());
-//        existingQuestion.setQtype(question.getQtype());
-//
-//        // Lấy danh sách đáp án hiện tại
-//        List<QuestionAnswersEntity> currentAnswers = existingQuestion.getAnswers();
-//
-//        // Danh sách ID đáp án mới từ `answers`
-//        Set<Integer> newAnswerIds = new HashSet<>();
-//        for (int i = 0; i < answers.size(); i++) {
-//            newAnswerIds.add(i);  // Gán chỉ mục làm ID cho các đáp án mới
-//        }
-//
-//        // Cập nhật hoặc xóa đáp án
-//        List<QuestionAnswersEntity> updatedAnswers = new ArrayList<>();
-//        for (int i = 0; i < answers.size(); i++) {
-//            QuestionAnswersEntity answer;
-//            if (i < currentAnswers.size()) {
-//                answer = currentAnswers.get(i); // Lấy đáp án đã có trong danh sách cũ
-//            } else {
-//                answer = new QuestionAnswersEntity(); // Tạo mới đáp án nếu chưa có
-//            }
-//
-//            // Cập nhật đáp án
-//            answer.setAnswerText(answers.get(i));
-//            answer.setCorrect(i == correctAnswerIndex); // Cập nhật đáp án đúng
-//
-//            // Thiết lập câu hỏi cho đáp án
-//            answer.setQuestion(existingQuestion);
-//
-//            // Thêm vào danh sách đáp án đã cập nhật
-//            updatedAnswers.add(answer);
-//        }
-//
-//        // Cập nhật lại danh sách đáp án của câu hỏi
-//        existingQuestion.setAnswers(updatedAnswers);
-//
-//        // Lưu câu hỏi (bao gồm cập nhật đáp án) vào cơ sở dữ liệu
-//        QuestionsRepository.save(existingQuestion);
-//
-//        // Gửi API lên Moodle
-//        updateQuestionInMoodle(existingQuestion, answers, correctAnswerIndex);
-//    }
-
 
     public void updateQuestionByMoodleId(int moodleId, QuestionsEntity question, List<String> answers, int correctAnswer) {
-        // Lấy câu hỏi hiện tại
         System.out.println("updateQuestionByMoodleId is being called...");
         QuestionsEntity existingQuestion = getQuestionByMoodleId(moodleId);
 
@@ -482,70 +381,47 @@ public class QuestionsService {
             newAnswerIds.add(i);  // Gán chỉ mục làm ID cho các đáp án mới
         }
 
-        // Cập nhật hoặc xóa đáp án
+        // Danh sách đáp án sẽ được cập nhật
         List<QuestionAnswersEntity> updatedAnswers = new ArrayList<>();
-        for (QuestionAnswersEntity answer : currentAnswers) {
+
+        // Cập nhật hoặc xóa đáp án
+        for (Iterator<QuestionAnswersEntity> iterator = currentAnswers.iterator(); iterator.hasNext(); ) {
+            QuestionAnswersEntity answer = iterator.next();
             if (newAnswerIds.contains(answer.getId())) {
-                // Nếu đáp án tồn tại, cập nhật thông tin
-                answer.setAnswerText(answers.get(answer.getId()));
-                answer.setCorrect(answer.getId() == correctAnswer);
-                updatedAnswers.add(answer);
+                // Nếu đáp án tồn tại trong danh sách mới, cập nhật thông tin
+                int answerIndex = new ArrayList<>(newAnswerIds).indexOf(answer.getId());  // Lấy chỉ mục của đáp án mới từ `newAnswerIds`
+                answer.setAnswerText(answers.get(answerIndex));  // Cập nhật nội dung đáp án
+                answer.setCorrect(answerIndex == correctAnswer);  // Đảm bảo đáp án đúng được xác định đúng
+                updatedAnswers.add(answer);  // Thêm vào danh sách đáp án đã cập nhật
             } else {
-                // Nếu đáp án không còn trong danh sách, xóa
-                QuestionAnswersRepository.delete(answer);
+                // Nếu đáp án không còn trong danh sách mới, xóa khỏi cơ sở dữ liệu
+                iterator.remove();  // Xóa đáp án khỏi danh sách hiện tại
+                QuestionAnswersRepository.delete(answer);  // Xóa đáp án khỏi cơ sở dữ liệu
             }
         }
 
         // Thêm đáp án mới
-        for (Integer id : newAnswerIds) {
-            boolean isExisting = currentAnswers.stream().anyMatch(a -> a.getId() == id);
+        for (int i = 0; i < answers.size(); i++) {
+            final int index = i;  // Tạo biến final từ `i` để sử dụng trong lambda expression
+            boolean isExisting = currentAnswers.stream().anyMatch(a -> a.getAnswerText().equals(answers.get(index)));
             if (!isExisting) {
+                // Nếu đáp án chưa có, tạo mới đáp án
                 QuestionAnswersEntity newAnswer = new QuestionAnswersEntity();
-                newAnswer.setAnswerText(answers.get(id));
-                newAnswer.setCorrect(id == correctAnswer);
-                newAnswer.setQuestion(existingQuestion);
+                newAnswer.setAnswerText(answers.get(index));
+                newAnswer.setCorrect(index == correctAnswer);  // Đảm bảo đáp án đúng được xác định đúng
+                newAnswer.setQuestion(existingQuestion);  // Gắn câu hỏi cho đáp án mới
+
+                // Lưu đáp án mới vào cơ sở dữ liệu
+                QuestionAnswersRepository.save(newAnswer);
                 updatedAnswers.add(newAnswer);
             }
         }
 
+        // Cập nhật lại danh sách đáp án
         existingQuestion.setAnswers(updatedAnswers);
 
-        // Lưu thay đổi vào CSDL
-        QuestionsRepository.save(existingQuestion);
-
-        // Gửi API lên Moodle
-
-        updateQuestionInMoodle(existingQuestion, answers, correctAnswer);
-    }
-
-    @Transactional
-    public void updateQuestionAnswers(QuestionsEntity question, List<String> answers, int correctAnswerIndex) {
-        // Duyệt qua danh sách các đáp án
-        List<QuestionAnswersEntity> updatedAnswers = new ArrayList<>();
-
-        for (int i = 0; i < answers.size(); i++) {
-            QuestionAnswersEntity answer;
-
-            // Nếu đáp án đã tồn tại trong câu hỏi
-            if (i < question.getAnswers().size()) {
-                answer = question.getAnswers().get(i); // Sử dụng đáp án hiện tại
-            } else {
-                answer = new QuestionAnswersEntity(); // Tạo mới nếu không có
-            }
-
-            // Cập nhật đáp án và trạng thái đúng/sai
-            answer.setAnswerText(answers.get(i));
-            answer.setCorrect(i == correctAnswerIndex); // Đánh dấu đáp án đúng
-
-            // Thiết lập lại mối quan hệ với câu hỏi
-            answer.setQuestion(question);
-
-            // Thêm vào danh sách đáp án đã cập nhật
-            updatedAnswers.add(answer);
-        }
-
-        // Cập nhật lại danh sách đáp án trong câu hỏi
-        question.setAnswers(updatedAnswers);
+        // Lưu câu hỏi và các đáp án vào cơ sở dữ liệu
+        QuestionsRepository.save(existingQuestion);  // Lưu câu hỏi và đáp án vào cơ sở dữ liệu
     }
 
     public void updateQuestionInMoodle(QuestionsEntity question, List<String> answers, int correctAnswer) {
@@ -553,8 +429,8 @@ public class QuestionsService {
         System.out.println("Current qtype before sending to API: " + question.getQtype());
 
         // Xây dựng URL API với các tham số
-        StringBuilder apiUrlBuilder = new StringBuilder(domainName+ "/webservice/rest/server.php")
-                .append("?wstoken=54df098d9366c247f13f81e27f6dddb2")
+        StringBuilder apiUrlBuilder = new StringBuilder(domainName + "/webservice/rest/server.php")
+                .append("?wstoken=").append(token)  // Dùng token đã có sẵn
                 .append("&wsfunction=local_question_update_question")
                 .append("&moodlewsrestformat=json")
                 .append("&qtype=").append(question.getQtype())
@@ -588,8 +464,4 @@ public class QuestionsService {
     }
 
 }
-
-
-
-
 

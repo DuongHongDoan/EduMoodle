@@ -144,70 +144,6 @@ public class QuestionCategoriesService {
         return rootCategories;
     }
 
-//    public List<QuestionCategoriesDTO> buildCategoryTree(List<QuestionCategoriesDTO> categories) {
-//        Map<Integer, QuestionCategoriesDTO> categoryMap = categories.stream()
-//                .collect(Collectors.toMap(QuestionCategoriesDTO::getId, category -> category));
-//
-//        List<QuestionCategoriesDTO> rootCategories = new ArrayList<>();
-//
-//        for (QuestionCategoriesDTO category : categories) {
-//            if (category.getParent() == 0) {
-//                rootCategories.add(category);  // Thêm danh mục gốc
-//            } else {
-//                QuestionCategoriesDTO parent = categoryMap.get(category.getParent());
-//                if (parent != null) {
-//                    // Thêm category vào danh sách children của parent
-//                    if (parent.getChildren() == null) {
-//                        parent.setChildren(new ArrayList<>());
-//                    }
-//                    parent.getChildren().add(category);
-//                }
-//            }
-//        }
-//
-//        return rootCategories;
-//    }
-
-    //  Lấy tất cả danh mục
-//    public List<QuestionCategoriesDTO> getAllQuestionCategories(int courseId) {
-//        String apiMoodleFunc = "local_question_get_categories";
-//        String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&courseId=%d",
-//                domainName, token, apiMoodleFunc, courseId);
-//
-//        logger.info("Fetching question categories from URL: {}", url);
-//
-//        try {
-//            // Gửi yêu cầu đến API và nhận kết quả
-//            ResponseEntity<QuestionCategoriesResponseDTO> response = restTemplate.getForEntity(url, QuestionCategoriesResponseDTO.class);
-//            logger.info("Response Status: {}", response.getStatusCode());
-//
-//            // Kiểm tra nếu phản hồi không thành công
-//            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
-//                logger.error("Không có dữ liệu hoặc yêu cầu thất bại.");
-//                return Collections.emptyList();
-//            }
-//
-//            // Kiểm tra trạng thái phản hồi
-//            if (!"success".equalsIgnoreCase(response.getBody().getStatus())) {
-//                logger.error("API trả về trạng thái không thành công: {}", response.getBody().getStatus());
-//                return Collections.emptyList();
-//            }
-//
-//            // Trả về danh sách các danh mục câu hỏi
-//            List<QuestionCategoriesDTO> categories = response.getBody().getCategories();
-//            if (categories == null) {
-//                logger.error("Trường 'categories' là null.");
-//                return Collections.emptyList();
-//            }
-//            logger.info("Fetched {} question categories.", categories.size());
-//               return categories;
-//
-//        } catch (Exception e) {
-//            // Xử lý lỗi ngoại lệ nếu xảy ra
-//            logger.error("Lỗi khi gọi API Moodle: {}", e.getMessage());
-//            return Collections.emptyList();
-//        }
-//    }
     public List<QuestionCategoriesDTO> getAllQuestionCategories(int courseId) {
         String apiMoodleFunc = "local_question_get_categories";
         String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&courseId=%d",
@@ -515,72 +451,6 @@ public class QuestionCategoriesService {
             return "Lỗi: Không thể xóa danh mục câu hỏi. Chi tiết: " + e.getMessage();
         }
     }
-//     Phương thức xử lý xóa danh mục và cập nhật danh mục con
-    @Autowired
-    private QuestionCategoryMapper categoryMapper; // Inject Mapper vào
-
-//    public String deleteCategory(int moodleId) {
-//        // Lấy danh mục cha từ cơ sở dữ liệu dưới dạng Entity
-//        Optional<QuestionCategoriesEntity> categoryOptional = questionCategoriesRepository.findByMoodleId(moodleId);
-//
-//        if (categoryOptional.isPresent()) {
-//            // Lấy danh mục cha dưới dạng Entity
-//            QuestionCategoriesEntity category = categoryOptional.get();
-//            int parentId = category.getParent();
-//
-//            // Tìm các danh mục con dưới dạng Entity
-//            List<QuestionCategoriesEntity> childCategories = questionCategoriesRepository.findByParent(moodleId);
-//
-//            // Chuyển Entity thành DTO (nếu cần làm việc với DTO)
-//            List<QuestionCategoriesDTO> childCategoriesDTO = new ArrayList<>();
-//            for (QuestionCategoriesEntity childCategory : childCategories) {
-//                QuestionCategoriesDTO dto = categoryMapper.toDTO(childCategory);  // Chuyển Entity thành DTO
-//                childCategoriesDTO.add(dto);
-//            }
-//
-//            // Cập nhật parentId cho các danh mục con (DTO)
-//            for (QuestionCategoriesDTO childDTO : childCategoriesDTO) {
-//                childDTO.setParent(parentId);
-//
-//                // Chuyển lại DTO thành Entity để lưu vào cơ sở dữ liệu
-//                QuestionCategoriesEntity updatedChildEntity = categoryMapper.toEntity(childDTO);
-//                questionCategoriesRepository.save(updatedChildEntity);  // Lưu lại sự thay đổi
-//            }
-//
-//            // Tiến hành gọi API Moodle để xóa danh mục
-//            String apiMoodleFunc = "local_question_delete_category";
-//            String url = UriComponentsBuilder.fromHttpUrl(domainName + "/webservice/rest/server.php")
-//                    .queryParam("wstoken", token)
-//                    .queryParam("wsfunction", apiMoodleFunc)
-//                    .queryParam("moodlewsrestformat", "json")
-//                    .queryParam("category_id", moodleId)
-//                    .toUriString();
-//
-//            try {
-//                ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
-//
-//                if (response.getStatusCode().is2xxSuccessful()) {
-//                    boolean isDeleted = parseDeleteResponse(response.getBody());
-//                    if (isDeleted) {
-//                        // Xóa danh mục trong cơ sở dữ liệu Web
-//                        questionCategoriesRepository.deleteByMoodleId(moodleId);
-//                        return "Xóa danh mục thành công trên Moodle và Web.";
-//                    } else {
-//                        return "Lỗi: Moodle không xóa được danh mục.";
-//                    }
-//                } else {
-//                    return "Lỗi: Không thể xóa danh mục câu hỏi trên Moodle. Mã trạng thái: " + response.getStatusCode();
-//                }
-//            } catch (Exception e) {
-//                return "Lỗi: Không thể xóa danh mục câu hỏi. Chi tiết: " + e.getMessage();
-//            }
-//        } else {
-//            return "Danh mục không tồn tại trong cơ sở dữ liệu.";
-//        }
-//    }
-
-
-
 
 
     public String updateCategory(int moodleId, String name, int contextId, String info, int parent) {
@@ -612,7 +482,5 @@ public class QuestionCategoriesService {
             return "Lỗi khi gọi API: " + e.getMessage();
         }
     }
-
-
 
 }
