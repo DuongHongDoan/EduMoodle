@@ -73,7 +73,7 @@ public class CategoriesController {
     }
 
 
-    @GetMapping("/categories/create-category")
+    @GetMapping("/create-category")
     public String getCategoriesList(Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);

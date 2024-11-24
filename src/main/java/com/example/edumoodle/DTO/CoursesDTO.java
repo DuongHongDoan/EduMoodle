@@ -7,6 +7,25 @@ public class CoursesDTO {
     private String shortname;
     private String summary;
 
+    private String categoryName;
+    private String teacherName;
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
     public CoursesDTO() {}
 
     public CoursesDTO(Integer categoryid, String fullname, String shortname, String summary) {

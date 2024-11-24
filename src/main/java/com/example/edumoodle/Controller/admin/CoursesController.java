@@ -278,7 +278,7 @@ public class CoursesController {
     }
 
     //url = /admin/courses/create-course
-    @GetMapping("/courses/create-course")
+    @GetMapping("/create-course")
     public String showFormCreateCourse(Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
@@ -359,7 +359,7 @@ public class CoursesController {
     }
 
     //url = /admin/courses/create-course-list
-    @GetMapping("/courses/create-course-list")
+    @GetMapping("/upload-courses-list")
     public String showFormCreateCourseList(Model model) {
         List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
         model.addAttribute("schoolYears", schoolYearsEntities);

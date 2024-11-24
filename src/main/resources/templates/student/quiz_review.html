@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="utf-8"/>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Quiz review</title> <!-- Cập nhật tiêu đề -->
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .quiz-review-container {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .answers {
+            margin-top: 10px;
+        }
+
+        .answer {
+            display: block;
+            margin-bottom: 10px;
+            padding-left: 20px;
+        }
+
+        .answer input {
+            margin-right: 10px;
+        }
+
+        .correct-answer {
+            background-color: #e7f7d9;
+            border-left: 5px solid green;
+            padding: 10px;
+        }
+
+        .incorrect-answer {
+            background-color: #fde8e8;
+            border-left: 5px solid red;
+            padding: 10px;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff5d8;
+            border-left: 5px solid #f7d479;
+        }
+
+        .student-answer {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .question-status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .correct-status {
+            color: green;
+        }
+
+        .incorrect-status {
+            color: red;
+        }
+
+        .icon-correct {
+            color: green;
+            font-weight: bold;
+        }
+
+        .icon-incorrect {
+            color: red;
+            font-weight: bold;
+        }
+
+        .print-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Phạm vi chỉ cho bài review quiz */
+        .quiz-navigation-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            overflow-x: auto;
+            height: calc(100vh - 40px);
+            background-color: #f9f9f9;
+            border-right: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, margin-left 0.3s ease;
+        }
+
+        .quiz-hidden-panel {
+            transform: translateX(-100%);
+            margin-left: -250px;
+        }
+
+        .quiz-show-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            z-index: 1000;
+            display: none;
+        }
+
+        .quiz-show-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .quiz-navigation-header {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .quiz-navigation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); /* Điều chỉnh số lượng cột linh hoạt */
+            gap: 12px;
+        }
+
+        .quiz-nav-item {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .quiz-nav-item.correct {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .quiz-nav-item.incorrect {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .quiz-nav-item:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .quiz-shifted {
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+        .quiz-close-icon {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .quiz-close-icon:hover {
+            color: #f44336;
+        }
+
+        .quiz-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+        }
+
+        .quiz-details td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .quiz-details td:first-child {
+            font-weight: bold;
+            width: 150px;
+        }
+
+        .quiz-details tr:last-child td {
+            border-bottom: none;
+        }
+
+    </style>
+</head>
+<body id="page-top" layout:fragment="body">
+
+<h1>Quiz Review</h1>
+
+<button class="quiz-show-button" id="quiz-show-button" onclick="toggleQuizNavigation()">☰</button>
+<div class="quiz-review-container">
+    <div class="quiz-details">
+        <table>
+            <tr>
+                <td><strong>Started on</strong></td>
+                <td><span th:text="${startTime}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>State</strong></td>
+                <td><span th:text="${status}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Completed on</strong></td>
+                <td><span th:text="${finishTime}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Time taken</strong></td>
+                <td><span th:text="${timeTaken}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Marks</strong></td>
+                <td><span th:text="${formattedScore}"></span></td>
+            </tr>
+            <tr>
+                <td><strong>Grade</strong></td>
+                <td><span th:text="${scoreMaxGrade}"></span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+<div class="quiz-navigation-panel" id="quiz-navigation-panel">
+    <span class="quiz-close-icon" onclick="toggleQuizNavigation()">✖</span>
+    <div class="quiz-navigation-header">Quiz Navigation</div>
+    <div class="quiz-navigation-grid">
+        <div th:each="questionDetail, iterStat : ${questionDetails}"
+             class="quiz-nav-item"
+             th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
+             th:onclick="'scrollToQuizQuestion(' + ${iterStat.index} + ')'">
+            <span th:text="${iterStat.index + 1}"></span>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper" id="quiz-content-wrapper">
+    <div th:each="questionDetail, iterStat : ${questionDetails}"
+         class="quiz-review-container"
+         th:id="'quiz-question-' + ${iterStat.index}">
+
+        <div class="question-status"
+             th:classappend="${questionDetail.isCorrect ? 'correct-status' : 'incorrect-status'}"
+             th:text="${questionDetail.isCorrect ? 'Correct' : 'Incorrect'}">
+        </div>
+
+        <div class="question-text">
+            Question <span th:text="${iterStat.index + 1}"></span>:
+            <span th:text="${questionDetail.questionText}"></span>
+        </div>
+
+        <div>
+            <p>Student Response: <span th:text="${questionDetail.studentResponse}"></span></p>
+            <p>Correct Response: <span th:text="${questionDetail.correctResponse}"></span></p>
+        </div>
+
+        <div class="answers" th:each="response : ${questionDetail.allResponses}">
+            <label class="answer">
+                <input type="radio" disabled th:checked="${response == questionDetail.studentResponse}">
+                <span th:text="${response}"></span>
+                <span th:if="${response == questionDetail.studentResponse && response == questionDetail.correctResponse}" class="icon-correct">✔</span>
+                <span th:if="${response == questionDetail.studentResponse && response != questionDetail.correctResponse}" class="icon-incorrect">✘</span>
+                <span th:if="${response != questionDetail.studentResponse && response == questionDetail.correctResponse}" class="icon-correct">✔</span>
+            </label>
+        </div>
+
+        <div class="feedback">
+            Your answer:
+            <span class="student-answer" th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
+                  th:text="${questionDetail.studentResponse}"></span>
+            <br>
+            The correct answer is:
+            <span th:text="${questionDetail.correctResponse}"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleQuizNavigation() {
+        const navPanel = document.getElementById('quiz-navigation-panel');
+        const showBtn = document.getElementById('quiz-show-button');
+
+        navPanel.classList.toggle('quiz-hidden-panel');
+
+        if (navPanel.classList.contains('quiz-hidden-panel')) {
+            showBtn.style.display = 'block';
+        } else {
+            showBtn.style.display = 'none';
+        }
+    }
+
+    function scrollToQuizQuestion(index) {
+        const question = document.getElementById('quiz-question-' + index);
+        if (question) {
+            question.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+</script>
+
+
+</body>
+</html>

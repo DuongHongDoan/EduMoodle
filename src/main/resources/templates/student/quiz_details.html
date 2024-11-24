@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+  <meta charset="utf-8"/>
+<!--  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Details quiz</title> <!-- Cập nhật tiêu đề -->
+
+  <style>
+    /* Style cho bảng và nút bấm */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th, td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .btn {
+      background: linear-gradient(90deg, #00b4db, #0083b0);
+      color: white;
+      padding: 10px 15px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+      position: relative;
+      min-width: 100px;
+    }
+
+    .btn:hover {
+      background: linear-gradient(90deg, #0093c4, #005b96);
+      box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .start-quiz-container {
+      margin: 20px 0;
+      text-align: left; /* Căn trái nút bấm */
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .btn {
+        font-size: 12px;
+        padding: 8px 16px;
+        border-radius: 30px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        font-size: 10px;
+        padding: 6px 12px;
+        border-radius: 20px;
+      }
+    }
+  </style>
+</head>
+<body id="page-top" layout:fragment="body">
+<div class="container">
+
+  <!-- Nút Preview Quiz để bắt đầu làm bài -->
+<!--  <form th:action="@{/user/quiz/start}" method="get">-->
+<!--    <input type="hidden" name="quizId" th:value="${quizId}" />-->
+<!--    <input type="hidden" name="userId" th:value="${userId}" />-->
+<!--    <input type="hidden" name="attemptId" th:value="${attemptId}" /> &lt;!&ndash; Truyền attemptId khi bắt đầu lại bài kiểm tra &ndash;&gt;-->
+<!--    <button type="submit" class="btn">Requiz</button>-->
+<!--  </form>-->
+
+  <h2 style="text-align: center">Chi tiết bài kiểm tra</h2>
+
+  <!-- Kiểm tra nếu danh sách quizDetails rỗng -->
+  <div th:if="${#lists.isEmpty(quizDetails)}">
+    <p style="text-align: center; font-size: 18px; color: #ff0000;">Bạn chưa thực hiện bài kiểm tra này</p>
+  </div>
+
+  <!-- Hiển thị bảng nếu có dữ liệu -->
+  <div th:if="${!#lists.isEmpty(quizDetails)}">
+    <table>
+      <thead>
+      <tr>
+        <th>Mã lần làm bài</th>
+        <th>Số câu đúng</th>
+        <th>Điểm tối đa</th> <!-- Add maxGrade column -->
+        <th>Điểm</th> <!-- Add numberOfQuestions column -->
+        <th>Thời gian bắt đầu</th>
+        <th>Thời gian kết thúc</th>
+        <th>Trạng thái</th>
+        <th>Hành động</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="attempt : ${quizDetails}">
+        <td th:text="${attempt.attemptId}">Attempt ID</td>
+        <td th:text="${#numbers.formatDecimal(attempt.score, 0, 0)} + '/' + ${numberOfQuestions}">Score/Questions</td> <!-- Display score as score/numberOfQuestions without .0 -->
+        <td th:text="${maxGrade}">Max Grade</td> <!-- Display maxGrade -->
+        <td th:text="${(attempt.score / numberOfQuestions) * maxGrade} + ' / ' + ${maxGrade}">Score</td>
+        <td th:text="${attempt.timeStart}">Start Time</td>
+        <td th:text="${attempt.timeFinish}">Finish Time</td>
+        <td th:text="${attempt.status}">Status</td>
+        <td>
+          <form th:action="@{/user/quiz/review}" method="post">
+            <!-- Các trường ẩn chứa thông tin cần truyền -->
+            <input type="hidden" name="attemptId" th:value="${attempt.attemptId}" />
+            <input type="hidden" name="maxGrade" th:value="${maxGrade}" />
+            <input type="hidden" name="numberOfQuestions" th:value="${numberOfQuestions}" />
+            <input type="hidden" name="score" th:value="${attempt.score}" />
+            <input type="hidden" name="startTime" th:value="${attempt.timeStart}" />
+            <input type="hidden" name="finishTime" th:value="${attempt.timeFinish}" />
+            <input type="hidden" name="status" th:value="${attempt.status}" />
+
+            <!-- Trường ẩn để truyền giá trị Score đã tính toán -->
+            <input type="hidden" name="calculatedScore" th:value="${(attempt.score / numberOfQuestions) * maxGrade}" />
+
+            <!-- Trường ẩn để truyền giá trị số câu hỏi/điểm đã định dạng -->
+            <input type="hidden" name="formattedScore" th:value="${#numbers.formatDecimal(attempt.score, 0, 0)} + '/' + ${numberOfQuestions}" />
+
+            <!-- Trường ẩn để truyền giá trị đã tính toán của Score/MaxGrade -->
+            <input type="hidden" name="scoreMaxGrade" th:value="${(attempt.score / numberOfQuestions) * maxGrade} + ' / ' + ${maxGrade}" />
+
+            <button type="submit" class="btn">Xem lại</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+
+</html>

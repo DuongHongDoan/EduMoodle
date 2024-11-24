@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>Chỉnh sửa câu hỏi</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        form label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        form input[type="text"], form textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        form textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        form input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .answer-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .answer-list li {
+            margin-bottom: 10px;
+        }
+
+        .answer-list input[type="text"] {
+            width: calc(100% - 40px);
+            display: inline-block;
+        }
+
+        .answer-list input[type="radio"] {
+            width: 30px;
+            display: inline-block;
+        }
+
+        button[type="submit"] {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button[type="submit"]:hover {
+            opacity: 0.9;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div layout:fragment="body">
+        <form th:action="@{/teacher/edit-question/{id}(id=${question.moodleId})}" method="post">
+            <h1>Chỉnh sửa câu hỏi</h1>
+            <input type="hidden" name="moodleId" th:value="${moodleId}">
+            <input type="hidden" name="categoryId" th:value="${categoryId}">
+
+
+            <div>
+                <label for="name">Tên câu hỏi:</label>
+                <input type="text" id="name" name="name" th:value="${question.name}" required>
+            </div>
+            <div>
+                <label for="questionText">Nội dung câu hỏi:</label>
+                <textarea id="questionText" name="questionText" required th:text="${question.questionText}"></textarea>
+            </div>
+
+            <!-- Lặp qua các đáp án -->
+            <div>
+                <label>Đáp án:</label>
+                <ul>
+                    <li th:each="answer, stat : ${answers}">
+                        <input type="text" name="answers" th:value="${answer.answerText}">
+                        <input type="radio" name="correctAnswer" th:value="${stat.index}" th:checked="${answer.correct}">
+                    </li>
+                </ul>
+            </div>
+
+            <button type="submit">Cập nhật</button>
+        </form>
+    </div>
+
+
+</body>
+</html>

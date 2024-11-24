@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="utf-8"/>
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Details Course</title>
+
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Source Sans Pro', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-weight: 600;
+            font-size: 2rem;
+            margin-top: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e6e6e6;
+        }
+
+        .course-header {
+            text-align: center; /* Aligns course name to the left */
+            color: #0073aa;
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+
+        h2 {
+            color: #333;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .section-title {
+            cursor: pointer;
+            color: #0073aa;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, box-shadow 0.2s ease;
+            border: 1px solid #eaeaea;
+        }
+
+        .section-title:hover {
+            background-color: #e2f0fb;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-title {
+            cursor: pointer;
+            color: #005b8a;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 5px 0;
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .module-title:hover {
+            color: #0073aa;
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .btn {
+            background-color: #0073aa;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #005b8a;
+        }
+
+        .section-content {
+            background-color: #ffffff;
+            padding: 10px 20px;
+            border-left: 4px solid #0073aa;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            border-bottom: 2px solid #e6e6e6;
+            background-color: #fff;
+        }
+
+        .nav-content-wrapper {
+            display: flex;
+            justify-content: center; /* Chỉnh sửa ở đây để căn giữa */
+            padding: 10px 0; /* Thêm padding cho thẩm mỹ */
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-right: 30px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease-in-out;
+        }
+
+        nav a.active {
+            color: #0073aa;
+            border-bottom: 2px solid #0073aa;
+        }
+
+        nav a:hover {
+            color: #0073aa;
+            border-bottom: 2px solid #0073aa;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .active-section {
+            display: block;
+        }
+
+        .section-content {
+            background-color: #ffffff;
+            padding: 10px 20px;
+            border-left: 4px solid #0073aa;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-wrapper {
+            padding: 0 100px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            nav a {
+                font-size: 1rem;
+            }
+
+            .content-wrapper {
+                padding: 0 20px;
+            }
+
+            .nav-content-wrapper {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            color: #ff9e00;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        td {
+            text-align: center;
+            color: #555;
+        }
+
+        .student-name {
+            color: #ff9e00;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .student-role, .student-group, .student-last-access {
+            color: #555;
+        }
+
+        .alphabet-filter {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .alphabet-filter a {
+            margin: 5px;
+            padding: 8px 12px;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .alphabet-filter a:hover, .alphabet-filter a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+
+    </style>
+</head>
+<body id="page-top" layout:fragment="body">
+<!-- Navigation Bar -->
+<nav>
+    <div class="nav-content-wrapper">
+        <a href="#" id="courses-tab" class="active" onclick="showSection('courses')">Khóa học</a>
+        <a href="#" id="students-tab" onclick="showSection('students')">Danh sách sinh viên</a>
+        <a href="#" id="grades-tab" onclick="showSection('grades')">Điểm số</a>
+    </div>
+</nav>
+<div class="content-wrapper">
+
+<!--    <h1>Course Details</h1>-->
+
+    <!-- Courses Section -->
+    <div id="courses" class="section active-section">
+        <p class="course-header">Course Name: <span th:text="${courseDetails.fullname}"></span></p>
+
+        <input type="hidden" id="user-id" name="userId" th:value="${userId}">
+        <input type="hidden" id="moodle-course-id" name="moodleCourseId" th:value="${courseDetails.moodleCourseId}">
+
+        <h2>Sections</h2>
+        <div th:each="section : ${courseDetails.sections}">
+            <p class="section-title" th:text="${section.name}"
+               th:onclick="'toggleSectionContent(' + ${section.name.hashCode()} + ')'"></p>
+
+            <div class="section-content" th:id="'section-content-' + ${section.name.hashCode()}" style="display:none;">
+                <ul>
+                    <li th:each="module : ${section.moduless}">
+                        <p class="module-title"
+                           th:text="${module.name}"
+                           th:data-module-id="${module.id}"
+                           th:data-module-type="${module.moduleType}"
+                           th:data-course-id="${courseDetails.moodleCourseId}"
+                           th:data-instance-id="${module.moduleType == 'forum' ? module.instanceId : ''}"
+                           onclick="submitModuleForm(this)">
+                        </p>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="students" class="section">
+        <h2>Student List</h2>
+        <div th:if="${students != null}">
+            <ul>
+                <li th:each="student : ${students}">
+                    <p th:text="${student.fullName}"></p>
+                </li>
+            </ul>
+        </div>
+        <p th:if="${students == null or students.isEmpty()}">No students found.</p>
+    </div>
+
+    <!-- Grades Section -->
+    <div id="grades" class="section">
+        <h2>Grades</h2>
+        <ul>
+            <li th:each="grade : ${grades}">
+                <p th:text="'Student: ' + ${grade.studentName} + ' - Grade: ' + ${grade.value}"></p>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Hidden Form for Module Submission -->
+<form id="module-form" action="/user/fetch_module_content" method="get" style="display:none;">
+    <input type="hidden" name="moduleId" id="module-id">
+    <input type="hidden" name="moduleType" id="module-type">
+    <input type="hidden" name="userId" id="hidden-user-id" th:value="${userId}">
+    <input type="hidden" name="moodleCourseId" id="hidden-moodle-course-id" th:value="${courseDetails.moodleCourseId}">
+</form>
+
+<script>
+    function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(function (section) {
+            section.classList.remove('active-section');
+        });
+
+        // Remove 'active' class from all tabs
+        document.querySelectorAll('nav a').forEach(function (tab) {
+            tab.classList.remove('active');
+        });
+
+        // Show the selected section
+        const sectionElement = document.getElementById(sectionId);
+        sectionElement.classList.add('active-section'); // Chỉ sử dụng class này để kiểm soát hiển thị
+
+        // Set the selected tab as active
+        document.getElementById(sectionId + '-tab').classList.add('active');
+
+        // Fetch and display content if it's not the "Courses" tab
+        if (sectionId === "students" || sectionId === "grades") {
+            const moodleCourseId = document.getElementById("moodle-course-id").value;
+            const userId = document.getElementById("user-id").value;
+
+            let fetchUrl = `/user/student_list?moodleCourseId=${moodleCourseId}&userId=${userId}&isFragment=true`;
+
+            if (sectionId === "grades") {
+                fetchUrl = `/user/student_grades?moodleCourseId=${moodleCourseId}&userId=${userId}`;
+            }
+
+            fetch(fetchUrl)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById(sectionId).innerHTML = html;
+                })
+                .catch(error => console.error('Error fetching section content:', error));
+        }
+    }
+
+
+    function toggleSectionContent(sectionId) {
+        // Toggle hiển thị nội dung của mỗi section khi bấm vào
+        var sectionContent = document.getElementById("section-content-" + sectionId);
+        sectionContent.style.display = sectionContent.style.display === "none" ? "block" : "none";
+    }
+
+    function submitModuleForm(element) {
+        // Lấy moduleId và moduleType từ thuộc tính của phần tử
+        const moduleId = element.getAttribute("data-module-id");
+        const moduleType = element.getAttribute("data-module-type");
+        const instanceId = element.getAttribute("data-instance-id"); // Lấy instanceId nếu có
+
+        // Gán giá trị vào các input của form
+        document.getElementById("module-id").value = moduleId;
+        document.getElementById("module-type").value = moduleType;
+
+        // Kiểm tra nếu module type là 'forum'
+        if (moduleType === 'forum') {
+            // Tạo input hidden cho instanceId nếu chưa có
+            let instanceInput = document.getElementById("instance-id");
+            if (!instanceInput) {
+                instanceInput = document.createElement("input");
+                instanceInput.type = "hidden";
+                instanceInput.name = "instanceId";
+                instanceInput.id = "instance-id";
+                document.getElementById("module-form").appendChild(instanceInput);
+            }
+            // Gán giá trị cho instanceId
+            instanceInput.value = instanceId;
+        } else {
+            // Nếu không phải forum, loại bỏ instanceId nếu có
+            const instanceInput = document.getElementById("instance-id");
+            if (instanceInput) {
+                instanceInput.remove();
+            }
+        }
+
+        // Gửi form để lấy nội dung module
+        document.getElementById("module-form").submit();
+    }
+
+    window.onscroll = function() {
+        const topButton = document.getElementById("backToTopBtn");
+        if (window.scrollY > 100) {
+            topButton.style.display = "flex"; // "flex" thay vì "block" để dùng với `align-items` và `justify-content`
+        } else {
+            topButton.style.display = "none";
+        }
+    };
+
+    function backToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
