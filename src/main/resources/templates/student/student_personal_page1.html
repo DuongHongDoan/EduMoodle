@@ -91,7 +91,9 @@
 
     <div class="course-card" th:each="course : ${recentlyAccessedCourses}">
         <!-- Bạn có thể sử dụng hình ảnh mặc định hoặc icon cho khóa học -->
-        <img th:src="@{/imgs/courses.png}" alt="Course Image"/>
+        <svg class="random-wave" viewBox="0 0 500 150" preserveAspectRatio="none">
+            <path></path>
+        </svg>
 
         <!-- Hiển thị thông tin chi tiết về khóa học -->
         <h3 th:text="${course.courseName}">Khóa học</h3>

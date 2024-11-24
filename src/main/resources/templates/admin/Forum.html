@@ -50,7 +50,7 @@
         <div class="col d-sm-flex align-items-center justify-content-between">
             <h1 class="h3 mb-3 text-gray-800 text-uppercase forumName" th:utext="${forumName}">Tên Forum</h1>
         </div>
-        <div class="col d-flex justify-content-end">
+        <div sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="col d-flex justify-content-end">
             <button id="addDiscussion" class="btn btn-cate btn-create text-white" style="background-color: #00afef; height: 38px;">
                 <i class="bi bi-plus"></i>Thêm thông báo
             </button>
@@ -100,10 +100,12 @@
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse' + ${discussion.id}" aria-expanded="false" th:attr="aria-controls='collapse' + ${discussion.id}" style="position: relative;">
                     <span class="subject" th:utext="${discussion.subject} + ' (Bởi ' + '<strong>' + ${discussion.userfullname} + '</strong> - ' + ${discussion.modified} + ')'">subject</span>
                     <div class="action-icons">
-                        <a th:href="@{/admin/courses/edit-discussion(courseId=${courseId}, forumId=${forumId}, postId=${discussion.id})}" id="editDiscussion" class="action-icon text-decoration-none">
+                        <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')"
+                           th:href="@{/admin/courses/edit-discussion(courseId=${courseId}, forumId=${forumId}, postId=${discussion.id})}" id="editDiscussion" class="action-icon text-decoration-none">
                             <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
                         </a>
-                        <a class="action-icon text-decoration-none" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${discussion.id}">
+                        <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')"
+                           class="action-icon text-decoration-none" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${discussion.id}">
                             <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
                         </a>
                     </div>
