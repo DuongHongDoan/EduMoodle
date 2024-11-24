@@ -8,6 +8,8 @@ import com.example.edumoodle.Model.*;
 import com.example.edumoodle.Repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,19 +113,158 @@ public class UsersService {
         restTemplate.postForObject(url.toString(), null, String.class);
     }
 
-    //đăng ký bằng cách upload file ds
-    public List<EnrolUserDTO> parseCSVFileEnrolUsers(MultipartFile file, String fileType) throws IOException {
+    public List<EnrolUserDTO> parseFileEnrolUsers(MultipartFile file, String fileType) throws IOException {
         List<EnrolUserDTO> enrolUsers = new ArrayList<>();
-        Set<String> validFields;
 
-        // Kiểm tra loại file đường dùng để nhập
         if ("basicEnrol".equalsIgnoreCase(fileType)) {
-            validFields = Set.of("username", "course_group_code", "role");
+            enrolUsers = parseCSVFileEnrolUsers(file);
         } else if ("DHCTEnrol".equalsIgnoreCase(fileType)) {
-            validFields = Set.of("coursename");
-        } else {
-            throw new IllegalArgumentException("Loại file không hợp lệ: " + fileType);
+            enrolUsers = parseExcelFileEnrolUsers(file);
         }
+        return enrolUsers;
+    }
+
+    private String getStringCellValue(Cell cell, int rowIndex, int colIndex) {
+        if (cell == null) {
+            throw new IllegalArgumentException("Ô tại dòng " + rowIndex + ", cột " + colIndex + " là null.");
+        }
+        if (cell.getCellType() == CellType.STRING) {
+            return cell.getStringCellValue().trim();
+        } else if (cell.getCellType() == CellType.NUMERIC) {
+            return String.valueOf((int) cell.getNumericCellValue()).trim();  // Chuyển số thành String nếu cần
+        } else {
+            throw new IllegalArgumentException("Ô tại dòng " + rowIndex + ", cột " + colIndex + " không phải là kiểu STRING hoặc NUMERIC.");
+        }
+    }
+
+    public List<EnrolUserDTO> parseExcelFileEnrolUsers(MultipartFile file) throws IOException {
+        List<EnrolUserDTO> enrolUsers = new ArrayList<>();
+
+        try(Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            String teacherCode = getStringCellValue(sheet.getRow(2).getCell(1), 2, 1); // Mã CB
+            String courseCode = getStringCellValue(sheet.getRow(3).getCell(1), 3, 1); // Mã MH
+            String courseGroup = getStringCellValue(sheet.getRow(3).getCell(3), 3, 3);// Mã nhóm MH
+            //String academicYear = sheet.getRow(4).getCell(1).getStringCellValue().trim(); // Năm học
+            //String semester = sheet.getRow(4).getCell(3).getStringCellValue().trim(); // Học kỳ
+
+            List<Integer> userIdsGV = new ArrayList<>(List.of());
+            List<Integer> userIdsHV = new ArrayList<>(List.of());
+            //tìm gv
+            String teacherCode00 = teacherCode.length() == 4 ? "00" + teacherCode : teacherCode;
+            System.out.println("Lấy thông tin gv và course: " + teacherCode00 + ", " + courseCode + ", " + courseGroup);
+            UsersDTO usersDTOGV = getUserByUsername(teacherCode00.trim());
+            System.out.println("Xong lệnh UserDTO " + usersDTOGV.getFirstname());
+            UsersEntity usersEntityGV = usersRepository.findByUsername(teacherCode00.trim());
+            if(usersEntityGV != null) {
+                userIdsGV.add(usersDTOGV.getId());
+                CourseGroupsEntity courseGroupsEntity;
+                if(courseGroup.length()==1) {
+                    courseGroupsEntity = courseGroupsRepository.findByGroupName(courseCode + '0' + courseGroup);
+                } else {
+                    courseGroupsEntity = courseGroupsRepository.findByGroupName(courseCode + courseGroup);
+                }
+                if(courseGroupsEntity != null) {
+                    Optional<CoursesEntity> coursesOpt = coursesRepository.findById(courseGroupsEntity.getCoursesEntity().getId_courses());
+                    CoursesEntity coursesEntity = coursesOpt.get();
+                    //xử lý role
+                    String role = "editingteacher";
+                    Optional<RolesEntity> rolesOpt = rolesRepository.findRoleByName(role);
+                    if(rolesOpt.isPresent()) {
+                        RolesEntity rolesEntity = rolesOpt.get();
+                        //kiểm tra người dùng có đky course chưa
+                        List<UserRoleEntity> userRoles = userRoleRepository.findByUsersEntityAndRolesEntity(usersEntityGV, rolesEntity);
+                        int cnt = 0;
+                        for(UserRoleEntity userRole : userRoles){
+                            CourseAssignmentEntity courseAssignment = courseAssignmentRepository.findByCourseGroupsEntityAndUserRoleEntity(courseGroupsEntity, userRole);
+                            if(courseAssignment == null) {
+                                cnt++;
+                            }else {
+                                break;
+                            }
+                        }
+                        if(cnt == userRoles.size()) {
+                            EnrolUserDTO enrolUser = new EnrolUserDTO(userIdsGV, coursesEntity.getMoodleId(), rolesEntity.getMoodleId());
+                            enrolUsers.add(enrolUser);
+                        }else {
+                            throw new IllegalArgumentException("Người dùng giảng viên'" + teacherCode00 + "' đã được đăng ký vào khóa học '" + courseCode + courseGroup + "'!");
+                        }
+                    }else {
+                        throw new IllegalArgumentException("Cột role không hợp lệ, không phải '" + role);
+                    }
+                }else {
+                    throw new IllegalArgumentException("Cột course_group_code không hợp lệ, vì khóa học'" + courseCode + courseGroup + "' chưa được tạo!");
+                }
+            }else {
+                throw new IllegalArgumentException("Cột username không hợp lệ, vì người dùng'" + teacherCode00 + "' chưa được tạo!");
+            }
+            for(int rowIndex = 7; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if(row==null) continue;
+                //lấy mã sv (username)
+                Cell studentIdCell = row.getCell(1);
+                if(studentIdCell == null || studentIdCell.getStringCellValue().isEmpty()) {
+                    continue;
+                }
+                String studentId = getStringCellValue(studentIdCell, rowIndex, 1);
+                System.out.println("Lấy thông tin sv: " + studentId);
+
+                //tìm sv, tìm kiếm username có tồn tại không và thêm nó vào danh sách
+                UsersDTO usersDTO = getUserByUsername(studentId);
+                UsersEntity usersEntity = usersRepository.findByUsername(studentId);
+                if(usersDTO != null) {
+                    userIdsHV.add(usersDTO.getId());
+
+                    //tìm nhóm học phần
+                    CourseGroupsEntity courseGroupsEntity;
+                    if(courseGroup.length()==1) {
+                        courseGroupsEntity = courseGroupsRepository.findByGroupName(courseCode + '0' + courseGroup);
+                    } else {
+                        courseGroupsEntity = courseGroupsRepository.findByGroupName(courseCode + courseGroup);
+                    }
+                    if(courseGroupsEntity != null) {
+                        Optional<CoursesEntity> coursesOpt = coursesRepository.findById(courseGroupsEntity.getCoursesEntity().getId_courses());
+                        CoursesEntity coursesEntity = coursesOpt.get();
+                        //xử lý role
+                        String role = "student";
+                        Optional<RolesEntity> rolesOpt = rolesRepository.findRoleByName(role);
+                        if(rolesOpt.isPresent()) {
+                            RolesEntity rolesEntity = rolesOpt.get();
+                            //kiểm tra người dùng có đky course chưa
+                            List<UserRoleEntity> userRoles = userRoleRepository.findByUsersEntityAndRolesEntity(usersEntity, rolesEntity);
+                            int cnt = 0;
+                            for(UserRoleEntity userRole : userRoles){
+                                CourseAssignmentEntity courseAssignment = courseAssignmentRepository.findByCourseGroupsEntityAndUserRoleEntity(courseGroupsEntity, userRole);
+                                if(courseAssignment == null) {
+                                    cnt++;
+                                }else {
+                                    break;
+                                }
+                            }
+                            if(cnt == userRoles.size()) {
+                                EnrolUserDTO enrolUser = new EnrolUserDTO(userIdsHV, coursesEntity.getMoodleId(), rolesEntity.getMoodleId());
+                                enrolUsers.add(enrolUser);
+                            }else {
+                                throw new IllegalArgumentException("Người dùng học viên'" + studentId + "' đã được đăng ký vào khóa học '" + courseCode + courseGroup + "'!");
+                            }
+                        }else {
+                            throw new IllegalArgumentException("Cột role không hợp lệ, không phải '" + role);
+                        }
+                    }else {
+                        throw new IllegalArgumentException("Cột course_group_code không hợp lệ, vì khóa học'" + courseCode + courseGroup + "' chưa được tạo!");
+                    }
+                }else {
+                    throw new IllegalArgumentException("Cột username không hợp lệ, vì người dùng'" + studentId + "' chưa được tạo!");
+                }
+            }
+        }
+        return enrolUsers;
+    }
+
+    //đăng ký bằng cách upload file ds
+    public List<EnrolUserDTO> parseCSVFileEnrolUsers(MultipartFile file) throws IOException {
+        List<EnrolUserDTO> enrolUsers = new ArrayList<>();
+        Set<String> validFields = Set.of("username", "course_group_code", "role");
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             String headerLine = reader.readLine(); //đọc dòng đầu tiên của file
@@ -547,6 +688,22 @@ public class UsersService {
         return (response != null && response.getUsers() != null && !response.getUsers().isEmpty())
                 ? response.getUsers().get(0)
                 : null;
+    }
+    public List<UsersDTO> getUsersByIds(List<Integer> userIds) {
+        String url = "https://yourmoodlesite.com/webservice/rest/server.php"
+                + "?wstoken=your_token"
+                + "&wsfunction=core_user_get_users_by_field"
+                + "&field=id"
+                + "&moodlewsrestformat=json";
+
+        for (int i = 0; i < userIds.size(); i++) {
+            url += "&values[" + i + "]=" + userIds.get(i);
+        }
+
+        // Gọi API và ánh xạ kết quả trả về vào List<UsersDTO>
+        UsersDTO[] usersArray = restTemplate.getForObject(url, UsersDTO[].class);
+        assert usersArray != null;
+        return Arrays.asList(usersArray);
     }
 
     //    cập nhật người dùng

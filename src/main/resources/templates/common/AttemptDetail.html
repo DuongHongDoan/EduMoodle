@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Xem lại bài làm</title>
+    <style>
+        .courses-name {
+            border-bottom: 2px solid #1f5ca9;
+        }
+
+        .cell {
+            padding: 1px .5em 1px 1em;
+            font-weight: 700;
+            text-align: right;
+            width: 10em;
+            background: #f0f0f0;
+        }
+
+        .question-container {
+            margin: 0 auto 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .answers {
+            margin-top: 10px;
+        }
+
+        .answer {
+            display: block;
+            margin-bottom: 10px;
+            padding-left: 20px;
+        }
+
+        .answer input {
+            margin-right: 10px;
+        }
+
+        .correct-answer {
+            background-color: #e7f7d9;
+            border-left: 5px solid green;
+            padding: 10px;
+        }
+
+        .incorrect-answer {
+            background-color: #fde8e8;
+            border-left: 5px solid red;
+            padding: 10px;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #fff5d8;
+            border-left: 5px solid #f7d479;
+        }
+
+        .student-answer {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .question-status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .correct-status {
+            color: green;
+        }
+
+        .incorrect-status {
+            color: red;
+        }
+
+        .icon-correct {
+            color: green;
+            font-weight: bold;
+        }
+
+        .icon-incorrect {
+            color: red;
+            font-weight: bold;
+        }
+
+        .review-link:hover {
+            text-decoration: underline;
+            color: #094478;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body">
+    <div>
+        <table class="table table-striped table-hover table-bordered mt-3">
+            <tr>
+                <th class="cell">Tài khoản</th>
+                <td th:text="${questionsDetail.attempt.usersDTO.fullname}"></td>
+            </tr>
+            <tr>
+                <th class="cell">Trạng thái</th>
+                <td th:text="${questionsDetail.attempt.state}">Hoàn thành</td>
+            </tr>
+            <tr>
+                <th class="cell">Thời gian bắt đầu</th>
+                <td th:text="${questionsDetail.attempt.getTimestartAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:38 AM</td>
+            </tr>
+            <tr>
+                <th class="cell">Thời gian kết thúc</th>
+                <td th:text="${questionsDetail.attempt.getTimefinishAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:39 AM</td>
+            </tr>
+            <tr>
+                <th class="cell">Thời gian làm bài</th>
+                <td th:text="${questionsDetail.attempt.getDurationFormat}">17 giây</td>
+            </tr>
+            <tr>
+                <th class="cell">Điểm</th>
+                <td th:text="${questionsDetail.attempt.getFormattedGrade} + '/' + ${quiz.getFormattedGrade}"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="row mt-3 mb-3">
+        <div class="col">
+            <a class="review-link text-decoration-none" th:href="@{/manage/courses/report(courseId=${courseId}, quizId=${quizId})}">
+                <i class="bi bi-caret-left-fill"></i> Hoàn thành xem lại
+            </a>
+        </div>
+        <div class="col d-flex justify-content-end">
+            <form method="get" th:action="@{/manage/courses/review/export}">
+                <input type="hidden" name="courseId" th:value="${courseId}">
+                <input type="hidden" name="quizId" th:value="${quizId}">
+                <input type="hidden" name="attemptId" th:value="${attemptId}">
+                <button type="submit" class="btn btn-cate btn-edit text-white" style="margin-left: 5px; background-color: #00afef;">
+                    <i class="bi bi-download"></i> Tải bài thi PDF
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="content-wrapper" id="content-wrapper">
+        <div th:each="questionDetail, iterStat : ${questionDetails}" class="question-container" th:id="'question-' + ${iterStat.index}">
+            <div class="question-status"
+                 th:classappend="${questionDetail.isCorrect ? 'correct-status' : 'incorrect-status'}"
+                 th:text="${questionDetail.isCorrect ? 'Đúng' : 'Sai'}">
+            </div>
+
+            <div class="question-text">
+                Câu <span th:text="${iterStat.index + 1}"></span>:
+                <span th:text="${questionDetail.questionText}"></span>
+            </div>
+
+            <div class="answers" th:each="response : ${questionDetail.allResponses}">
+                <label class="answer">
+                    <input type="radio" disabled th:checked="${response == questionDetail.studentResponse}">
+                    <span th:text="${response}"></span>
+                    <span th:if="${response == questionDetail.studentResponse && response == questionDetail.correctResponse}" class="icon-correct">✔</span>
+                    <span th:if="${response == questionDetail.studentResponse && response != questionDetail.correctResponse}" class="icon-incorrect">✘</span>
+                    <span th:if="${response != questionDetail.studentResponse && response == questionDetail.correctResponse}" class="icon-correct">✔</span>
+                </label>
+            </div>
+
+            <div class="feedback">
+                Câu trả lời:
+                <span class="student-answer" th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
+                      th:text="${questionDetail.studentResponse}"></span>
+                <br>
+                Đáp án đúng:
+                <span th:text="${questionDetail.correctResponse}"></span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

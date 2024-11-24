@@ -21,10 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 @RequestMapping("/admin")
@@ -86,6 +83,19 @@ public class CoursesController {
         //đồng bộ dữ liệu course web-moodle
         coursesService.synchronizeCourses(coursesList);
 
+        Map<Integer, List<CategoriesDTO>> categories = categoriesService.getCategoriesGroupedByParent();
+        if (categories == null || categories.isEmpty()) {
+            // Khởi tạo một Map rỗng để tránh lỗi null pointer
+            categories = new HashMap<>();
+        }
+        // Lấy tổng số khóa học cho từng danh mục cha
+        Map<Integer, Integer> totalCoursesByParent = categoriesService.getTotalCoursesByParent();
+        if (totalCoursesByParent == null) {
+            totalCoursesByParent = new HashMap<>();
+        }
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalCoursesByParent", totalCoursesByParent);
+
         return "admin/ManageCourses";
     }
 
@@ -124,6 +134,18 @@ public class CoursesController {
             model.addAttribute("coursePage", null);
         }
 
+        Map<Integer, List<CategoriesDTO>> categories = categoriesService.getCategoriesGroupedByParent();
+        if (categories == null || categories.isEmpty()) {
+            // Khởi tạo một Map rỗng để tránh lỗi null pointer
+            categories = new HashMap<>();
+        }
+        // Lấy tổng số khóa học cho từng danh mục cha
+        Map<Integer, Integer> totalCoursesByParent = categoriesService.getTotalCoursesByParent();
+        if (totalCoursesByParent == null) {
+            totalCoursesByParent = new HashMap<>();
+        }
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalCoursesByParent", totalCoursesByParent);
         return "admin/ManageCourses";
     }
 
@@ -256,7 +278,7 @@ public class CoursesController {
     }
 
     //url = /admin/courses/create-course
-    @GetMapping("/courses/create-course")
+    @GetMapping("/create-course")
     public String showFormCreateCourse(Model model) {
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
@@ -337,7 +359,7 @@ public class CoursesController {
     }
 
     //url = /admin/courses/create-course-list
-    @GetMapping("/courses/create-course-list")
+    @GetMapping("/upload-courses-list")
     public String showFormCreateCourseList(Model model) {
         List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
         model.addAttribute("schoolYears", schoolYearsEntities);
@@ -355,7 +377,8 @@ public class CoursesController {
     public String createCourseList(@RequestParam("file")MultipartFile file,
                                    @RequestParam("type") String type,
                                    @RequestParam("schoolYearName") Integer schoolYearName,
-                                   @RequestParam("semesterName") Integer semesterName, Model model) {
+                                   @RequestParam("semesterName") Integer semesterName, Model model,
+                                   RedirectAttributes redirectAttributes) {
         if (file.isEmpty()) {
             model.addAttribute("errorMessage", "File không được để trống");
             return "admin/UploadCourseList";
@@ -424,8 +447,8 @@ public class CoursesController {
                     return "admin/UploadCourseList";
                 }
             }
-            model.addAttribute("successMessage", "Tạo danh sách khóa học thành công!");
-            return "admin/UploadCourseList";
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo danh sách khóa học thành công!");
+            return "redirect:/admin/courses";
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", "Lỗi: " + e.getMessage());
 

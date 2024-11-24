@@ -3,7 +3,9 @@ package com.example.edumoodle.Model;
 import com.example.edumoodle.DTO.RecentlyAccessedCourseDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "recently_accessed_courses")
 public class RecentlyAccessedCoursesEntity {

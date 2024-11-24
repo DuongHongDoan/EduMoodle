@@ -83,15 +83,23 @@
                 <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3"><a class="nav-link" aria-current="page" th:href="@{/admin/dashboard}">Tổng quan</a></li>
                 <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
                     <div class="dropdown">
-                        <a class="nav-link" th:href="@{/admin/categories}" role="button" id="QLCourse" aria-expanded="false">
-                            Danh mục - Khóa học
+                        <a class="nav-link" th:href="@{/admin/categories}" role="button" id="QLCategory" aria-expanded="false">
+                            Danh mục
                         </a>
                         <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" th:href="@{/admin/categories}">Xem danh mục</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/courses}">Xem danh sách khóa học</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/categories/create-category}">Thêm danh mục</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/courses/create-course}">Thêm khóa học</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/courses/create-course-list}">Nhập danh sách khóa học</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/create-category}">Thêm danh mục</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
+                    <div class="dropdown">
+                        <a class="nav-link" th:href="@{/admin/courses}" role="button" id="QLCourse" aria-expanded="false">
+                            Khóa học
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
+                            <li><a class="dropdown-item" th:href="@{/admin/create-course}">Thêm khóa học</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/upload-courses-list}">Nhập danh sách khóa học</a></li>
                             <li><a class="dropdown-item" th:href="@{/manage/courses/enrol-users}">Nhập danh sách đăng ký học phần</a></li>
                         </ul>
                     </div>
@@ -103,7 +111,6 @@
                         </a>
 
                         <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" th:href="@{/admin/users}">Xem danh sách thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/add-user}">Thêm thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/upload-users}">Nhập danh sách thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/manage-role}">Quản lý vai trò</a></li>
@@ -112,12 +119,12 @@
                 </li>
                 <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
                     <div class="dropdown">
-                        <a class="nav-link" th:href="@{/baithi}" role="button" id="dropdownMenuLink" aria-expanded="false">
+                        <a class="nav-link" th:href="@{/teacher/courses/view/list_question}" role="button" id="dropdownMenuLink" aria-expanded="false">
                             Bài thi
                         </a>
 
                         <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="#">Action 1</a></li>
+                            <li><a class="dropdown-item" href="#">Danh mục câu hỏi</a></li>
                             <li><a class="dropdown-item" href="#">Action 2</a></li>
                             <li><a class="dropdown-item" href="#">Action 3</a></li>
                         </ul>
@@ -372,8 +379,8 @@
             fileLink.setAttribute('href', '/CSV/danhsachdangky.csv');
             fileLink.textContent = 'danhsachdangky.csv';
         } else if (selectedValue === 'DHCTEnrol') {
-            fileLink.setAttribute('href', '/CSV/DHCT.csv');
-            fileLink.textContent = 'DHCT.csv';
+            fileLink.setAttribute('href', '/CSV/danhsachsinhvien.xlsx');
+            fileLink.textContent = 'danhsachsinhvien.xlsx';
         }else if (selectedValue === 'basicCourse') {
             fileLink.setAttribute('href', '/CSV/danhsachkhoahoc.csv');
             fileLink.textContent = 'danhsachkhoahoc.csv';
@@ -397,20 +404,25 @@
         $('hr').toggle();
         $('.btn-add-resource').toggle();
     });
+
+    //Hiển thị form add discussion
+    $('#addDiscussion').click(function() {
+        $('.formAddDiscussion').toggle();
+    });
 </script>
+
 <script>
-    <!-- script active links group -->
-    document.addEventListener("DOMContentLoaded", function() {
-        var currentPath = window.location.pathname;
+    document.addEventListener("DOMContentLoaded", function () {
+        var currentPath = window.location.pathname; // Lấy đường dẫn hiện tại
 
         // Lấy tất cả các nav-link và dropdown-item trong trang
         var allLinks = document.querySelectorAll('.nav-link, .dropdown-item');
 
-        allLinks.forEach(function(link) {
+        allLinks.forEach(function (link) {
             var linkPath = link.getAttribute('href');
 
-            // So sánh chính xác đường dẫn hiện tại với href của từng liên kết
-            if (currentPath === linkPath) {
+            // Kiểm tra nếu currentPath bắt đầu với linkPath (để xử lý các đường dẫn con)
+            if (currentPath.startsWith(linkPath)) {
                 // Đánh dấu liên kết được chọn là active
                 link.classList.add('active');
 

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Tạo danh mục bài thi</title>
+    <style>
+        .courses-name {
+            border-bottom: 2px solid #1f5ca9;
+        }
+
+        .tab-content {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            border: 1px solid #dee2e6;
+        }
+
+        .topic-name {
+            font-size: 1.5rem;
+        }
+
+        .module-list li{
+            list-style: none;
+            font-size: 1.2rem;
+            border: 1px solid #e1e1e1;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .module-list li a {
+            text-decoration: none;
+        }
+
+        .activity-name-link:hover,
+        .activity-add-text:hover{
+            text-decoration: underline;
+        }
+
+        .btn-cate i {
+            margin-right: 5px;
+        }
+
+        .btn-create:hover {
+            background-color: #7ac7e3 !important;
+        }
+        .listStudent {
+            list-style: none;
+            font-size: 1.2rem;
+        }
+
+        .listStudent li {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .action-icons {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            cursor: pointer;
+            justify-content: end;
+        }
+
+        .gv-sv {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .btn-add-resource, .bi-pencil-fill, .bi-trash, .btn-add-topic, hr {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body">
+    <!-- phần thông báo chỉ xuất hiện khi nhấn nút xóa người dùng -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <button
+    </div>
+</div>
+</body>
+</html>

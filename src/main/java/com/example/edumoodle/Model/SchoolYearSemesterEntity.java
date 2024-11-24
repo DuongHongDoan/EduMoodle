@@ -34,6 +34,11 @@ public class SchoolYearSemesterEntity {
         this.semestersEntity = semestersEntity;
     }
 
+    public SchoolYearSemesterEntity(SchoolYearsEntity schoolYearsEntity, SemestersEntity semestersEntity) {
+        this.schoolYearsEntity = schoolYearsEntity;
+        this.semestersEntity = semestersEntity;
+    }
+
     public Integer getId_schoolYear_semester() {
         return id_schoolYear_semester;
     }

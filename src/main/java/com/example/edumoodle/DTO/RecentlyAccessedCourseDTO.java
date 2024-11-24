@@ -1,7 +1,6 @@
 package com.example.edumoodle.DTO;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class RecentlyAccessedCourseDTO {
 

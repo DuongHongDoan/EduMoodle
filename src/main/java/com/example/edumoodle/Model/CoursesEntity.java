@@ -91,4 +91,12 @@ public class CoursesEntity {
     public void setCategoriesEntity(CategoriesEntity categoriesEntity) {
         this.categoriesEntity = categoriesEntity;
     }
+
+    public List<CourseGroupsEntity> getCourseGroupsEntities() {
+        return courseGroupsEntities;
+    }
+
+    public void setCourseGroupsEntities(List<CourseGroupsEntity> courseGroupsEntities) {
+        this.courseGroupsEntities = courseGroupsEntities;
+    }
 }

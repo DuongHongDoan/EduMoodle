@@ -76,6 +76,46 @@
     .btn-add-resource, .bi-pencil-fill, .bi-trash, .btn-add-topic, hr {
         display: none;
     }
+
+<!--      bảng điểm số -->
+      /* General table styling */
+        #gradesTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #gradesTable th, #gradesTable td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        #gradesTable thead {
+            background-color: #f2f2f2;
+        }
+
+        /* Course Name Row */
+        .course-name-row {
+            font-weight: bold;
+            background-color: #e7f3ff;
+        }
+
+        /* Indent for Quiz/Test rows */
+        .grade-item-row .item-name {
+            padding-left: 20px;
+        }
+
+        /* Item type and name styling */
+        .item-type {
+            display: block;
+            font-weight: bold;
+        }
+
+        /* Student name styling */
+        .student-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
   </style>
 </head>
 <body>
@@ -101,14 +141,20 @@
         <div class="col">
           <!-- Tab navigation -->
             <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
+                <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher') or hasAuthority('student')" class="nav-item" role="presentation">
                     <button class="nav-link active" id="khoahoc-tab" data-bs-toggle="tab" data-bs-target="#khoahoc" type="button" role="tab" aria-controls="khoahoc" aria-selected="true">Khóa học</button>
                 </li>
-                <li class="nav-item" role="presentation">
+                <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher') or hasAuthority('student')" class="nav-item" role="presentation">
                     <button class="nav-link" id="thanhvien-tab" data-bs-toggle="tab" data-bs-target="#thanhvien" type="button" role="tab" aria-controls="thanhvien" aria-selected="false" tabindex="-1">Thành viên</button>
                 </li>
-                <li class="nav-item" role="presentation">
+                <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="nav-item" role="presentation">
                     <button class="nav-link" id="đkthanhvien-tab" data-bs-toggle="tab" data-bs-target="#đkthanhvien" type="button" role="tab" aria-controls="đkthanhvien" aria-selected="false" tabindex="-1">Đăng ký thành viên</button>
+                </li>
+                <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="nav-item" role="presentation">
+                    <button class="nav-link" id="quizBank-tab" data-bs-toggle="tab" data-bs-target="#quizBank" type="button" role="tab" aria-controls="quizBank" aria-selected="false" tabindex="-1">Ngân hàng câu hỏi</button>
+                </li>
+                <li sec:authorize="hasAuthority('student')" class="nav-item" role="presentation">
+                    <button class="nav-link" id="grade-tab" data-bs-toggle="tab" data-bs-target="#grades" type="button" role="tab" aria-controls="grades" aria-selected="false" tabindex="-1">Điểm số</button>
                 </li>
             </ul>
 
@@ -117,7 +163,7 @@
               <!-- Tab Khóa học -->
                 <div class="tab-pane fade active show" id="khoahoc" role="tabpanel" aria-labelledby="khoahoc-tab">
                     <div class="accordion mt-3" id="accordionExample">
-                        <div class="col mb-3 d-flex justify-content-end">
+                        <div sec:authorize="hasAuthority('ADMIN')  or hasAuthority('editingteacher')" class="col mb-3 d-flex justify-content-end">
                             <button id="contentCourseEdit" class="btn btn-primary" style="margin-left: 5px;">
                                 Chỉnh sửa <i class="bi bi-gear"></i>
                             </button>
@@ -162,11 +208,28 @@
                                 <div class="accordion-body">
                                     <ul class="module-list">
                                         <li th:each="module : ${section.modules}" class="activity-item"  th:data-activityid="${module.id}" th:data-typename="${module.modname}" th:data-courseid="${courseDetails.id}">
-                                            <a href="#" style="margin-left: 12px;" class="activity-name-link">
+                                            <!-- Nếu là forum thì hiển thị trang thông báo -->
+                                            <a th:if="${module.modname == 'forum'}" th:href="@{/admin/courses/forum(courseId=${courseDetails.id}, forumId=${module.instance})}" style="margin-left: 12px;" class="activity-name-link">
+                                                <i class="bi bi-card-text"></i>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
+<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+                                            <!-- Nếu là quiz thì hiển thị trang quiz tương ứng -->
+                                            <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'quiz'}" th:href="@{/manage/quiz/view(courseId=${courseDetails.id}, quizId=${module.instance})}" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-check2-square"></i>
                                                 <span th:utext="${module.name}" class="activity-name">Module Name</span>
 <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                                 <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+                                            <a sec:authorize="hasAuthority('student')" th:if="${module.modname == 'quiz'}" th:href="@{/user/quizCourseStudent(quizId=${module.instance}, moodleCourseId=${courseDetails.id}, userId=${userId})}" style="margin-left: 12px;" class="activity-name-link">
+                                                <i class="bi bi-check2-square"></i>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
+<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+                                            <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'quiz'}" th:href="@{/manage/courses/report(courseId=${courseDetails.id}, quizId=${module.instance})}" title="Xem kết quả các bài kiểm tra">
+                                                <i class="bi bi-eye-fill"></i>
                                             </a>
                                             <a href="" th:onclick="editActivity(this); return false;" class="edit-activity">
                                                 <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
@@ -261,7 +324,7 @@
                                 <li th:each="role : ${user.roles}" th:if="(${role.shortname == 'editingteacher'} or ${role.shortname == 'teacher'}) and ${user.username != 'admin'}">
                                     <div class="col"><span th:utext="${user.fullname}">Nguyễn Văn A 111111</span></div>
                                     <div class="col d-flex justify-content-center"><span th:utext="${user.email}">email@gmail.com</span></div>
-                                    <div class="col action-icons">
+                                    <div sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="col action-icons">
                                         <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
                                             <i class="bi bi-trash-fill text-danger"></i>
                                         </a>
@@ -302,7 +365,7 @@
                                 <li th:each="role : ${user.roles}" th:if="${role.shortname == 'student'}">
                                     <div class="col"> <span th:text="${user.fullname}">Ds sinh viên</span></div>
                                     <div class="col d-flex justify-content-center"> <span th:utext="${user.email}">email@gmail.com</span></div>
-                                    <div class="col action-icons">
+                                    <div sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="col action-icons">
                                         <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
                                             <i class="bi bi-trash-fill text-danger"></i>
                                         </a>
@@ -367,6 +430,64 @@
                             </form>
                         </div>
                     </div>
+                </div>
+                <!-- Tab ngân hàng câu hỏi -->
+                <div class="tab-pane fade" id="quizBank" role="tabpanel" aria-labelledby="quizBank-tab">
+                    <div class="row mb-3 justify-content-start">
+                        <div class="col-sm-3 d-grid">
+                            <a th:href="@{/teacher/courses/view/list_question(courseId=${courseDetails.id})}" type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Thêm câu hỏi</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tab Điểm số -->
+                <div class="tab-pane fade" id="grades" role="tabpanel" aria-labelledby="grade-tab">
+<!--                    <div class="row">-->
+<!--                        <h4 class="mb-3">Điểm số</h4>-->
+<!--                    </div>-->
+<!--                    <div class="row">-->
+
+<!--                    </div>-->
+                    <div th:if="${grades != null}">
+                        <table border="1" id="gradesTable">
+                            <thead>
+                            <tr>
+                                <th>Grade Item</th>
+                                <th>Calculated Weight</th>
+                                <th>Grade</th>
+                                <th>Percentage</th>
+                                <th>Feedback</th>
+                                <th>Contribution to Course Total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <!-- Course Name Row with Toggle Button -->
+                            <tr class="course-name-row">
+                                <td th:text="${grades.courseName}" colspan="6">
+                                    Course Name
+                                    <button id="toggleButton" onclick="toggleItems()">Hide Items</button>
+                                </td>
+                            </tr>
+
+                            <!-- Grade Items Rows with Indentation -->
+                            <tr th:each="gradeItem : ${grades.gradeItems}" class="grade-item-row">
+                                <td>
+                                    <!-- Display "Quiz" or "Test" only if it’s not "Course total" -->
+                                    <span th:if="${!gradeItem.itemName.contains('Course total')}"
+                                          th:text="${#strings.startsWith(gradeItem.itemName, 'Quiz') ? 'Quiz' : 'Test'}"
+                                          class="item-type"></span>
+                                    <span th:text="${gradeItem.itemName.replace('Quiz', '').replace('Test', '').trim()}" class="item-name"></span>
+                                </td>
+                                <td th:text="${gradeItem.weight}"></td>
+                                <td th:text="${gradeItem.grade}"></td>
+                                <td th:text="${gradeItem.percentage}"></td>
+                                <td th:text="${gradeItem.feedback}"></td>
+                                <td th:text="${gradeItem.contributionToCourseTotal}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p th:if="${grades == null || grades.gradeItems.isEmpty()}">Không có điểm nào cho sinh viên trong khóa học này.</p>
                 </div>
             </div>
         </div>

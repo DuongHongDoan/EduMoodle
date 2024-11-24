@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách câu hỏi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        .form-container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-container h2 {
+            font-size: 28px;
+            color: #0056b3;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #f7f7f7;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #0056b3;
+            background-color: #fff;
+            outline: none;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group button {
+            background-color: #28a745;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-group button:hover {
+            background-color: #218838;
+        }
+
+        .form-group .cancel-button {
+            background-color: #dc3545;
+            margin-top: 10px;
+        }
+
+        .form-group .cancel-button:hover {
+            background-color: #c82333;
+        }
+
+        .answer-container {
+            margin-top: 40px;
+        }
+
+        .answer-container h3 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .answer-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .answer-list li {
+            background-color: #f4f4f4;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .answer-list li.correct {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .answer-list li span {
+            margin-left: 10px;
+        }
+
+        .answer-list input[type="radio"] {
+            margin-right: 15px;
+        }
+
+        /* Cột thao tác */
+        .question-table th:last-child, .question-table td:last-child {
+            width: 180px; /* Giảm chiều rộng cột thao tác */
+            text-align: center; /* Căn giữa nội dung trong cột thao tác */
+        }
+
+        /* Cập nhật lại nút sửa và xóa trong cột thao tác */
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 5px; /* Giảm khoảng cách giữa các nút */
+            margin-top: 0;
+        }
+
+        .action-buttons a, .action-buttons form button {
+            padding: 6px 12px; /* Giảm padding để nút nhỏ hơn */
+            font-size: 14px; /* Giảm kích thước font */
+            border-radius: 6px; /* Giảm radius để tạo kiểu nhỏ nhắn hơn */
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-block;
+        }
+
+        /* Nút sửa */
+        .action-buttons a {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            text-decoration: none;
+        }
+
+        .action-buttons a:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* Nút xóa */
+        .action-buttons .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .action-buttons .btn-delete:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .action-buttons button {
+            width: auto;
+            padding: 6px 12px; /* Giảm padding để nút nhỏ hơn */
+            font-size: 14px; /* Giảm kích thước font */
+            border-radius: 6px; /* Giảm radius */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .action-buttons button:active {
+            transform: scale(0.98);
+        }
+
+
+        .add-question-button {
+            display: inline-block;
+            background-color: white;
+            color: #0056b3;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 18px;
+            margin-bottom: 20px;
+            border: 2px solid #0056b3;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-question-button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        .question-name a {
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .question-name a:hover {
+            text-decoration: underline;
+        }
+
+        .question-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-color: white;
+        }
+
+        .question-table th, .question-table td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .question-table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+        .no-questions {
+            text-align: center;
+            color: #777;
+            font-size: 18px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        .alert-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .alert-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+    </style>
+
+</head>
+<body layout:fragment="body">
+
+<h1>Danh sách câu hỏi</h1>
+
+<!-- Hiển thị số lượng câu hỏi -->
+<div th:if="${questions != null}">
+    <p><strong>Số lượng câu hỏi:</strong> <span th:text="${questions.size()}">0</span></p>
+</div>
+
+<!-- Nút Thêm câu hỏi -->
+<div class="add-question-button">
+    <a th:href="@{/teacher/courses/view/categories/{categoryId}/add-question(categoryId=${categoryId})}">
+        Thêm câu hỏi
+    </a>
+</div>
+<div th:if="${response != null}">
+    <div class="alert alert-success" th:text="${response}"></div>
+</div>
+
+<div th:if="${error != null}">
+    <div class="alert alert-danger" th:text="${error}"></div>
+</div>
+
+
+
+
+<table class="question-table">
+    <thead>
+    <tr>
+        <th>Tên câu hỏi</th>
+        <th>Loại câu hỏi</th>
+        <th>Nội dung câu hỏi</th>
+        <th>Đáp án</th>
+        <th>Thao tác</th>
+    </tr>
+    </thead>
+    <tbody th:if="${questions != null}" th:each="question : ${questions}">
+    <tr>
+        <td class="question-name">
+            <a href="#" th:text="${question.name}"
+               onclick="getAnswers(${question.id}); return false;">Tên câu hỏi</a>
+        </td>
+        <td th:text="${question.qtype}">Loại câu hỏi</td>
+        <td th:text="${question.questionText}">Nội dung câu hỏi</td>
+        <td>
+            <ul>
+                <li th:each="answer : ${question.answers}">
+                    <span th:text="${answer.answerText}"></span>
+                    <span th:if="${answer.correct}" style="color: green;">(Đúng)</span>
+                </li>
+            </ul>
+        </td>
+        <td class="action-buttons">
+
+            <a th:href="@{/teacher/edit-question/{id}(id=${question.id})}"
+               class="btn btn-primary">Chỉnh sửa</a>
+
+
+
+
+            <form th:action="@{/teacher/questions/delete/{id}(id=${question.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?');">
+                <input type="hidden" name="categoryId" th:value="${categoryId}" />
+                <button type="submit" class="btn-delete">
+                    <i class="fas fa-trash-alt"></i> Xóa
+                </button>
+            </form>
+
+<!--            <button type="button" class="preview-button">-->
+<!--                <a th:href="@{/teacher/questions/preview/{id}(id=${question.id})}" style="color: white; text-decoration: none;">Xem trước</a>-->
+<!--            </button>-->
+
+        </td>
+    </tr>
+    </tbody>
+    <tbody th:if="${questions == null}">
+    <tr>
+        <td colspan="4" class="no-questions">Không có câu hỏi nào.</td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    function editQuestion(questionId) {
+        alert('Chỉnh sửa câu hỏi với ID: ' + questionId);
+    }
+
+    function deleteQuestion(questionId) {
+        if (confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) {
+            alert('Đã xóa câu hỏi với ID: ' + questionId);
+        }
+    }
+</script>
+
+</body>
+</html>

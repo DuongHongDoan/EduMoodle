@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE" th:utext="${forumName}">Vai trò người dùng</title>
+    <style>
+        .btn-create:hover {
+            background-color: #7ac7e3 !important;
+        }
+
+        .btn-reset:hover {
+            background-color: #aeaeae !important;
+        }
+
+        .btn-save:hover {
+            background-color: #7ac7e3 !important;
+        }
+
+        .forumName {
+            border-bottom: 2px solid #0056b3;
+        }
+
+        .subject {
+            font-size: 18px;
+        }
+
+        .action-icons {
+            position: absolute;
+            right: 50px;
+            font-size: 18px;
+        }
+
+        .action-icon {
+            border: none;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body" >
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 class="h3 mb-3 text-gray-800 text-uppercase forumName" th:utext="${forumName}">Tên Forum</h1>
+        </div>
+        <div class="col d-flex justify-content-end">
+            <button id="addDiscussion" class="btn btn-cate btn-create text-white" style="background-color: #00afef; height: 38px;">
+                <i class="bi bi-plus"></i>Thêm thông báo
+            </button>
+        </div>
+    </div>
+
+    <!-- form thêm discussion -->
+    <div class="row gx-4 gx-lg-5 align-items-center justify-content-center text-center formAddDiscussion" style="display: none;">
+        <div class="col-lg-7 align-self-lg-center">
+            <form method="post" th:action="@{/admin/courses/add-discussion}" enctype="multipart/form-data">
+                <input type="hidden" th:value="${forumId}" name="forumId">
+                <input type="hidden" th:value="${courseId}" name="courseId">
+                <input type="hidden" value="" name="postId">
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3" for="subject">Tiêu đề:</label>
+                    <div class="col-sm-1 text-danger">*</div>
+                    <div class="col-sm-8">
+                        <input class="form-control" id="subject" name="subject" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-center">
+                    <label class="col-sm-3" for="message">Nội dung:</label>
+                    <div class="col-sm-1 text-danger">*</div>
+                    <div class="col-sm-8">
+                        <textarea rows="5" class="form-control" id="message" name="message" required></textarea>
+                    </div>
+                </div>
+
+                <div class="row mb-3 justify-content-end">
+                    <div class="col-sm-2 d-grid">
+                        <button type="reset" class="btn btn-reset bg-secondary text-white">Đặt lại</button>
+                    </div>
+
+                    <div class="col-sm-2 d-grid">
+                        <button type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Lưu</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hiển thị danh sách thông báo -->
+    <div class="accordion mt-2" th:if="${forumDiscussions != null}">
+        <div th:each="discussion : ${forumDiscussions}" class="accordion-item">
+            <h2 class="accordion-header" th:attr="id='heading' + ${discussion.id}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse' + ${discussion.id}" aria-expanded="false" th:attr="aria-controls='collapse' + ${discussion.id}" style="position: relative;">
+                    <span class="subject" th:utext="${discussion.subject} + ' (Bởi ' + '<strong>' + ${discussion.userfullname} + '</strong> - ' + ${discussion.modified} + ')'">subject</span>
+                    <div class="action-icons">
+                        <a th:href="@{/admin/courses/edit-discussion(courseId=${courseId}, forumId=${forumId}, postId=${discussion.id})}" id="editDiscussion" class="action-icon text-decoration-none">
+                            <i class="bi bi-pencil-fill text-warning" style="margin-left: 8px;"></i>
+                        </a>
+                        <a class="action-icon text-decoration-none" href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${discussion.id}">
+                            <i class="bi bi-trash text-danger" style="margin-left: 8px;"></i>
+                        </a>
+                    </div>
+                </button>
+            </h2>
+            <!-- The Modal -->
+            <div class="modal fade" th:id="'deleteModal' + ${discussion.id}">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <h4 class="modal-title">Thông báo</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <!-- Modal body -->
+                        <div class="modal-body">
+                            <span th:utext="'Bạn có chắc muốn xóa thảo luận ' + '<strong>' + ${discussion.subject} + '</strong>' + ' không?'"></span>
+                        </div>
+                        <!-- Modal footer -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                            <a th:href="@{/admin/courses/delete-discussion(courseId=${courseId}, forumId=${forumId}, postId=${discussion.id})}" class="btn btn-danger">Xóa</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:id="'collapse' + ${discussion.id}" class="accordion-collapse collapse"
+                 th:attr="aria-labelledby='heading'+${discussion.id}" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    <p th:utext="${discussion.message}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Xử lý nếu không có thông báo nào -->
+    <div class="accordion mt-2" th:if="${forumDiscussions == null} or ${forumDiscussions.size()} == 0">
+        <span class="fst-italic">Chưa có thông báo nào trong diễn đàn này.</span>
+    </div>
+</div>
+</body>
+</html>
