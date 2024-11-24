@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 
+=======
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
 <!DOCTYPE html>
 <html lang="vi"
       xmlns:th="http://www.thymeleaf.org"
@@ -106,17 +109,45 @@
             <label for="parentCategoryForColumn2">Chọn danh mục cha: <span class="required">*</span></label>
             <select name="parentCategoryForColumn2" id="parentCategoryForColumn2" class="form-control" required>
                 <option value="">-- Chọn danh mục --</option>
+<<<<<<< HEAD
                 <th:block th:each="category : ${parentCategories}">
                     <option th:value="${category.id}" th:text="${category.name}"></option>
                     <!-- Gọi fragment đệ quy nếu tồn tại danh mục con -->
                     <th:block th:if="${category.children != null}">
                         <th:block th:insert="this :: renderOptions(children=${category.children}, indent='&nbsp;&nbsp;&nbsp;&nbsp;')"/>
+=======
+                <th:block th:each="category : ${categories}">
+                    <option th:value="${category.id}" th:text="${category.name}"></option>
+                </th:block>
+<!--                <option value="0">&#45;&#45; Không có &#45;&#45;</option>-->
+                <th:block th:each="category : ${parentCategories}">
+                    <option th:value="${category.id}" th:text="${category.name}"></option>
+                    <th:block th:if="${category.children != null}">
+                        <th:block th:each="child : ${category.children}">
+                            <option th:value="${child.id}" th:text="'  &nbsp;&nbsp;&nbsp;&nbsp;  ' + ${child.name}"></option>
+                            <th:block th:if="${child.children != null}">
+                                <th:block th:each="subChild : ${child.children}">
+                                    <option th:value="${subChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subChild.name}"></option>
+                                    <th:block th:each="subSubChild : ${subChild.children}">
+                                        <option th:value="${subSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubChild.name}"></option>
+                                        <th:block th:each="subSubSubChild : ${subSubChild.children}">
+                                            <option th:value="${subSubSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubSubChild.name}"></option>
+
+                                        </th:block>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
+                        </th:block>
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
                     </th:block>
                 </th:block>
             </select>
         </div>
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
         <div class="form-group">
             <label for="file">Chọn file Excel: <span class="required">*</span></label>
             <input type="file" id="file" name="file" class="form-control" required />
@@ -150,6 +181,7 @@
                 <!--                <option value="0">&#45;&#45; Không có &#45;&#45;</option>-->
                 <th:block th:each="category : ${parentCategories}">
                     <option th:value="${category.id}" th:text="${category.name}"></option>
+<<<<<<< HEAD
                     <!-- Gọi fragment đệ quy để xử lý danh mục con -->
                     <th:block th:if="${category.children != null}">
                         <th:block th:insert="this :: renderOptions(children=${category.children}, indent='&nbsp;&nbsp;&nbsp;&nbsp;')"/>
@@ -167,6 +199,26 @@
                     </th:block>
                 </th:block>
 
+=======
+                    <th:block th:if="${category.children != null}">
+                        <th:block th:each="child : ${category.children}">
+                            <option th:value="${child.id}" th:text="'  &nbsp;&nbsp;&nbsp;&nbsp;  ' + ${child.name}"></option>
+                            <th:block th:if="${child.children != null}">
+                                <th:block th:each="subChild : ${child.children}">
+                                    <option th:value="${subChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subChild.name}"></option>
+                                    <th:block th:each="subSubChild : ${subChild.children}">
+                                        <option th:value="${subSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubChild.name}"></option>
+                                        <th:block th:each="subSubSubChild : ${subSubChild.children}">
+                                            <option th:value="${subSubSubChild.id}" th:text="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${subSubSubChild.name}"></option>
+
+                                        </th:block>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
+                        </th:block>
+                    </th:block>
+                </th:block>
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
             </select>
         </div>
 
@@ -177,4 +229,8 @@
     </form>
 </div>
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726

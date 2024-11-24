@@ -132,7 +132,11 @@
             Thêm danh mục câu hỏi
         </a>
     </div>
+<<<<<<< HEAD
 
+=======
+<!--    <p class="category-count">Số lượng chủ đề: <span th:text="${#lists.size(questionCategories)}"></span></p>-->
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
     <ul class="module-list">
         <th:block th:each="category : ${questionCategories}">
             <li>
@@ -141,6 +145,7 @@
                        class="category-name"
                        th:text="${category.name} + ' (' + ${category.questionCount} + ')'">
                     </a>
+<<<<<<< HEAD
                     <div class="btn-group">
                         <a th:href="@{/teacher/courses/view/update/{id}(id=${category.id}, courseId=${courseId})}" class="btn-edit">
                             <i class="fas fa-edit"></i> Sửa
@@ -159,11 +164,180 @@
                 <th:block th:if="${category.children != null}">
                     <ul>
                         <th:block th:insert="this :: renderCategory(children=${category.children})" />
+=======
+<!--                    <div class="btn-group">-->
+<!--                        <a th:href="@{/teacher/courses/view/update/{id}(id=${category.id}, courseId=${courseId})}" class="btn-edit">-->
+<!--                            <i class="fas fa-edit"></i> Sửa-->
+<!--                        </a>-->
+<!--                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${category.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">-->
+<!--                            <input type="hidden" name="courseId" th:value="${courseId}" />-->
+<!--                            <button type="submit" class="btn-delete">-->
+<!--                                <i class="fas fa-trash-alt"></i> Xóa-->
+<!--                            </button>-->
+<!--                        </form>-->
+<!--                    </div>-->
+                </div>
+                <!-- Hiển thị danh mục con cấp 1 -->
+                <th:block th:if="${category.children != null}">
+                    <ul>
+                        <th:block th:each="child : ${category.children}">
+                            <li>
+                                <div class="category-item">
+                                    <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${child.id})}"
+                                       class="category-name"
+                                       th:text="${child.name}+ ' (' + ${child.questionCount} + ')'">
+                                    </a>
+                                    <div class="btn-group">
+                                        <a th:href="@{/teacher/courses/view/update/{id}(id=${child.id}, courseId=${courseId})}" class="btn-edit">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+                                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${child.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                            <input type="hidden" name="courseId" th:value="${courseId}" />
+                                            <button type="submit" class="btn-delete">
+                                                <i class="fas fa-trash-alt"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <!-- Hiển thị danh mục con cấp 2 -->
+                                <th:block th:if="${child.children != null}">
+                                    <ul>
+                                        <th:block th:each="subChild : ${child.children}">
+                                            <li>
+                                                <div class="category-item">
+                                                    <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${subChild.id})}"
+                                                       class="category-name"
+                                                       th:text="${subChild.name}+ ' (' + ${subChild.questionCount} + ')'">
+                                                    </a>
+                                                    <div class="btn-group">
+                                                        <a th:href="@{/teacher/courses/view/update/{id}(id=${subChild.id}, courseId=${courseId})}" class="btn-edit">
+                                                            <i class="fas fa-edit"></i> Sửa
+                                                        </a>
+                                                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${subChild.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                                            <input type="hidden" name="courseId" th:value="${courseId}" />
+                                                            <button type="submit" class="btn-delete">
+                                                                <i class="fas fa-trash-alt"></i> Xóa
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                <!-- Hiển thị danh mục con cấp 3 -->
+                                                <th:block th:if="${subChild.children != null}">
+                                                    <ul>
+                                                        <th:block th:each="subSubChild : ${subChild.children}">
+                                                            <li>
+                                                                <div class="category-item">
+                                                                    <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${subSubChild.id})}"
+                                                                       class="category-name"
+                                                                       th:text="${subSubChild.name}+ ' (' + ${subSubChild.questionCount} + ')'">
+                                                                    </a>
+                                                                    <div class="btn-group">
+                                                                        <a th:href="@{/teacher/courses/view/update/{id}(id=${subSubChild.id}, courseId=${courseId})}" class="btn-edit">
+                                                                            <i class="fas fa-edit"></i> Sửa
+                                                                        </a>
+                                                                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${subSubChild.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                                                            <input type="hidden" name="courseId" th:value="${courseId}" />
+                                                                            <button type="submit" class="btn-delete">
+                                                                                <i class="fas fa-trash-alt"></i> Xóa
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Hiển thị danh mục con cấp 4 -->
+                                                                <th:block th:if="${subSubChild.children != null}">
+                                                                    <ul>
+                                                                        <th:block th:each="subSubSubChild : ${subSubChild.children}">
+                                                                            <li>
+                                                                                <div class="category-item">
+                                                                                    <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${subSubSubChild.id})}"
+                                                                                       class="category-name"
+                                                                                        th:text="${subSubSubChild.name}+ ' (' + ${subSubSubChild.questionCount} + ')'">
+                                                                                    </a>
+                                                                                    <div class="btn-group">
+                                                                                        <a th:href="@{/teacher/courses/view/update/{id}(id=${subSubSubChild.id}, courseId=${courseId})}" class="btn-edit">
+                                                                                            <i class="fas fa-edit"></i> Sửa
+                                                                                        </a>
+                                                                                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${subSubSubChild.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                                                                            <input type="hidden" name="courseId" th:value="${courseId}" />
+                                                                                            <button type="submit" class="btn-delete">
+                                                                                                <i class="fas fa-trash-alt"></i> Xóa
+                                                                                            </button>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <!-- Hiển thị danh mục con cấp 5 -->
+                                                                                <th:block th:if="${subSubSubChild.children != null}">
+                                                                                    <ul>
+                                                                                        <th:block th:each="subSubSubSubChild : ${subSubSubChild.children}">
+                                                                                            <li>
+                                                                                                <div class="category-item">
+                                                                                                    <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${subSubSubSubChild.id})}"
+                                                                                                       class="category-name"
+                                                                                                       th:text="${subSubSubChild.name}+ ' (' + ${subSubSubChild.questionCount} + ')'">
+                                                                                                    </a>
+                                                                                                    <div class="btn-group">
+                                                                                                        <a th:href="@{/teacher/courses/view/update/{id}(id=${subSubSubSubChild.id}, courseId=${courseId})}" class="btn-edit">
+                                                                                                            <i class="fas fa-edit"></i> Sửa
+                                                                                                        </a>
+                                                                                                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${subSubSubSubChild.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                                                                                            <input type="hidden" name="courseId" th:value="${courseId}" />
+                                                                                                            <button type="submit" class="btn-delete">
+                                                                                                                <i class="fas fa-trash-alt"></i> Xóa
+                                                                                                            </button>
+                                                                                                        </form>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <!-- Hiển thị danh mục con cấp 6 -->
+                                                                                                <th:block th:if="${subSubSubSubChild.children != null}">
+                                                                                                    <ul>
+                                                                                                        <th:block th:each="subSubSubSubSubChild : ${subSubSubSubChild.children}">
+                                                                                                            <li>
+                                                                                                                <div class="category-item">
+                                                                                                                    <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${subSubSubSubSubChild.id})}"
+                                                                                                                       class="category-name"
+                                                                                                                       th:text="${subSubSubChild.name}+ ' (' + ${subSubSubChild.questionCount} + ')'">
+                                                                                                                    </a>
+                                                                                                                    <div class="btn-group">
+                                                                                                                        <a th:href="@{/teacher/courses/view/update/{id}(id=${subSubSubSubSubChild.id}, courseId=${courseId})}" class="btn-edit">
+                                                                                                                            <i class="fas fa-edit"></i> Sửa
+                                                                                                                        </a>
+                                                                                                                        <form th:action="@{/teacher/courses/view/Delete_QuestionCategory/{id}(id=${subSubSubSubSubChild.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này?');">
+                                                                                                                            <input type="hidden" name="courseId" th:value="${courseId}" />
+                                                                                                                            <button type="submit" class="btn-delete">
+                                                                                                                                <i class="fas fa-trash-alt"></i> Xóa
+                                                                                                                            </button>
+                                                                                                                        </form>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </li>
+                                                                                                        </th:block>
+                                                                                                    </ul>
+                                                                                                </th:block>
+                                                                                            </li>
+                                                                                        </th:block>
+                                                                                    </ul>
+                                                                                </th:block>
+                                                                            </li>
+                                                                        </th:block>
+                                                                    </ul>
+                                                                </th:block>
+                                                            </li>
+                                                        </th:block>
+                                                    </ul>
+                                                </th:block>
+                                            </li>
+                                        </th:block>
+                                    </ul>
+                                </th:block>
+                            </li>
+                        </th:block>
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
                     </ul>
                 </th:block>
             </li>
         </th:block>
     </ul>
+<<<<<<< HEAD
 
     <!-- Fragment để hiển thị danh mục con -->
     <th:block th:fragment="renderCategory(children)">
@@ -199,6 +373,8 @@
     </th:block>
 
 
+=======
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
 </div>
 <!--Phân trang-->
 <div>
@@ -213,4 +389,8 @@
     </ul>
 </div>
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726

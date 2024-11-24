@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout}">
+<head>
+    <title th:utext="'Course: ' + ${courseDetails.fullname}" layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">{Găn tên khóa học}</title>
+    <style>
+        .courses-name {
+            border-bottom: 2px solid #1f5ca9;
+        }
+
+        .tab-content {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            border: 1px solid #dee2e6;
+        }
+
+        .topic-name {
+            font-size: 1.5rem;
+        }
+
+        .module-list li{
+            list-style: none;
+            font-size: 1.2rem;
+            border: 1px solid #e1e1e1;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .module-list li a {
+            text-decoration: none;
+        }
+
+        .module-list li a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-cate i {
+            margin-right: 5px;
+        }
+
+        .btn-create:hover {
+            background-color: #7ac7e3 !important;
+        }
+        .listStudent {
+            list-style: none;
+            font-size: 1.2rem;
+        }
+
+        .listStudent li {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .action-icons {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            cursor: pointer;
+            justify-content: end;
+        }
+
+        .gv-sv {
+            border-bottom: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-3 mb-3" layout:fragment="body">
+    <!-- phần thông báo chỉ xuất hiện khi nhấn nút xóa người dùng -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="row">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 th:utext="${courseDetails.fullname}" class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
+        </div>
+    </div>
+
+
+    <div class="row mt-3">
+        <div class="col">
+            <!-- Tab navigation -->
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="khoahoc-tab" data-bs-toggle="tab" data-bs-target="#khoahoc" type="button" role="tab" aria-controls="khoahoc" aria-selected="true">Khóa học</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="thanhvien-tab" data-bs-toggle="tab" data-bs-target="#thanhvien" type="button" role="tab" aria-controls="thanhvien" aria-selected="false" tabindex="-1">Thành viên</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="đkthanhvien-tab" data-bs-toggle="tab" data-bs-target="#đkthanhvien" type="button" role="tab" aria-controls="đkthanhvien" aria-selected="false" tabindex="-1">Đăng ký thành viên</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link" th:href="@{/teacher/courses/view/list_question(courseId=${courseDetails.id})}" role="tab">Câu hỏi</a>
+
+                </li>
+            </ul>
+
+
+
+            <!-- Tab content -->
+            <div class="tab-content" id="myTabContent">
+                <!-- Tab Khóa học -->
+                <div class="tab-pane fade active show" id="khoahoc" role="tabpanel" aria-labelledby="khoahoc-tab">
+                    <div class="accordion mt-3" id="accordionExample">
+                        <div th:each="section : ${sections}" class="accordion-item">
+                            <h2 class="accordion-header" th:id="'heading'+${section.id}">
+                                <button class="accordion-button collapsed topic-name" type="button" data-bs-toggle="collapse"
+                                        th:data-bs-target="'#collapse' + ${section.id}" aria-expanded="false"
+                                        th:attr="aria-controls='collapse'+${section.id}">
+                                    <span th:utext="${section.name}">Topic Name</span>
+                                </button>
+                            </h2>
+                            <div th:id="'collapse' + ${section.id}" class="accordion-collapse collapse"
+                                 th:attr="aria-labelledby='heading'+${section.id}" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <ul class="module-list">
+                                        <li th:each="module : ${section.modules}">
+                                            <a href="#">
+                                                <span th:utext="${module.name}">Module Name</span>
+                                                (<span th:utext="${module.modname}">Module Type</span>)
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Thành viên -->
+                <div class="tab-pane fade" id="thanhvien" role="tabpanel" aria-labelledby="thanhvien-tab">
+                    <!-- Giáo viên -->
+                    <div class="row">
+                        <div class="col-12 d-sm-flex align-items-center gv-sv">
+                            <h4 class="fw-bold">Giáo viên</h4>
+                        </div>
+                        <div class="col align-items-center">
+                            <ul th:each="user : ${enrolledUsers}" class="listStudent">
+                                <li th:each="role : ${user.roles}" th:if="${role.shortname == 'editingteacher'} and ${user.username != 'admin'}">
+                                    <div class="col"><span th:utext="${user.fullname}">Nguyễn Văn A 111111</span></div>
+                                    <div class="col d-flex justify-content-center"><span th:utext="${user.email}">email@gmail.com</span></div>
+                                    <div class="col action-icons">
+                                        <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </a>
+                                    </div>
+                                </li>
+                                <!-- The Modal -->
+                                <div class="modal fade" th:id="'deleteModal' + ${user.id}">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <!-- Modal Header -->
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">Thông báo</h4>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <!-- Modal body -->
+                                            <div class="modal-body">
+                                                <span th:text="'Bạn có chắc muốn hủy ghi danh người dùng ' + ${user.fullname} + ' ra khỏi khóa học không?'"></span>
+                                            </div>
+                                            <!-- Modal footer -->
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                <a th:href="@{/admin/courses/unenrol(userid=${user.id}, courseid=${course})}" class="btn btn-danger">Xóa</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Học viên -->
+                    <div class="row">
+                        <div class="col-12 d-sm-flex align-items-center gv-sv">
+                            <h4 class="fw-bold mt-4">Sinh viên (<span th:text="${studentCount}" class="text-muted">(22)</span>)</h4>
+                        </div>
+                        <div class="col align-items-center">
+                            <ul th:each="user : ${enrolledUsers}" class="listStudent">
+                                <li th:each="role : ${user.roles}" th:if="${role.shortname == 'student'}">
+                                    <div class="col"> <span th:text="${user.fullname}">Ds sinh viên</span></div>
+                                    <div class="col d-flex justify-content-center"> <span th:utext="${user.email}">email@gmail.com</span></div>
+                                    <div class="col action-icons">
+                                        <a href="" data-bs-toggle="modal" th:data-bs-target="'#deleteModal' + ${user.id}">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </a>
+                                    </div>
+                                </li>
+                                <!-- The Modal -->
+                                <div class="modal fade" th:id="'deleteModal' + ${user.id}">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <!-- Modal Header -->
+                                            <div class="modal-header">
+                                                <h4 class="modal-title">Thông báo</h4>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <!-- Modal body -->
+                                            <div class="modal-body">
+                                                <span th:text="'Bạn có chắc muốn hủy ghi danh người dùng ' + ${user.fullname} + ' ra khỏi khóa học không?'"></span>
+                                            </div>
+                                            <!-- Modal footer -->
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn text-bg-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                                                <a th:href="@{/admin/courses/unenrol(userid=${user.id}, courseid=${course})}" class="btn btn-danger">Xóa</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tab Đăng ký Thành viên -->
+                <div class="tab-pane fade" id="đkthanhvien" role="tabpanel" aria-labelledby="đkthanhvien-tab">
+                    <div class="row">
+                        <h4 class="mb-3">Tùy chọn đăng ký</h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <form id="enrolForm" th:action="@{/admin/courses/enrolUser}" method="post">
+                                <input type="hidden" name="courseId" th:value="${course}" id="e-id"/>
+                                <div class="mb-3">
+                                    <label for="selectUsers" class="form-label">Chọn người dùng</label>
+                                    <select multiple class="form-select" id="selectUsers" name="userIds" required>
+                                        <option th:each="user : ${usersList}"
+                                                th:value="${user.id}"
+                                                th:utext="${user.firstname} + ' ' + ${user.lastname}"></option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="selectRole" class="form-label">Chọn vai trò</label>
+                                    <select class="form-select" id="selectRole" name="roleId" required
+                                            style="display: inline;width: 28%; margin-left: 38px;">
+                                        <option value="5">Student</option>
+                                        <option value="3">Teacher</option>
+                                    </select>
+                                </div>
+                                <div class="row mb-3 justify-content-start">
+                                    <div class="col-sm-3 d-grid">
+                                        <button type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Đăng ký</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -115,9 +115,15 @@
     <h1>Tải file txt</h1>
     <form action="/api/questions/import" method="post" enctype="multipart/form-data">
         <input type="hidden" name="categoryId" th:value="${categoryId}" />
+<<<<<<< HEAD
         <!--        <label for="categoryId">Category ID:</label>-->
         <!--        <input type="number" id="categoryId" name="categoryId" required>-->
         <!--        <br><br>-->
+=======
+<!--        <label for="categoryId">Category ID:</label>-->
+<!--        <input type="number" id="categoryId" name="categoryId" required>-->
+<!--        <br><br>-->
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
         <label for="file">Tải lên .txt file:</label>
         <input type="file" id="file" name="file" accept=".txt" required>
         <br><br>
@@ -174,7 +180,11 @@
 
         <!-- Hướng dẫn cho Tự luận -->
         <div id="essay-container" class="hidden">
+<<<<<<< HEAD
             <!--            <input type="text" name="answers[]" placeholder="Nhập đáp án 1" required />-->
+=======
+<!--            <input type="text" name="answers[]" placeholder="Nhập đáp án 1" required />-->
+>>>>>>> 47c62b59e48e958ed8320ae0d8a395e29824e726
             <label for="essayGuide">Hướng dẫn chấm:</label>
             <textarea id="essayGuide" name="essayGuide" placeholder="Nhập hướng dẫn chấm câu tự luận"></textarea>
         </div>

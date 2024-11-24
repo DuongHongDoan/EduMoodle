@@ -38,7 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)throws Exception {
 
         http.csrf().disable().authorizeHttpRequests()
-                .requestMatchers("/user/home", "/user/courses/search", "/user/courses", "/user/courses/category").permitAll()
+                .requestMatchers("/user/home", "/user/courses/search", "/user/courses", "/user/courses/category", "/user/courses/course").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ADMIN")
                 .requestMatchers("/manage/**").hasAnyAuthority("editingteacher", "ADMIN")
                 .requestMatchers("/user/**").hasAnyAuthority("editingteacher", "student")
@@ -76,5 +76,4 @@ public class SecurityConfig {
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(customUserDetailsServices).passwordEncoder(passwordEncoder());
     }
-
 }
