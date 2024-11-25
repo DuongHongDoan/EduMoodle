@@ -209,10 +209,32 @@
                                     <ul class="module-list">
                                         <li th:each="module : ${section.modules}" class="activity-item"  th:data-activityid="${module.id}" th:data-typename="${module.modname}" th:data-courseid="${courseDetails.id}">
                                             <!-- Nếu là forum thì hiển thị trang thông báo -->
-                                            <a th:if="${module.modname == 'forum'}" th:href="@{/admin/courses/forum(courseId=${courseDetails.id}, forumId=${module.instance})}" style="margin-left: 12px;" class="activity-name-link">
+                                            <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'forum'}" th:href="@{/admin/courses/forum(courseId=${courseDetails.id}, forumId=${module.instance})}" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-card-text"></i>
                                                 <span th:utext="${module.name}" class="activity-name">Module Name</span>
-<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+
+                                            <a  sec:authorize="hasAuthority('student')" th:if="${module.modname == 'forum'}" th:href="@{/student/courses/forum(courseId=${courseDetails.id}, forumId=${module.instance})}" style="margin-left: 12px;" class="activity-name-link">
+                                                <i class="bi bi-card-text"></i>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
+                                                <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+
+                                            <!--Nếu là resource thf ấy-->
+                                            <a  sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')"  th:if="${module.modname == 'resource'}" th:href="@{/admin/resource(courseId=${courseDetails.id}, resourceId=${module.id})}" style="margin-left: 12px;" class="activity-name-link">
+                                                <i class="bi bi-card-text"></i>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
+                                                <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <input type="text" class="edit-activity-input" style="display: none;" />
+                                            </a>
+
+                                            <a  sec:authorize="hasAuthority('student')" th:if="${module.modname == 'resource'}" th:href="@{/user/resource(courseId=${courseDetails.id}, resourceId=${module.id})}" style="margin-left: 12px;" class="activity-name-link">
+                                                <i class="bi bi-card-text"></i>
+                                                <span th:utext="${module.name}" class="activity-name">Module Name</span>
+                                                <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                                 <input type="text" class="edit-activity-input" style="display: none;" />
                                             </a>
                                             <!-- Nếu là quiz thì hiển thị trang quiz tương ứng -->

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+  <meta charset="utf-8"/>
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Resource Course</title> <!-- Cập nhật tiêu đề -->
+  <link rel="stylesheet" href="/css/styles.css"> <!-- Đảm bảo đường dẫn tới CSS đúng -->
+  <style>
+
+    h1 {
+        font-size: 24px;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .resource-content {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #555;
+        margin-bottom: 30px;
+    }
+    .back-link {
+        display: block;
+        text-align: center;
+        font-size: 16px;
+        color: #007BFF;
+        text-decoration: none;
+        padding: 10px;
+        background-color: #f1f1f1;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    .back-link:hover {
+        background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body id="page-top" layout:fragment="body">
+<div class="container">
+  <h1>Chi tiết bài giảng</h1>
+
+  <!-- Hiển thị nội dung tài nguyên -->
+  <div class="resource-content">
+    <div>
+      <!-- Hiển thị nội dung tài liệu (văn bản hoặc liên kết) -->
+      <div th:utext="${resourceContent}"></div> <!-- Nội dung đã được xử lý trong controller -->
+    </div>
+  </div>
+</div>
+</body>
+</html>

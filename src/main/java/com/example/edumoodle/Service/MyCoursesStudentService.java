@@ -17,9 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +40,7 @@ public class MyCoursesStudentService {
     @Autowired
     private RecentlyAccessedCoursesRepository recentlyAccessedCoursesRepository;
 
-//hiển thị danh sách các kháo học
+    //hiển thị danh sách các kháo học
     public List<CoursesDTO> getUserCourses(String username) {
         List<CoursesDTO> userCourses = new ArrayList<>(); // Danh sách khóa học của người dùng
         UsersDTO usersDTO = usersService.getUserByUsername(username);
@@ -179,7 +177,7 @@ public class MyCoursesStudentService {
         return filteredCourses;
     }
 
-// phần chi tiết khóa học
+    // phần chi tiết khóa học
     public CoursesDTO getCourseDetails(Integer moodleCourseId) {
         CoursesDTO courseDetails = new  CoursesDTO();
         List<SectionsDTO> sectionsList = new ArrayList<>(); // Lưu trữ các section
@@ -626,4 +624,122 @@ public class MyCoursesStudentService {
             System.out.println("Saved accessed course with userId: " + userId + " and courseId: " + courseId);
         }
     }
+
+    // Phương thức để lấy nội dung module dựa trên module ID và loại
+    // Phương thức để lấy nội dung module dựa trên module ID và loại
+    public Object fetchModuleContent(Integer courseId, Integer resourceId) {
+        String moduleContentUrl;
+
+        String functionResource = "mod_resource_get_resources_by_courses";
+        // Xây dựng URL cho các loại module khác nhau
+        moduleContentUrl = domainName + "/webservice/rest/server.php" +
+                "?wstoken=" + token +
+                "&wsfunction=" + functionResource +
+                "&moodlewsrestformat=json" +
+                "&courseids[0]=" + courseId;  // Sử dụng moodleCourseId cho tất cả loại module
+
+        // Gọi API để lấy nội dung của module
+        String response = restTemplate.getForObject(moduleContentUrl, String.class);
+
+        // In ra URL API và phản hồi để kiểm tra
+        System.out.println("API URL: " + moduleContentUrl); // Kiểm tra URL gọi API
+        System.out.println("API Response: " + response);   // Kiểm tra phản hồi từ API
+
+        // Xử lý phản hồi JSON
+        try {
+            JSONObject jsonResponse = new JSONObject(response);
+
+            // Kiểm tra mã lỗi từ phản hồi
+            if (jsonResponse.has("errorcode")) {
+                String errorMessage = "Lỗi từ API: " + jsonResponse.optString("error");
+                System.out.println(errorMessage);  // In ra thông báo lỗi
+                return errorMessage;
+            }
+
+            // Kiểm tra loại module và xử lý phù hợp
+            // Nếu có tài nguyên (resources), gọi phương thức xử lý tài nguyên
+            if (jsonResponse.has("resources")) {
+                String result = handleResources(jsonResponse, resourceId);  // Gọi handleResources với resourceId
+                System.out.println("Processed Resources: " + result);  // In ra kết quả đã xử lý
+                return result;
+            }
+
+            // Nếu không có tài nguyên, thông báo không có tài nguyên
+            String noResourceMessage = "Không có tài nguyên nào trong khóa học này.";
+            System.out.println(noResourceMessage);  // In ra thông báo không có tài nguyên
+            return noResourceMessage;
+
+        } catch (JSONException e) {
+            String errorParsingMessage = "Error parsing JSON response: " + e.getMessage();
+            System.err.println(errorParsingMessage);  // In ra lỗi khi parse JSON
+            return errorParsingMessage;
+        }
+    }
+
+
+    // Phương thức để xử lý tất cả resources theo module và chỉ lấy theo moduleId nếu cần
+    private String handleResources(JSONObject jsonResponse, Integer selectedModuleId) throws JSONException {
+        JSONArray resources = jsonResponse.getJSONArray("resources");
+        StringBuilder moduleHtml = new StringBuilder();
+
+        if (resources.length() > 0) {
+            Map<Integer, StringBuilder> moduleMap = new HashMap<>();
+
+            for (int i = 0; i < resources.length(); i++) {
+                JSONObject resource = resources.getJSONObject(i);
+                int moduleId = resource.getInt("coursemodule");
+
+                // Kiểm tra nếu moduleId đã được chọn và chỉ lấy module đó
+                if (selectedModuleId != null && moduleId != selectedModuleId) {
+                    continue; // Bỏ qua các module không được chọn
+                }
+
+                // Thay vì in ra moduleId, chỉ hiển thị tên của resource
+                if (!moduleMap.containsKey(moduleId)) {
+                    moduleMap.put(moduleId, new StringBuilder());
+                }
+
+                // Duyệt qua các tài liệu trong module
+                JSONArray contentFiles = resource.getJSONArray("contentfiles");
+                if (contentFiles.length() > 0) {
+                    for (int j = 0; j < contentFiles.length(); j++) {
+                        JSONObject file = contentFiles.getJSONObject(j);
+                        String fileUrl = file.optString("fileurl");
+                        String fileName = file.optString("filename");
+
+                        // Xử lý URL tài liệu
+                        if (fileUrl.contains("/webservice")) {
+                            fileUrl = fileUrl.replace("/webservice", "");
+                        }
+
+                        if (!fileUrl.isEmpty()) {
+                            if (fileUrl.contains("?")) {
+                                fileUrl += "&wstoken=" + token;
+                            } else {
+                                fileUrl += "?wstoken=" + token;
+                            }
+
+                            // Chỉ thêm link tài liệu vào kết quả
+                            moduleMap.get(moduleId).append("<a href=\"").append(fileUrl).append("\" target=\"_blank\">")
+                                    .append("Xem tài liệu: ").append(fileName).append("</a><br>");
+                        }
+                    }
+                } else {
+                    moduleMap.get(moduleId).append("Không tìm thấy tài liệu cho tài nguyên này.<br>");
+                }
+
+                moduleMap.get(moduleId).append("<hr>");
+            }
+
+            // Tạo kết quả cuối cùng từ moduleMap
+            for (StringBuilder moduleContent : moduleMap.values()) {
+                moduleHtml.append(moduleContent);
+            }
+
+            return moduleHtml.toString();
+        }
+
+        return "Không tìm thấy tài liệu.";
+    }
+
 }

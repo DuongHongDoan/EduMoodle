@@ -117,19 +117,6 @@
                         </ul>
                     </div>
                 </li>
-                <li sec:authorize="hasAuthority('ADMIN')"  class="nav-item mx-3">
-                    <div class="dropdown">
-                        <a class="nav-link" th:href="@{/teacher/courses/view/list_question}" role="button" id="dropdownMenuLink" aria-expanded="false">
-                            Bài thi
-                        </a>
-
-                        <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="#">Danh mục câu hỏi</a></li>
-                            <li><a class="dropdown-item" href="#">Action 2</a></li>
-                            <li><a class="dropdown-item" href="#">Action 3</a></li>
-                        </ul>
-                    </div>
-                </li>
 
                 <li sec:authorize="hasAuthority('student') or hasAuthority('editingteacher') or isAuthenticated() and !hasAuthority('ADMIN')"  class="nav-item mx-3">
                     <a class="nav-link" aria-current="page" th:href="@{/user/home}">Trang chủ</a>
