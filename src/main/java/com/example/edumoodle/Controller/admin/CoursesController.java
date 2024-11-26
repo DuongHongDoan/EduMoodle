@@ -166,6 +166,16 @@ public class CoursesController {
                 .count();
         model.addAttribute("studentCount", studentCount);
 
+        UsersDTO teacherName = enrolledUsers.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2)
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "editingteacher".equals(role.getShortname())))
+                .findFirst().orElse(null);
+        if(teacherName != null) {
+            model.addAttribute("teacherName", teacherName.getFullname());
+        } else {
+            model.addAttribute("teacherName", "Không có");
+        }
+
         List<UsersDTO> usersList = usersService.getAllUsers();
         // Lọc ra những sinh viên chưa đăng ký khóa học
         List<UsersDTO> usersListNotEnrolled = usersList.stream()
@@ -273,6 +283,19 @@ public class CoursesController {
 
         List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
         model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+
+        Map<Integer, List<CategoriesDTO>> categories = categoriesService.getCategoriesGroupedByParent();
+        if (categories == null || categories.isEmpty()) {
+            // Khởi tạo một Map rỗng để tránh lỗi null pointer
+            categories = new HashMap<>();
+        }
+        // Lấy tổng số khóa học cho từng danh mục cha
+        Map<Integer, Integer> totalCoursesByParent = categoriesService.getTotalCoursesByParent();
+        if (totalCoursesByParent == null) {
+            totalCoursesByParent = new HashMap<>();
+        }
+        model.addAttribute("categories", categories);
+        model.addAttribute("totalCoursesByParent", totalCoursesByParent);
 
         return "admin/ManageCourses";
     }
