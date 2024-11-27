@@ -203,13 +203,13 @@ public class CoursesOfStudentController {
         QuizDetails quizDetails = myCoursesStudentService.getQuizDetails(quizId.toString(), moodleCourseId);
         Double maxGrade = quizDetails.getMaxGrade();
         Integer numberOfQuestions = quizDetails.getNumberOfQuestions();
-
+        String quizName = quizDetails.getQuizName(); // Lấy tên bài kiểm tra từ quizDetails
+        System.out.println("quiz name: " + quizName);
         if (maxGrade == null || numberOfQuestions == null) {
             System.out.println("Max grade or number of questions not found for course ID: " + moodleCourseId);
             model.addAttribute("errorMessage", "Could not retrieve quiz details.");
             return "student/quiz_details"; // Trả về view với thông báo lỗi
         }
-
 
 
         // Lấy danh sách attempts của sinh viên cho quiz
@@ -226,9 +226,12 @@ public class CoursesOfStudentController {
         model.addAttribute("maxGrade", maxGrade); // Thêm điểm tối đa
         model.addAttribute("numberOfQuestions", numberOfQuestions); // Thêm số câu hỏi
         model.addAttribute("courseName", courseName); // ấy tên khóa học qua view
+//        System.out.println("quiz name ne choi oi: " + quizName);
+//        model.addAttribute("quizName", quizName); // Tên bài kiểm tra
         // Gọi hàm getAttemptId từ service để lấy attemptId
 //        String attemptId = myCoursesStudentService.getAttemptId(quizId.toString(), userId.toString());
 //        model.addAttribute("attemptId", attemptId); // Thêm attemptId vào model nếu cần
+        model.addAttribute("quizName", quizName); // Tên bài kiểm tra
 
         // Trả về view 'student/quiz_details' để hiển thị chi tiết quiz
         return "student/quiz_details";
@@ -255,6 +258,7 @@ public class CoursesOfStudentController {
             @RequestParam(value = "formattedScore", required = false) String formattedScore,
             @RequestParam(value = "scoreMaxGrade", required = false) String scoreMaxGrade,
             @RequestParam("courseName") String courseName,
+            @RequestParam("quizName") String quizName,
             Model model) {
 
         // Gọi service để lấy thông tin chi tiết của quiz dựa trên attemptId
@@ -293,7 +297,7 @@ public class CoursesOfStudentController {
         model.addAttribute("scoreMaxGrade", scoreMaxGrade);
 
         model.addAttribute("courseName", courseName);
-
+        model.addAttribute("quizName", quizName);
         // Trả về trang review để hiển thị chi tiết bài kiểm tra
         return "student/quiz_review";
     }
