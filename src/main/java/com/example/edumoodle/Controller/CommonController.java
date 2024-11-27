@@ -23,13 +23,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 //controller chung cho vai trò student, teacher và những người dùng không có vai trò
 @Controller
@@ -351,7 +356,10 @@ public class CommonController {
                                        @RequestParam(value = "size", defaultValue = "30") Integer size, Model model) {
         List<QuizAttemptListDTO.AttemptDTO> attempts = quizService.getAllAttemptStudents(quizId, courseId);
         model.addAttribute("attempts", attempts);
-        int attemptCnt = attempts.size();
+        List<QuizAttemptListDTO.AttemptDTO> attemptsStudent = attempts.stream()
+                .filter(attempt -> attempt.getPreview()==0)
+                .toList();
+        int attemptCnt = attemptsStudent.size();
         model.addAttribute("attemptCnt", attemptCnt);
 
         List<UsersDTO> usersEnrolled = usersService.getEnrolledUsers(courseId);
@@ -377,6 +385,27 @@ public class CommonController {
 
         model.addAttribute("courseId", courseId);
         model.addAttribute("quizId", quizId);
+
+        //truyền thông tin tên khóa học
+        CoursesDTO courseDetails = coursesService.getCourseDetail(courseId);
+        model.addAttribute("courseDetails", courseDetails);
+        List<UsersDTO> enrolledUsers = usersService.getEnrolledUsers(courseId);
+        model.addAttribute("enrolledUsers", enrolledUsers);
+        long studentCount = enrolledUsers.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "student".equals(role.getShortname())))
+                .count();
+        model.addAttribute("studentCount", studentCount);
+
+        UsersDTO teacherName = enrolledUsers.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2)
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "editingteacher".equals(role.getShortname())))
+                .findFirst().orElse(null);
+        if(teacherName != null) {
+            model.addAttribute("teacherName", teacherName.getFullname());
+        } else {
+            model.addAttribute("teacherName", "Không có");
+        }
+
         return "common/ResultGrade";
     }
 
@@ -392,7 +421,10 @@ public class CommonController {
         }
         model.addAttribute("attempts", attempts);
         List<QuizAttemptListDTO.AttemptDTO> attemptsAll = quizService.getAllAttemptStudents(quizId, courseId);
-        int attemptCnt = attemptsAll.size();
+        List<QuizAttemptListDTO.AttemptDTO> attemptsStudent = attemptsAll.stream()
+                .filter(attempt -> attempt.getPreview()==0)
+                .toList();
+        int attemptCnt = attemptsStudent.size();
         model.addAttribute("attemptCnt", attemptCnt);
 
         List<UsersDTO> usersEnrolled = usersService.getEnrolledUsers(courseId);
@@ -408,6 +440,27 @@ public class CommonController {
         model.addAttribute("quizId", quizId);
 
         model.addAttribute("keyword", keyword);
+
+        //truyền thông tin tên khóa học
+        CoursesDTO courseDetails = coursesService.getCourseDetail(courseId);
+        model.addAttribute("courseDetails", courseDetails);
+        List<UsersDTO> enrolledUsers = usersService.getEnrolledUsers(courseId);
+        model.addAttribute("enrolledUsers", enrolledUsers);
+        long studentCount = enrolledUsers.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "student".equals(role.getShortname())))
+                .count();
+        model.addAttribute("studentCount", studentCount);
+
+        UsersDTO teacherName = enrolledUsers.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2)
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "editingteacher".equals(role.getShortname())))
+                .findFirst().orElse(null);
+        if(teacherName != null) {
+            model.addAttribute("teacherName", teacherName.getFullname());
+        } else {
+            model.addAttribute("teacherName", "Không có");
+        }
+
         return "common/ResultGrade";
     }
 
@@ -420,10 +473,14 @@ public class CommonController {
         List<UsersDTO> studentsEnrolled = usersEnrolled.stream()
                 .filter(user -> user.getRoles().stream().anyMatch(role -> role.getRoleid() == 5))
                 .toList();
+        CoursesDTO coursesDTO = coursesService.getCourseDetail(courseId);
+
+        String quizName = pdfService.sanitizeFileName(quiz.getName());
+        String courseName = pdfService.sanitizeFileName(coursesDTO.getFullname());
 
         try {
             // Đường dẫn file tạm thời trong server
-            String tempFilePath = System.getProperty("java.io.tmpdir") + "exported_results.xlsx";
+            String tempFilePath = System.getProperty("java.io.tmpdir") + quizName + "_" + courseName + ".xlsx";
             quizService.exportAttemptToExcel(quiz, attempts, studentsEnrolled, tempFilePath, courseId);
 
             // Tạo InputStreamResource từ file để gửi phản hồi
@@ -469,6 +526,26 @@ public class CommonController {
         model.addAttribute("totalQuestions", totalQuestions);
         model.addAttribute("attemptId", attemptId); // Truyền attemptId qua view nếu cần
 
+        //truyền thông tin tên khóa học
+        CoursesDTO courseDetails = coursesService.getCourseDetail(courseId);
+        model.addAttribute("courseDetails", courseDetails);
+        List<UsersDTO> enrolledUsers = usersService.getEnrolledUsers(courseId);
+        model.addAttribute("enrolledUsers", enrolledUsers);
+        long studentCount = enrolledUsers.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "student".equals(role.getShortname())))
+                .count();
+        model.addAttribute("studentCount", studentCount);
+
+        UsersDTO teacherName = enrolledUsers.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2)
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "editingteacher".equals(role.getShortname())))
+                .findFirst().orElse(null);
+        if(teacherName != null) {
+            model.addAttribute("teacherName", teacherName.getFullname());
+        } else {
+            model.addAttribute("teacherName", "Không có");
+        }
+
         return "common/AttemptDetail";
     }
 
@@ -476,15 +553,43 @@ public class CommonController {
     @GetMapping("/manage/courses/review/export")
     public ResponseEntity<Resource> exportAttemptDetailPDF(@RequestParam Integer courseId,
                                                            @RequestParam Integer quizId,
-                                                           @RequestParam Integer attemptId) {
+                                                           @RequestParam Integer attemptId,
+                                                           @RequestParam String exportDate) {
         AttemptViewDTO questionsDetail = quizService.getAttemptDetailInfo(attemptId, courseId, quizId);
         QuizzesDTO.QuizzesListDTO quiz = quizService.getQuizInCourse(quizId, courseId);
         List<QuestionDetail> questionDetails = quizService.getAttemptDetails(attemptId);
+        CoursesDTO courseDetails = coursesService.getCourseDetail(courseId);
+
+        //chuẩn bị các thông tin để đặt tên file pdf ta về
+        String userFullName = pdfService.sanitizeFileName(questionsDetail.getAttempt().getUsersDTO().getFullname());
+        String quizName = pdfService.sanitizeFileName(quiz.getName());
+        String courseName = pdfService.sanitizeFileName(courseDetails.getFullname());
+
+        // Định dạng mong muốn cho ngày nhập
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String formattedDate;
+
+        try {
+            // Parse ngày từ chuỗi input
+            LocalDate date = LocalDate.parse(exportDate, inputFormatter);
+            // Chuyển sang định dạng dd/MM/yyyy
+            formattedDate = date.format(outputFormatter);
+        } catch (DateTimeParseException e) {
+            // Log lỗi và trả thông báo nếu ngày không hợp lệ
+            e.printStackTrace();
+            return ResponseEntity.badRequest()
+                    .body(new InputStreamResource(new ByteArrayInputStream("Ngày không hợp lệ".getBytes())));
+        }
 
         try {
             // Đường dẫn file tạm thời trong server
-            String tempFilePath = System.getProperty("java.io.tmpdir") + "exported_attempt_detail.pdf";
-            pdfService.exportAttemptDetailPDF(questionsDetail, quiz, questionDetails, tempFilePath);
+            String tempFilePath = System.getProperty("java.io.tmpdir") + userFullName + "_" + quizName + "_" + courseName + ".pdf";
+            if(questionsDetail.getAttempt().getPreview() == 0) {
+                pdfService.exportAttemptDetailPDF(questionsDetail, quiz, questionDetails, tempFilePath, courseDetails, formattedDate);
+            } else {
+                pdfService.exportSampleAttemptPDF(questionsDetail, quiz, questionDetails, tempFilePath, courseDetails, formattedDate);
+            }
 
             // Tạo InputStreamResource từ file để gửi phản hồi
             File file = new File(tempFilePath);

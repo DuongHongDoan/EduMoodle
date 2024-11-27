@@ -77,6 +77,7 @@ public class QuizService {
     public List<QuizAttemptListDTO.AttemptDTO> getAllAttemptStudents(Integer quizId, Integer courseId) {
         String apiMoodleFunc = "mod_quiz_get_user_attempts";
         String apiReviewFunc = "mod_quiz_get_attempt_review";
+        String apiGetAttemptTeacher = "local_quizquestions_get_questions";
 
         List<QuizAttemptListDTO.AttemptDTO> allAttempts = new ArrayList<>();
         //lấy danh sách id của sv đã đăng ký vào course
@@ -84,6 +85,42 @@ public class QuizService {
         List<UsersDTO> studentsEnrolled = usersEnrolled.stream()
                 .filter(user -> user.getRoles().stream().anyMatch(role -> role.getRoleid() == 5))
                 .toList();
+        //lấy id của gv
+        UsersDTO teacherEnrolled = usersEnrolled.stream()
+                .filter(user -> user.getRoles().stream().anyMatch(role -> role.getRoleid() == 3))
+                .filter(user -> user.getId() != 2)
+                .findFirst().orElse(null);
+        //lấy attempt của gv, do gv làm bài preview nên sẽ khác so với sv
+        assert teacherEnrolled != null;
+        String attemptUrl = domainName + "/webservice/rest/server.php"
+                + "?wstoken=" + token
+                + "&wsfunction=" + apiGetAttemptTeacher
+                + "&moodlewsrestformat=json"
+                + "&quizid=" + quizId
+                + "&userid=" + teacherEnrolled.getId();
+        QuizAttemptListDTO previewAttempts = restTemplate.getForObject(attemptUrl, QuizAttemptListDTO.class);
+        if (previewAttempts != null && previewAttempts.getAttempts() != null) {
+            for(QuizAttemptListDTO.AttemptDTO attempt : previewAttempts.getAttempts()) {
+                attempt.setUsersDTO(usersService.getUserByID(teacherEnrolled.getId()));
+                //tính thời gian làm bài
+                QuizAttemptListDTO.AttemptDTO durationAttempt = new QuizAttemptListDTO.AttemptDTO(attempt.getTimestart(), attempt.getTimefinish());
+                attempt.setDuration(durationAttempt.getDurationFormat());
+                // lấy bài làm của gv đã preview
+                String reviewUrl = domainName + "/webservice/rest/server.php"
+                        + "?wstoken=" + token
+                        + "&wsfunction=" + apiReviewFunc
+                        + "&moodlewsrestformat=json"
+                        + "&attemptid=" + attempt.getId();
+
+                QuizAttemptListDTO reviewResponse = restTemplate.getForObject(reviewUrl, QuizAttemptListDTO.class);
+
+                if (reviewResponse != null && reviewResponse.getGrade() != null) {
+                    attempt.setGrade(reviewResponse.getGrade());
+                }
+            }
+            allAttempts.addAll(previewAttempts.getAttempts());
+        }
+
         List<Integer> userIds = new ArrayList<>();
         for (UsersDTO user : studentsEnrolled) {
             userIds.add(user.getId());

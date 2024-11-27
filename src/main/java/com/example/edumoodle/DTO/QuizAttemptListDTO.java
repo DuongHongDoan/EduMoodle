@@ -38,6 +38,7 @@ public class QuizAttemptListDTO {
         private Integer userid;
         private Integer attempt;
         private Integer uniqueid;
+        private Integer preview;
         private String state;
         private Long timestart;
         private Long timefinish;
@@ -50,16 +51,25 @@ public class QuizAttemptListDTO {
 
         public AttemptDTO(){}
 
-        public AttemptDTO(Integer id, Integer quiz, Integer userid, Integer attempt, Integer uniqueid, String state, Long timestart, Long timefinish, Long timemodified) {
+        public AttemptDTO(Integer id, Integer quiz, Integer userid, Integer attempt, Integer uniqueid, Integer preview, String state, Long timestart, Long timefinish, Long timemodified) {
             this.id = id;
             this.quiz = quiz;
             this.userid = userid;
             this.attempt = attempt;
             this.uniqueid = uniqueid;
+            this.preview = preview;
             this.state = state;
             this.timestart = timestart;
             this.timefinish = timefinish;
             this.timemodified = timemodified;
+        }
+
+        public Integer getPreview() {
+            return preview;
+        }
+
+        public void setPreview(Integer preview) {
+            this.preview = preview;
         }
 
         public String getTimestartAsLocalDateTime() {

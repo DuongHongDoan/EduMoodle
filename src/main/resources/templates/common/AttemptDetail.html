@@ -109,8 +109,17 @@
 </head>
 <body>
 <div class="container mt-3 mb-3" layout:fragment="body">
+    <div class="row" th:if="teacherName != null">
+        <div class="col d-sm-flex align-items-center justify-content-between">
+            <h1 th:utext="${courseDetails.fullname} + ' (Giảng viên: ' + ${teacherName} + ')'" class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
+        </div>
+    </div>
     <div>
-        <table class="table table-striped table-hover table-bordered mt-3">
+        <table class="table table-striped table-hover table-bordered border mt-3">
+            <tr>
+                <th class="cell">Tên bài thi</th>
+                <td th:text="${quiz.name}"></td>
+            </tr>
             <tr>
                 <th class="cell">Tài khoản</th>
                 <td th:text="${questionsDetail.attempt.usersDTO.fullname}"></td>
@@ -119,11 +128,11 @@
                 <th class="cell">Trạng thái</th>
                 <td th:text="${questionsDetail.attempt.state}">Hoàn thành</td>
             </tr>
-            <tr>
+            <tr th:if="${questionsDetail.attempt.preview == 0}">
                 <th class="cell">Thời gian bắt đầu</th>
                 <td th:text="${questionsDetail.attempt.getTimestartAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:38 AM</td>
             </tr>
-            <tr>
+            <tr th:if="${questionsDetail.attempt.preview == 0}">
                 <th class="cell">Thời gian kết thúc</th>
                 <td th:text="${questionsDetail.attempt.getTimefinishAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:39 AM</td>
             </tr>
@@ -139,7 +148,7 @@
     </div>
 
     <div class="row mt-3 mb-3">
-        <div class="col">
+        <div class="col mt-2">
             <a class="review-link text-decoration-none" th:href="@{/manage/courses/report(courseId=${courseId}, quizId=${quizId})}">
                 <i class="bi bi-caret-left-fill"></i> Hoàn thành xem lại
             </a>
@@ -149,6 +158,7 @@
                 <input type="hidden" name="courseId" th:value="${courseId}">
                 <input type="hidden" name="quizId" th:value="${quizId}">
                 <input type="hidden" name="attemptId" th:value="${attemptId}">
+                <input type="date" name="exportDate" required style="height: 38px; border-radius: 10px;">
                 <button type="submit" class="btn btn-cate btn-edit text-white" style="margin-left: 5px; background-color: #00afef;">
                     <i class="bi bi-download"></i> Tải bài thi PDF
                 </button>
@@ -158,7 +168,7 @@
 
     <div class="content-wrapper" id="content-wrapper">
         <div th:each="questionDetail, iterStat : ${questionDetails}" class="question-container" th:id="'question-' + ${iterStat.index}">
-            <div class="question-status"
+            <div th:if="${questionsDetail.attempt.preview == 0}" class="question-status"
                  th:classappend="${questionDetail.isCorrect ? 'correct-status' : 'incorrect-status'}"
                  th:text="${questionDetail.isCorrect ? 'Đúng' : 'Sai'}">
             </div>
@@ -178,7 +188,7 @@
                 </label>
             </div>
 
-            <div class="feedback">
+            <div th:if="${questionsDetail.attempt.preview == 0}" class="feedback">
                 Câu trả lời:
                 <span class="student-answer" th:classappend="${questionDetail.isCorrect ? 'correct' : 'incorrect'}"
                       th:text="${questionDetail.studentResponse}"></span>
