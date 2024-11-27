@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8"/>
     <!--    <link layout:href="@{/css/styles.css}" rel="stylesheet"/>-->
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
+    <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Khóa học của sinh viên</title>
     <style>
         body {
@@ -101,8 +101,10 @@
 
         .course-card p {
             font-size: 14px;
-            color: #6c757d; /* Màu chữ nhẹ hơn cho phần mô tả */
-            margin: 10px 20px; /* Khoảng cách giữa các đoạn văn bản */
+            color: #6c757d;
+            margin: 5px 5px;
+            line-height: 1.5;
+            min-height: 40px; /* Cố định chiều cao tối thiểu */
         }
 
         .course-card button {
@@ -119,7 +121,7 @@
 
         .course-card button:hover {
             background-color: #0056b3; /* Màu nền đậm hơn khi hover */
-        }
+        }z
     </style>
 </head>
 <body id="page-top" layout:fragment="body">
@@ -161,7 +163,7 @@
         <h3 th:text="${course.fullname}">Tên khóa học</h3>
         <p>Danh mục: <span th:utext="${course.categoryName}">Tên Category</span></p>
         <p>Giảng viên: <span th:utext="${course.teacherName}">Không xác định</span></p>
-        <a th:href="@{/user/student_course_details(moodleCourseId=${course.id})}" class="btn btn-primary">Xem chi tiết</a>
+        <a th:href="@{/user/student_course_details(moodleCourseId=${course.id})}" class="btn btn-primary" style="margin-bottom: 10px;">Xem chi tiết</a>
     </div>
 </div>
 

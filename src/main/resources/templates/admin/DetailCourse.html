@@ -131,10 +131,17 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <div class="row">
+    <div class="row" th:if="teacherName != null">
         <div class="col d-sm-flex align-items-center justify-content-between">
-            <h1 th:utext="${courseDetails.fullname}" class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
+            <h1 th:utext="${courseDetails.fullname} + ' (Giảng viên: ' + ${teacherName} + ')'" class="h3 courses-name mb-0 text-gray-800">Tên học phần (Mã HP) -  Tên nhóm - Tên GV - HK - Năm học</h1>
         </div>
+    </div>
+
+    <div class="row mt-3" sec:authorize="hasAuthority('editingteacher')">
+        <p>Bạn không thể tự đăng ký vào khóa học</p>
+    </div>
+    <div class="row mt-3" sec:authorize="hasAuthority('editingteacher')">
+        <a th:href="@{/user/home}">Quay lại trang chủ</a>
     </div>
 
     <div class="row mt-3">
@@ -149,6 +156,9 @@
                 </li>
                 <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="nav-item" role="presentation">
                     <button class="nav-link" id="đkthanhvien-tab" data-bs-toggle="tab" data-bs-target="#đkthanhvien" type="button" role="tab" aria-controls="đkthanhvien" aria-selected="false" tabindex="-1">Đăng ký thành viên</button>
+                </li>
+                <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" class="nav-item" role="presentation">
+                    <button class="nav-link" id="quizBank-tab" data-bs-toggle="tab" data-bs-target="#quizBank" type="button" role="tab" aria-controls="quizBank" aria-selected="false" tabindex="-1">Ngân hàng câu hỏi</button>
                 </li>
                 <li sec:authorize="hasAuthority('student')" class="nav-item" role="presentation">
                     <button class="nav-link" id="grade-tab" data-bs-toggle="tab" data-bs-target="#grades" type="button" role="tab" aria-controls="grades" aria-selected="false" tabindex="-1">Điểm số</button>
@@ -234,9 +244,8 @@
                                                 <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                                 <input type="text" class="edit-activity-input" style="display: none;" />
                                             </a>
-
                                             <!-- Nếu là quiz thì hiển thị trang quiz tương ứng -->
-                                            <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'quiz'}" th:href="@{/admin/courses}" style="margin-left: 12px;" class="activity-name-link">
+                                            <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'quiz'}" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-check2-square"></i>
                                                 <span th:utext="${module.name}" class="activity-name">Module Name</span>
                                                 <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
@@ -448,6 +457,14 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tab ngân hàng câu hỏi -->
+                <div class="tab-pane fade" id="quizBank" role="tabpanel" aria-labelledby="quizBank-tab">
+                    <div class="row mb-3 justify-content-start">
+                        <div class="col-sm-3 d-grid">
+                            <a th:href="@{/teacher/courses/view/list_question(courseId=${courseDetails.id})}" type="submit" class="btn btn-save text-white" style="background-color: #00afef;">Thêm câu hỏi</a>
                         </div>
                     </div>
                 </div>

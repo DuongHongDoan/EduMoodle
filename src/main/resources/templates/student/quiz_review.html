@@ -5,17 +5,17 @@
       layout:decorate="~{layout}">
 <head>
     <meta charset="utf-8"/>
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
+    <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Quiz review</title> <!-- Cập nhật tiêu đề -->
 
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
         }
 
-        h1 {
+        h2 {
             text-align: center;
+            margin-top: 10px;
         }
 
         .quiz-review-container {
@@ -223,20 +223,26 @@
         }
 
         .quiz-details table {
-            width: 100%;
+            width: 100%; /* Đảm bảo bảng chiếm toàn bộ chiều rộng của container */
             border-collapse: collapse;
             margin-top: 20px;
             background-color: white;
+            table-layout: fixed; /* Thêm để cân bằng kích thước các cột */
         }
 
-        .quiz-details td {
+        .quiz-details td, .quiz-details th {
             padding: 10px;
             border-bottom: 1px solid #ddd;
+            word-wrap: break-word; /* Đảm bảo văn bản không bị tràn khỏi ô */
+        }
+
+        .quiz-details th {
+            text-align: left; /* Canh trái cho các tiêu đề cột */
         }
 
         .quiz-details td:first-child {
             font-weight: bold;
-            width: 150px;
+            width: 35%; /* Điều chỉnh chiều rộng cột đầu tiên */
         }
 
         .quiz-details tr:last-child td {
@@ -245,14 +251,18 @@
 
     </style>
 </head>
-<body id="page-top" layout:fragment="body">
+<body layout:fragment="body">
 
-<h1>Quiz Review</h1>
-
+<h2>Quiz Review</h2>
 <button class="quiz-show-button" id="quiz-show-button" onclick="toggleQuizNavigation()">☰</button>
 <div class="quiz-review-container">
     <div class="quiz-details">
         <table>
+            <tr>
+                <td><strong>Course </strong></td>
+                <td><span th:text="${courseName}"></span></td>
+            </tr>
+
             <tr>
                 <td><strong>Started on</strong></td>
                 <td><span th:text="${startTime}"></span></td>

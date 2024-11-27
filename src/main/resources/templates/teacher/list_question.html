@@ -110,6 +110,15 @@
             margin-left: 10px;
             background-color: #f8f9fa;
         }
+
+        .button-group {
+            gap: 50px; /* Tạo khoảng cách giữa các nút */
+        }
+
+        .me-2{
+            margin-left: 15px;
+        }
+
     </style>
 </head>
 <body>
@@ -124,13 +133,13 @@
     <div class="header">
 
         <h1 class="mb-3">Danh mục câu hỏi</h1>
-        <div class="mb-3">
-            <!-- Nút export Excel -->
-            <a th:href="@{/exportQuestionCategoriesToExcel(courseId=${courseId})}" class="btn btn-primary">Export to Excel</a>
+        <div class="button-group d-flex align-items-center">
+            <a th:href="@{/exportQuestionCategoriesToExcel(courseId=${courseId})}" class="btn btn-primary me-2">Export to Excel</a>
+            <a th:href="@{/teacher/courses/view/Add_QuestionCategories(courseId=${courseId})}" class="add-button">
+                Thêm danh mục câu hỏi
+            </a>
         </div>
-        <a th:href="@{/teacher/courses/view/Add_QuestionCategories(courseId=${courseId})}" class="add-button">
-            Thêm danh mục câu hỏi
-        </a>
+
     </div>
 
     <ul class="module-list">

@@ -5,7 +5,7 @@
       layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">-->
+    <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trang cá nhân</title>
     <style>
@@ -62,7 +62,12 @@
         .course-card p {
             font-size: 14px;
             color: #6c757d;
-            margin: 10px 20px;
+            margin: 5px 5px;
+            line-height: 1.5;
+            display: flex; /* Thêm Flexbox để justify-content hoạt động */
+            justify-content: center; /* Canh giữa nội dung theo chiều ngang */
+            align-items: center; /* Canh giữa nội dung theo chiều dọc */
+            text-align: center; /* Nếu muốn văn bản canh giữa */
         }
 
         .course-card button {
@@ -99,16 +104,16 @@
         <h3 th:text="${course.courseName}">Khóa học</h3>
 
         <!-- Hiển thị danh mục -->
-        <p th:text="'Danh mục: ' + ${course.categoryName}">Danh mục</p>
+        <p style="min-height: 40px;" th:text="'Danh mục: ' + ${course.categoryName}">Danh mục</p>
 
         <!-- Hiển thị tên giảng viên -->
-        <p th:text="'Giảng viên: ' + ${course.instructorName}">Giảng viên</p>
+        <p style="min-height: 40px;" th:text="'Giảng viên: ' + ${course.instructorName}">Giảng viên</p>
 
         <!-- Hiển thị thời gian truy cập -->
         <p>Thời gian truy cập: <span th:text="${course.accessedAt}">Thời gian truy cập</span></p>
 
         <!-- Liên kết tới chi tiết khóa học -->
-        <a th:href="@{/user/student_course_details(moodleCourseId=${course.courseId})}" class="btn btn-primary">Xem chi tiết</a>
+        <a th:href="@{/user/student_course_details(moodleCourseId=${course.courseId})}" class="btn btn-primary" style="margin-bottom: 10px;">Xem chi tiết</a>
     </div>
 </div>
 
