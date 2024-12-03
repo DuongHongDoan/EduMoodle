@@ -1,54 +1,106 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm và Nhập Câu Hỏi</title>
+    <title>Thêm Câu Hỏi</title>
     <style>
-        body {
-            background-color: #f4f7fc;
-            font-family: 'Arial', sans-serif;
+        .wrapper {
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            height: 100vh;
-            margin: 0;
-            padding: 20px;
+            justify-content: center; /* Căn giữa theo chiều ngang */
+            align-items: center;    /* Căn giữa theo chiều dọc */
+            height: auto;          /* Chiều cao 100% màn hình */
+            width: 100vw;           /* Chiều rộng 100% màn hình */
+            background-color: #f4f4f4; /* Màu nền tùy chọn */
         }
 
-        .container {
+        .main-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1900px; /* Tăng chiều rộng tối đa của container */
             width: 100%;
-            max-width: 650px;
+            padding: 20px;
+            justify-content: center;
+            height: auto; /* Loại bỏ chiều cao cố định */
+        }
+
+        .container1 {
+            flex: 2;
             background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            padding: 30px;
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 20px;
+            max-width: 600px; /* Giữ nguyên chiều rộng cho container tải file */
+            width: 100%;
+        }
+
+        .container2 {
+            flex: 5; /* Tăng tỉ lệ chiều rộng của container2 so với container1 */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1500px; /* Chiều rộng tối đa cho container thêm câu hỏi */
+            width: 100%;
         }
 
         h1 {
             text-align: center;
-            color: #007bff;
-            margin-bottom: 20px;
+            color: #101214;
+            font-size: 30px;
+            margin-bottom: 10px;
+            /*font-weight: bold; !* In đậm tiêu đề *!*/
+        }
+
+        .form-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .form-group .left {
+            flex: 1; /* Hoặc sử dụng flex-basis: 48%; để có khoảng cách */
+        }
+
+        .form-group .right {
+            flex: 1; /* Hoặc giảm giá trị này nếu cần phần này hẹp hơn */
         }
 
         label {
-            font-size: 14px;
-            color: #555;
             font-weight: bold;
-            margin-top: 10px;
+        }
+
+        .required::after {
+            content: " *";
+            color: red;
         }
 
         input[type="text"], select, textarea, input[type="file"] {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             margin-top: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
             box-sizing: border-box;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus, input[type="file"]:focus {
+            border-color: #007bff;
+            outline: none;
         }
 
         textarea {
@@ -56,29 +108,33 @@
             height: 120px;
         }
 
-        .answers {
-            margin-top: 20px;
-        }
-
         button {
-            padding: 12px 20px;
-            background-color: #007bff;
-            color: white;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: bold;
             border: none;
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 15px;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
             width: 100%;
         }
 
-        button:hover {
+        button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            margin-top: 20px;
+            width: 200px;
+        }
+
+        button[type="submit"]:hover {
             background-color: #0056b3;
         }
 
         .add-answer-btn {
             background-color: #28a745;
+            color: white;
+            width: 300px; /* Đặt chiều rộng nút thêm đáp án */
+            margin-top: 10px;
         }
 
         .add-answer-btn:hover {
@@ -89,150 +145,107 @@
             display: none;
         }
 
-        .file-input {
-            padding: 8px;
-        }
+        /*.back-btn {*/
+        /*    text-align: center;*/
+        /*    padding: 12px;*/
+        /*    font-size: 16px;*/
+        /*    color: white;*/
+        /*    !*background-color: #6c757d;*!*/
+        /*    text-decoration: none;*/
+        /*    border-radius: 8px;*/
+        /*    transition: background-color 0.3s ease;*/
+        /*}*/
 
-        .file-label {
-            font-size: 14px;
-            font-weight: bold;
-            color: #555;
+        .back-btn:hover {
+            color: #0a58ca;
         }
-
-        .form-section {
-            margin-bottom: 30px;
-        }
-
-        .question-type-select {
-            margin-top: 15px;
-        }
-
     </style>
 </head>
-<body>
-
-<div class="container">
-    <h1>Tải file txt</h1>
-    <form action="/api/questions/import" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="categoryId" th:value="${categoryId}" />
-        <!--        <label for="categoryId">Category ID:</label>-->
-        <!--        <input type="number" id="categoryId" name="categoryId" required>-->
-        <!--        <br><br>-->
-        <label for="file">Tải lên .txt file:</label>
-        <input type="file" id="file" name="file" accept=".txt" required>
-        <br><br>
-        <button type="submit">Tải lên</button>
-    </form>
-    <h1>Thêm Câu Hỏi</h1>
-    <form th:action="@{/api/questions/add}" th:method="post" id="questionForm">
-        <input type="hidden" name="categoryId" th:value="${categoryId}" />
-
-        <!-- Tên câu hỏi -->
-        <label for="name">Tên câu hỏi:</label>
-        <input type="text" id="name" name="name" placeholder="Nhập tên câu hỏi" required />
-
-        <!-- Nội dung câu hỏi -->
-        <label for="questionText">Nội dung câu hỏi:</label>
-        <textarea id="questionText" name="questionText" placeholder="Nhập nội dung câu hỏi" required></textarea>
-
-        <!-- Loại câu hỏi -->
-        <label for="qtype">Loại câu hỏi:</label>
-        <select id="qtype" name="qtype" onchange="handleQuestionTypeChange()" required>
-            <option value="multichoice">Trắc nghiệm</option>
-            <option value="true_false">Đúng/Sai</option>
-            <option value="essay">Tự luận</option>
-        </select>
-
-        <!-- Đáp án đúng cho Trắc nghiệm -->
-        <div id="multiple-choice-container" class="answers">
-            <label>Đáp án:</label>
-            <div id="answers-container">
-                <input type="text" name="answers[]" placeholder="Nhập đáp án 1" required />
-                <input type="text" name="answers[]" placeholder="Nhập đáp án 2" required />
-                <input type="text" name="answers[]" placeholder="Nhập đáp án 3" />
-                <input type="text" name="answers[]" placeholder="Nhập đáp án 4" />
-            </div>
-            <button type="button" class="add-answer-btn" onclick="addAnswer()">Thêm đáp án</button>
-
-            <label for="correctanswerindex">Đáp án đúng:</label>
-            <select id="correctanswerindex" name="correctanswerindex" required>
-                <option value="0">Đáp án 1</option>
-                <option value="1">Đáp án 2</option>
-                <option value="2">Đáp án 3</option>
-                <option value="3">Đáp án 4</option>
-            </select>
+<body layout:fragment="body">
+<div class="wrapper">
+    <div class="main-container">
+        <!-- Form tải file -->
+        <div class="container1">
+            <h1><strong>Tải file txt</strong></h1> <!-- Thêm <strong> để làm tiêu đề in đậm -->
+            <form action="/api/questions/import" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="categoryId" th:value="${categoryId}" />
+                <label for="file" class="required">Tải lên file txt:</label>
+                <input type="file" id="file" name="file" accept=".txt" required>
+                <button type="submit">Tải lên</button>
+            </form>
         </div>
 
-        <!-- Đáp án đúng cho Đúng/Sai -->
-        <div id="true-false-container" class="hidden">
-            <label>Đáp án:</label>
-            <select id="trueFalseAnswer" name="trueFalseAnswer" required>
-                <option value="true">Đúng</option>
-                <option value="false">Sai</option>
-            </select>
+        <!-- Form thêm câu hỏi -->
+        <div class="container2">
+            <h1><strong>Thêm Câu hỏi</strong></h1> <!-- Thêm <strong> để làm tiêu đề in đậm -->
+            <form th:action="@{/api/questions/add}" th:method="post" id="questionForm">
+                <input type="hidden" name="categoryId" th:value="${categoryId}" />
+
+                <div class="form-group">
+                    <div class="left">
+                        <label for="name" class="required">Tên câu hỏi:</label>
+                        <input type="text" id="name" name="name" placeholder="Nhập tên câu hỏi" required />
+
+                        <label for="questionText" class="required">Nội dung câu hỏi:</label>
+                        <textarea id="questionText" name="questionText" placeholder="Nhập nội dung câu hỏi" required></textarea>
+
+                        <label for="qtype" class="required">Loại câu hỏi:</label>
+                        <select id="qtype" name="qtype" onchange="handleQuestionTypeChange()" required>
+                            <option value="multichoice" selected>Trắc nghiệm</option>
+                        </select>
+                    </div>
+
+                    <div class="right">
+                        <label>Đáp án:</label>
+                        <div id="answers-container">
+                            <input type="text" name="answers[]" placeholder="Nhập đáp án 1" required />
+                            <input type="text" name="answers[]" placeholder="Nhập đáp án 2" required />
+                            <input type="text" name="answers[]" placeholder="Nhập đáp án 3" />
+                            <input type="text" name="answers[]" placeholder="Nhập đáp án 4" />
+                        </div>
+                        <button type="button" class="add-answer-btn" onclick="addAnswer()">Thêm đáp án</button>
+                        <br><br>
+                        <label for="correctanswerindex" class="required">Đáp án đúng:</label>
+                        <select id="correctanswerindex" name="correctanswerindex" required>
+                            <option value="0"> Đáp án 1</option>
+                            <option value="1">Đáp án 2</option>
+                            <option value="2">Đáp án 3</option>
+                            <option value="3">Đáp án 4</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Thêm câu hỏi</button>
+            </form>
+            <a th:href="@{/teacher/courses/view/categories/{categoryId}/questions(categoryId=${categoryId})}" class="back-btn">Quay lại danh sách câu hỏi</a>
         </div>
-
-        <!-- Hướng dẫn cho Tự luận -->
-        <div id="essay-container" class="hidden">
-            <!--            <input type="text" name="answers[]" placeholder="Nhập đáp án 1" required />-->
-            <label for="essayGuide">Hướng dẫn chấm:</label>
-            <textarea id="essayGuide" name="essayGuide" placeholder="Nhập hướng dẫn chấm câu tự luận"></textarea>
-        </div>
-
-        <!-- Nút Gửi -->
-        <button type="submit">Thêm câu hỏi</button>
-    </form>
-    <a class="back-btn" th:href="@{/teacher/courses/view/categories/${categoryId}/questions}">Quay lại trang danh sách</a>
-
+    </div>
 </div>
 
 <script>
-    // Xử lý khi loại câu hỏi thay đổi
-    function handleQuestionTypeChange() {
-        const questionType = document.getElementById('qtype').value;
+    let answerCount = 4; // Bắt đầu từ 4 vì đã có 4 đáp án mặc định
 
-        // Hiển thị hoặc ẩn các phần dựa vào loại câu hỏi
-        document.getElementById('multiple-choice-container').classList.toggle('hidden', questionType !== 'multichoice');
-        document.getElementById('true-false-container').classList.toggle('hidden', questionType !== 'true_false');
-        document.getElementById('essay-container').classList.toggle('hidden', questionType !== 'essay');
-    }
-
-    // Thêm đáp án mới cho Trắc nghiệm
     function addAnswer() {
-        const answersContainer = document.getElementById('answers-container');
-        const correctAnswerSelect = document.getElementById('correctanswerindex');
-        const answerCount = answersContainer.querySelectorAll('input').length;
+        const container = document.getElementById('answers-container');
+        const correctAnswerDropdown = document.getElementById('correctanswerindex');
 
-        // Tạo trường nhập đáp án mới
-        const newInput = document.createElement('input');
-        newInput.setAttribute('type', 'text');
-        newInput.setAttribute('name', 'answers[]');
-        newInput.setAttribute('placeholder', `Nhập đáp án ${answerCount + 1}`);
+        // Tăng số lượng đáp án
+        answerCount++;
 
-        // Thêm tùy chọn vào danh sách đáp án đúng
+        // Tạo ô nhập đáp án mới
+        const newAnswerInput = document.createElement('input');
+        newAnswerInput.type = 'text';
+        newAnswerInput.name = 'answers[]';
+        newAnswerInput.placeholder = `Nhập đáp án ${answerCount}`;
+        newAnswerInput.required = true;
+        container.appendChild(newAnswerInput);
+
+        // Cập nhật dropdown "Đáp án đúng"
         const newOption = document.createElement('option');
-        newOption.value = answerCount;
-        newOption.textContent = `Đáp án ${answerCount + 1}`;
-
-        answersContainer.appendChild(newInput);
-        correctAnswerSelect.appendChild(newOption);
+        newOption.value = answerCount - 1; // Giá trị option là index của mảng
+        newOption.text = `Đáp án ${answerCount}`; // Hiển thị "Đáp án X"
+        correctAnswerDropdown.appendChild(newOption);
     }
 
-    // Đảm bảo form được kiểm tra đầy đủ trước khi gửi
-    document.getElementById('questionForm').onsubmit = function(event) {
-        const name = document.getElementById('name').value;
-        const questionText = document.getElementById('questionText').value;
-        const qtype = document.getElementById('qtype').value;
-        const correctAnswerIndex = document.getElementById('correctanswerindex') ? document.getElementById('correctanswerindex').value : null;
-        const trueFalseAnswer = document.getElementById('trueFalseAnswer') ? document.getElementById('trueFalseAnswer').value : null;
-
-        if (!name || !questionText || (qtype === 'multichoice' && !correctAnswerIndex) || (qtype === 'true_false' && !trueFalseAnswer)) {
-            alert('Vui lòng điền đầy đủ thông tin!');
-            event.preventDefault();
-        }
-    };
 </script>
-
 </body>
-
 </html>

@@ -95,8 +95,8 @@
           <a class="text-decoration-none fw-bold" title="Xem lại bài làm" th:href="@{/manage/courses/review(attemptId=${attempt.id}, courseId=${courseId}, quizId=${quizId})}" th:text="${attempt.getFormattedGrade}">Xem lại bài làm</a>
         </td>
         <td th:text="${attempt.duration}">17 giây</td>
-        <td th:if="${attempt.preview == 0}" th:text="${attempt.getTimestartAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:38 AM</td>
-        <td th:if="${attempt.preview == 0}" th:text="${attempt.getTimefinishAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:39 AM</td>
+        <td th:text="${attempt.getTimestartAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:38 AM</td>
+        <td th:text="${attempt.getTimefinishAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:39 AM</td>
       </tr>
       </tbody>
     </table>
@@ -147,8 +147,8 @@
             <a class="text-decoration-none fw-bold" title="Xem lại bài làm" th:href="@{/manage/courses/review(attemptId=${attempt.id}, courseId=${courseId}, quizId=${quizId})}" th:text="${attempt.getFormattedGrade}">Xem lại bài làm</a>
           </td>
           <td th:text="${attempt.duration}">17 giây</td>
-          <td th:if="${attempt.preview == 0}" th:text="${attempt.getTimestartAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:38 AM</td>
-          <td th:if="${attempt.preview == 0}" th:text="${attempt.getTimefinishAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:39 AM</td>
+          <td th:text="${attempt.getTimestartAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:38 AM</td>
+          <td th:text="${attempt.getTimefinishAsLocalDateTime}">Ngày 5 tháng 11 năm 2024, 7:39 AM</td>
         </tr>
       </tbody>
     </table>

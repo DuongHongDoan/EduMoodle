@@ -23,7 +23,7 @@ import java.util.List;
 @Controller
 public class CoursesOfStudentController {
 
-//    @GetMapping("/user/quizCourseStudent")
+    //    @GetMapping("/user/quizCourseStudent")
 //    public String getMyCourse(Model model) {
 //        return "student/quiz_details";
 //    }
@@ -132,12 +132,25 @@ public class CoursesOfStudentController {
                 .count();
         model.addAttribute("studentCount", studentCount);
 
+        UsersDTO teacherName = enrolledUsers.stream()
+                .filter(user -> user.getId() != 1 && user.getId() != 2)
+                .filter(user -> user.getRoles().stream().anyMatch(role -> "editingteacher".equals(role.getShortname())))
+                .findFirst().orElse(null);
+        if(teacherName != null) {
+            model.addAttribute("teacherName", teacherName.getFullname());
+        } else {
+            model.addAttribute("teacherName", "Không có");
+        }
+
+        System.out.println("tên giảng viên " + teacherName);
+
         List<UsersDTO> usersList = usersService.getAllUsers();
         // Lọc ra những sinh viên chưa đăng ký khóa học
         List<UsersDTO> usersListNotEnrolled = usersList.stream()
                 .filter(user -> user.getId() != 1 && user.getId() != 2) // Loại bỏ các user ID không liên quan
                 .filter(user -> enrolledUsers.stream().noneMatch(enrolledUser -> enrolledUser.getId().equals(user.getId())))
                 .toList();
+
         model.addAttribute("usersList", usersListNotEnrolled);
         model.addAttribute("course", moodleCourseId);
 
@@ -190,15 +203,21 @@ public class CoursesOfStudentController {
         QuizDetails quizDetails = myCoursesStudentService.getQuizDetails(quizId.toString(), moodleCourseId);
         Double maxGrade = quizDetails.getMaxGrade();
         Integer numberOfQuestions = quizDetails.getNumberOfQuestions();
-
+        String quizName = quizDetails.getQuizName(); // Lấy tên bài kiểm tra từ quizDetails
+        System.out.println("quiz name: " + quizName);
         if (maxGrade == null || numberOfQuestions == null) {
             System.out.println("Max grade or number of questions not found for course ID: " + moodleCourseId);
             model.addAttribute("errorMessage", "Could not retrieve quiz details.");
             return "student/quiz_details"; // Trả về view với thông báo lỗi
         }
 
+
         // Lấy danh sách attempts của sinh viên cho quiz
         List<AttemptIDTO> attempts = myCoursesStudentService.getStudentAttempts(userId.toString(), quizId.toString(), maxGrade, numberOfQuestions);
+
+        // **Lấy chi tiết khóa học**
+        CoursesDTO courseDetails = myCoursesStudentService.getCourseDetails(moodleCourseId);
+        String courseName = courseDetails.getFullname(); // Lấy tên đầy đủ khóa học
 
         // Thêm dữ liệu vào model để hiển thị trong view
         model.addAttribute("quizId", quizId);
@@ -206,10 +225,13 @@ public class CoursesOfStudentController {
         model.addAttribute("quizDetails", attempts); // Thêm danh sách attempts vào model
         model.addAttribute("maxGrade", maxGrade); // Thêm điểm tối đa
         model.addAttribute("numberOfQuestions", numberOfQuestions); // Thêm số câu hỏi
-
+        model.addAttribute("courseName", courseName); // ấy tên khóa học qua view
+//        System.out.println("quiz name ne choi oi: " + quizName);
+//        model.addAttribute("quizName", quizName); // Tên bài kiểm tra
         // Gọi hàm getAttemptId từ service để lấy attemptId
 //        String attemptId = myCoursesStudentService.getAttemptId(quizId.toString(), userId.toString());
 //        model.addAttribute("attemptId", attemptId); // Thêm attemptId vào model nếu cần
+        model.addAttribute("quizName", quizName); // Tên bài kiểm tra
 
         // Trả về view 'student/quiz_details' để hiển thị chi tiết quiz
         return "student/quiz_details";
@@ -235,10 +257,14 @@ public class CoursesOfStudentController {
             @RequestParam(value = "calculatedScore", required = false) Double calculatedScore,
             @RequestParam(value = "formattedScore", required = false) String formattedScore,
             @RequestParam(value = "scoreMaxGrade", required = false) String scoreMaxGrade,
+            @RequestParam("courseName") String courseName,
+            @RequestParam("quizName") String quizName,
             Model model) {
 
         // Gọi service để lấy thông tin chi tiết của quiz dựa trên attemptId
         List<QuestionDetail> questionDetails = myCoursesStudentService.getAttemptDetails(attemptId);
+
+        System.out.println("Review - Course Name: " + courseName);
 
         // Tính số câu đúng và sai
         long correctCount = questionDetails.stream().filter(QuestionDetail::isCorrect).count();
@@ -270,6 +296,8 @@ public class CoursesOfStudentController {
         model.addAttribute("formattedScore", formattedScore);
         model.addAttribute("scoreMaxGrade", scoreMaxGrade);
 
+        model.addAttribute("courseName", courseName);
+        model.addAttribute("quizName", quizName);
         // Trả về trang review để hiển thị chi tiết bài kiểm tra
         return "student/quiz_review";
     }

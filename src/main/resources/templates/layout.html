@@ -113,7 +113,7 @@
                         <ul class="dropdown-menu dropdown-menu-nav" aria-labelledby="dropdownMenuLink">
                             <li><a class="dropdown-item" th:href="@{/admin/users/add-user}">Thêm thành viên</a></li>
                             <li><a class="dropdown-item" th:href="@{/admin/users/upload-users}">Nhập danh sách thành viên</a></li>
-                            <li><a class="dropdown-item" th:href="@{/admin/users/manage-role}">Quản lý vai trò</a></li>
+<!--                            <li><a class="dropdown-item" th:href="@{/admin/users/manage-role}">Quản lý vai trò</a></li>-->
                         </ul>
                     </div>
                 </li>
@@ -422,6 +422,24 @@
                 }
             }
         });
+        if (currentPath.startsWith('/manage/courses/') || currentPath.startsWith('/teacher/courses/')) {
+            var navLinkToActivate = document.querySelector('.nav-link[href="/admin/courses"]');
+            if (navLinkToActivate) {
+                navLinkToActivate.classList.add('active');
+            }
+        }
+        if (currentPath.startsWith('/user/courses') ||currentPath.startsWith('/user/courses/') || currentPath.startsWith('/user/create-course/') || currentPath.startsWith('/user/edit-course/') || currentPath.startsWith('/manage/courses/')) {
+            var navLinkToActivate = document.querySelector('.nav-link[href="/user/home"]');
+            if (navLinkToActivate) {
+                navLinkToActivate.classList.add('active');
+            }
+        }
+        if (currentPath.startsWith('/user/student_course_details') || currentPath.startsWith('/user/student_course_details/') || currentPath.startsWith('/teacher/courses/') || currentPath.startsWith('/user/quiz/')) {
+            var navLinkToActivate = document.querySelector('.nav-link[href="/user/my-student-courses"]');
+            if (navLinkToActivate) {
+                navLinkToActivate.classList.add('active');
+            }
+        }
     });
 </script>
 

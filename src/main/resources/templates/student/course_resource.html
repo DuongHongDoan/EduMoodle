@@ -11,13 +11,23 @@
         color: #333;
         text-align: center;
         margin-bottom: 20px;
+        margin-top: 20px;
     }
+
     .resource-content {
         font-size: 16px;
         line-height: 1.6;
         color: #555;
         margin-bottom: 30px;
+        max-width: 800px; /* Giới hạn chiều rộng cho nội dung để tránh kéo dài trên màn hình lớn */
+        margin-left: auto;
+        margin-right: auto;
+        padding: 15px; /* Thêm padding để nội dung không sát mép */
+        background-color: #f9f9f9; /* Màu nền nhẹ để làm nổi bật nội dung */
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Tạo đổ bóng nhẹ */
     }
+
     .back-link {
         display: block;
         text-align: center;
@@ -28,10 +38,14 @@
         background-color: #f1f1f1;
         border-radius: 5px;
         transition: background-color 0.3s ease;
+        max-width: 200px;
+        margin: 20px auto 0; /* Canh giữa và thêm khoảng cách với nội dung phía trên */
     }
+
     .back-link:hover {
         background-color: #e0e0e0;
     }
+
   </style>
 </head>
 <body id="page-top" layout:fragment="body">

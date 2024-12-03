@@ -50,6 +50,11 @@ public class QuestionCategoriesService {
 
     private static final Logger logger = LoggerFactory.getLogger(QuestionCategoriesService.class);
 
+    public QuestionCategoriesEntity findByMoodleId(Integer moodleId) {
+        return questionCategoriesRepository.findByMoodleId(moodleId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục với moodleId: " + moodleId));
+    }
+
     public List<QuestionCategoriesDTO> getQuestionCategories(int courseId) {
         String apiMoodleFunc = "local_question_get_categories";
         String url = String.format("%s/webservice/rest/server.php?wstoken=%s&wsfunction=%s&moodlewsrestformat=json&courseId=%d",
@@ -105,9 +110,6 @@ public class QuestionCategoriesService {
 
             // Trả về số lượng câu hỏi trong danh mục
             List<QuestionsDTO> questions = response.getBody().getQuestions();
-            logger.info("Số lượng câu hỏi trong danh mục {}: {}", questionCategoryId, (questions != null) ? questions.size() : 0);
-            logger.info("URL yêu cầu đến API lấy câu hỏi: {}", url);
-            logger.info("Phản hồi từ API: {}", response.getBody());
             return (questions != null) ? questions.size() : 0;
         } catch (Exception e) {
             logger.error("Lỗi khi gọi API Moodle: {}", e.getMessage());
@@ -351,6 +353,22 @@ public class QuestionCategoriesService {
         } catch (Exception e) {
             logger.error("Lỗi: Không thể thêm danh mục câu hỏi. Chi tiết: {}", e.getMessage());
             return -1;
+        }
+    }
+
+    public List<Map<String, Object>> getCategories(int courseId) {
+        String url = domainName + "/webservice/rest/server.php";
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
+                .queryParam("wstoken", token)
+                .queryParam("moodlewsrestformat", "json")
+                .queryParam("wsfunction", "local_question_get_categories")
+                .queryParam("courseId", courseId);
+
+        Map<String, Object> response = restTemplate.getForObject(builder.toUriString(), Map.class);
+        if (response != null && response.containsKey("categories")) {
+            return (List<Map<String, Object>>) response.get("categories");
+        } else {
+            return new ArrayList<>();
         }
     }
 

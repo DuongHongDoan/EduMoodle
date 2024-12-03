@@ -4,10 +4,13 @@ package com.example.edumoodle.Controller.teacher;
 
 
 import com.example.edumoodle.DTO.QuestionAnswersDTO;
+import com.example.edumoodle.DTO.QuestionCategoriesDTO;
 import com.example.edumoodle.DTO.QuestionsDTO;
 import com.example.edumoodle.DTO.QuestionsResponseDTO;
 import com.example.edumoodle.Model.QuestionAnswersEntity;
+import com.example.edumoodle.Model.QuestionCategoriesEntity;
 import com.example.edumoodle.Model.QuestionsEntity;
+import com.example.edumoodle.Service.QuestionCategoriesService;
 import com.example.edumoodle.Service.QuestionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -27,10 +30,20 @@ import java.util.List;
 public class QuestionsController {
     @Autowired
     private QuestionsService questionsService;
+    @Autowired
+    private QuestionCategoriesService questionCategoriesService;
+
 
     @GetMapping("/teacher/courses/view/categories/{categoryId}/questions")
-    public String getQuestionsByCategory(@PathVariable Long categoryId, Model model) {
+    public String getQuestionsByCategory(@PathVariable Integer categoryId, Model model) {
         // Gọi service để lấy danh sách câu hỏi
+        try {
+            QuestionCategoriesEntity category = questionCategoriesService.findByMoodleId(categoryId);
+            model.addAttribute("categoryName", category.getName());
+        } catch (RuntimeException e) {
+            model.addAttribute("categoryName", "Danh mục không xác định");
+            model.addAttribute("error", e.getMessage());
+        }
         QuestionsResponseDTO response = questionsService.getQuestionsByCategory(categoryId);
 
         // Đưa danh sách tên câu hỏi vào model để hiển thị trên view
@@ -45,9 +58,7 @@ public class QuestionsController {
 
     @GetMapping("/teacher/courses/view/categories/{categoryId}/add-question")
     public String showAddQuestionForm(@PathVariable("categoryId") Integer categoryId, Model model) {
-        // Giả sử bạn có một service để lấy danh sách các danh mục câu hỏi
-        //    List<QuestionCategoriesDTO> categories = categoriesService.getQuestionCategories();
-        //    model.addAttribute("categories", categories);
+
         model.addAttribute("categoryId", categoryId);
         model.addAttribute("questionsDTO", new QuestionsDTO());
         return "teacher/Add_question";  // Đảm bảo tên trang HTML đúng
@@ -86,7 +97,7 @@ public class QuestionsController {
             questionsDTO.setAnswers(answerList);
 
             questionsService.addQuestionToMoodleAndWeb(questionsDTO);
-            redirectAttributes.addFlashAttribute("message", "Thêm câu hỏi thành công!");
+            redirectAttributes.addFlashAttribute("response", "Thêm câu hỏi thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi thêm câu hỏi: " + e.getMessage());
         }
@@ -113,7 +124,7 @@ public class QuestionsController {
 
             // Gọi service để import câu hỏi từ file
             questionsService.importQuestionsFromTxt(filePath, categoryId);
-            redirectAttributes.addFlashAttribute("message", "Import câu hỏi từ file thành công!");
+            redirectAttributes.addFlashAttribute("response", "Thêm câu hỏi thành công!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi import câu hỏi: " + e.getMessage());
             e.printStackTrace();
@@ -122,6 +133,7 @@ public class QuestionsController {
         return "redirect:/teacher/courses/view/categories/" + categoryId + "/questions";
 
     }
+
 
     @GetMapping("teacher/edit-question/{moodleId}")
     public String editQuestion(@PathVariable int moodleId, Model model) {
@@ -165,17 +177,18 @@ public class QuestionsController {
             questionsService.updateQuestionByMoodleId(moodleId, question, answers, correctAnswer);
 
             // Thêm thông báo thành công
-            redirectAttributes.addFlashAttribute("message", "Cập nhật câu hỏi thành công.");
+            redirectAttributes.addFlashAttribute("response", "Cập nhật câu hỏi thành công.");
 
             // Đảm bảo categoryId không bị null và trả về đúng trang danh sách câu hỏi
             redirectAttributes.addFlashAttribute("categoryId", categoryId);
             return "redirect:/teacher/courses/view/categories/" + categoryId + "/questions"; // Đảm bảo categoryId chính xác
         } catch (Exception e) {
             // Nếu có lỗi, thông báo lỗi
-//            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật câu hỏi: " + e.getMessage());
+//           redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật câu hỏi: " + e.getMessage());
             return "redirect:/teacher/courses/view/categories/" + categoryId + "/questions";
         }
     }
+
 
     @PostMapping("/teacher/questions/delete/{moodle_id}")
     public String deleteQuestion(@PathVariable Integer moodle_id,

@@ -6,6 +6,7 @@ import com.example.edumoodle.Repository.*;
 import com.example.edumoodle.Service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -16,12 +17,18 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -65,6 +72,8 @@ public class CommonController {
     private CourseGroupsRepository courseGroupsRepository;
     @Autowired
     private CourseAssignmentRepository courseAssignmentRepository;
+    @Autowired
+    private CategoriesRepository categoriesRepository;
 
     @GetMapping("/login")
     public String getLogin(Model model, UsersDTO usersDTO) {
@@ -228,6 +237,19 @@ public class CommonController {
     //    url = /user/courses/view?courseId=
     @GetMapping("/user/courses/view")
     public String getCourseDetail(@RequestParam Integer courseId, Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            if (authentication.getPrincipal() instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                username = userDetails.getUsername();
+            } else {
+                username = authentication.getPrincipal().toString();
+            }
+        }
+        model.addAttribute("username", username);
+
         List<SectionsDTO> sections = coursesService.getCourseContent(courseId);
         model.addAttribute("sections", sections);
 
@@ -246,8 +268,10 @@ public class CommonController {
                 .findFirst().orElse(null);
         if(teacherName != null) {
             model.addAttribute("teacherName", teacherName.getFullname());
+            model.addAttribute("teacherUserName", teacherName.getUsername());
         } else {
             model.addAttribute("teacherName", "Không có");
+            model.addAttribute("teacherUserName", "Không có");
         }
 
         List<UsersDTO> usersList = usersService.getAllUsers();
@@ -263,6 +287,192 @@ public class CommonController {
         model.addAttribute("moduleList", moduleList);
 
         return "admin/DetailCourse";
+    }
+
+    //url = /user/courses/create-course
+    @GetMapping("/user/create-course")
+    public String showFormCreateCourse(Model model) {
+        List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+        model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+
+        CoursesDTO coursesDTO = new CoursesDTO();
+        model.addAttribute("coursesDTO", coursesDTO);
+
+        List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+        model.addAttribute("schoolYears", schoolYearsEntities);
+
+        List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+        model.addAttribute("semesters", semestersEntities);
+
+        return "admin/CreateCourse";
+    }
+
+    @Operation(summary = "Create course", description = "create course")
+    @ApiResponse(responseCode = "200", description = "Successfully created course")
+    //    url = /user/courses/create-course
+    @PostMapping("/user/create-course")
+    public String createCourse(@Valid @ModelAttribute CoursesDTO coursesDTO,
+                               @RequestParam("schoolYearName") Integer schoolYearName,
+                               @RequestParam("semesterName") Integer semesterName,
+                               @RequestParam("courseCode") String courseCode,
+                               @RequestParam("groupName") String groupName,
+                               BindingResult bindingResult,
+                               RedirectAttributes redirectAttributes, Model model) {
+        if(bindingResult.hasErrors()) {
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("coursesDTO", coursesDTO);
+            return "admin/CreateCourse";
+        }
+
+        // Tạo khóa học trên Moodle
+        String moodleResponse = coursesService.createCourse(coursesDTO);
+
+        if (moodleResponse != null && moodleResponse.contains("id")) {
+            Integer moodleCourseId = coursesService.extractMoodleCourseId(moodleResponse);
+            CategoriesEntity category = categoriesRepository.findByMoodleId(coursesDTO.getCategoryid());
+            if (category == null) {
+                // Xử lý lỗi nếu category không tồn tại
+                model.addAttribute("error", "Category không tồn tại.");
+                return "admin/CreateCourse";
+            }
+
+            //lưu in4 của khóa học vào các bảng trong csdl web
+            CoursesEntity newCourse = new CoursesEntity();
+            newCourse.setMoodleId(moodleCourseId);
+            newCourse.setFullname(coursesDTO.getFullname());
+            newCourse.setShortname(coursesDTO.getShortname());
+            newCourse.setSummary(coursesDTO.getSummary());
+            newCourse.setCategoriesEntity(category);
+            coursesRepository.save(newCourse);
+
+            SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getOrCreateSchoolYearSemester(schoolYearName, semesterName);
+            if (getSchoolYearSemesterEntity == null) {
+                model.addAttribute("error", "Năm học hoặc học kỳ không tồn tại.");
+                return "admin/CreateCourse";
+            }
+            CourseGroupsEntity courseGroupsEntity = new CourseGroupsEntity();
+            courseGroupsEntity.setCourseCode(courseCode);
+            courseGroupsEntity.setGroupName(groupName);
+            courseGroupsEntity.setCoursesEntity(newCourse);
+            courseGroupsEntity.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+            courseGroupsRepository.save(courseGroupsEntity);
+
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo khóa học thành công!");
+            return "redirect:/user/courses";
+        } else {
+            // Nếu tạo khóa học thất bại, trả về thông báo lỗi
+            model.addAttribute("errorMessage", "Failed to create the course on Moodle. Please try again.");
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("coursesDTO", coursesDTO);
+            return "admin/CreateCourse";
+        }
+    }
+
+    @GetMapping("/user/edit-course")
+    public String showFormEditCourse(@RequestParam("courseId") Integer courseId, RedirectAttributes redirectAttributes, Model model) {
+        Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(courseId);
+        if (courseOpt.isPresent()) {
+            CoursesEntity course = courseOpt.get();
+            CoursesDTO coursesDto = new CoursesDTO();
+            coursesDto.setId(course.getMoodleId());
+            coursesDto.setFullname(course.getFullname());
+            coursesDto.setShortname(course.getShortname());
+            coursesDto.setCategoryid(course.getCategoriesEntity().getMoodleId());
+            coursesDto.setSummary(course.getSummary());
+            model.addAttribute("coursesDto", coursesDto);
+
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("courseIdWeb", course.getId_courses());
+
+            List<SchoolYearsEntity> schoolYearsEntities = coursesService.getAllSchoolYear();
+            model.addAttribute("schoolYears", schoolYearsEntities);
+
+            List<SemestersEntity> semestersEntities = coursesService.getAllSemester();
+            model.addAttribute("semesters", semestersEntities);
+
+            CourseGroupsEntity courseGroup = coursesService.findByCoursesId(course);
+            if(courseGroup != null) {
+                System.out.println("tìm nhóm HP đc: " + courseGroup.getCourseCode());
+                model.addAttribute("courseCode", courseGroup.getCourseCode());
+                model.addAttribute("groupName", courseGroup.getGroupName());
+
+                SchoolYearSemesterEntity schoolYearSemester = coursesService.findByIdSchoolYearSemester(courseGroup.getSchoolYearSemesterEntity().getId_schoolYear_semester());
+                System.out.println("tìm NH_HK: " + schoolYearSemester.getId_schoolYear_semester());
+                model.addAttribute("schoolYearId", schoolYearSemester.getSchoolYearsEntity().getId_school_year());
+                model.addAttribute("semesterId", schoolYearSemester.getSemestersEntity().getId_semester());
+            }
+        } else {
+            model.addAttribute("errorMessage", "Course not found.");
+        }
+        return "admin/EditCourse";
+    }
+
+    @Operation(summary = "Edit course", description = "edit course")
+    @ApiResponse(responseCode = "200", description = "Successfully edited course")
+    //    url = /user/edit-course
+    @PostMapping("/user/edit-course")
+    public String editCourse(@Valid @ModelAttribute CoursesDTO coursesDto, @RequestParam("courseIdWeb") Integer courseIdWeb,
+                             @RequestParam("schoolYearName") Integer schoolYearName,
+                             @RequestParam("semesterName") Integer semesterName,
+                             @RequestParam("courseCode") String courseCode,
+                             @RequestParam("groupName") String groupName,
+                             BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+        if (bindingResult.hasErrors()) {
+            List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+            model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+            model.addAttribute("coursesDto", coursesDto);
+            model.addAttribute("courseIdWeb", courseIdWeb);
+            return "admin/EditCourse";
+        }
+
+        Optional<CoursesEntity> courseOpt = coursesRepository.findByMoodleId(coursesDto.getId());
+        CategoriesEntity category = categoriesRepository.findByMoodleId(coursesDto.getCategoryid());
+        if (courseOpt.isPresent()) {
+            CoursesEntity course = courseOpt.get();
+            course.setMoodleId(coursesDto.getId());
+            course.setFullname(coursesDto.getFullname());
+            course.setShortname(coursesDto.getShortname());
+            course.setCategoriesEntity(category); // Sử dụng Integer trực tiếp
+            course.setSummary(coursesDto.getSummary());
+            coursesRepository.save(course);
+
+            CourseGroupsEntity courseGroup = coursesService.findByCoursesId(course);
+            SchoolYearSemesterEntity getSchoolYearSemesterEntity = coursesService.getOrCreateSchoolYearSemester(schoolYearName, semesterName);
+            if(courseGroup != null) { //tìm thấy course đã có nhóm học phan thì cập nhật lại nhóm học phần đó thoi
+                courseGroup.setCourseCode(courseCode);
+                courseGroup.setGroupName(groupName);
+                courseGroup.setCoursesEntity(course);
+                courseGroup.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+                courseGroupsRepository.save(courseGroup);
+            }
+            else {//sửa các khóa học đc tạo trên moodle đồng bộ về web
+                CourseGroupsEntity courseGroupsEntity = new CourseGroupsEntity();
+                courseGroupsEntity.setCourseCode(courseCode);
+                courseGroupsEntity.setGroupName(groupName);
+                courseGroupsEntity.setCoursesEntity(course);
+                courseGroupsEntity.setSchoolYearSemesterEntity(getSchoolYearSemesterEntity);
+                courseGroupsRepository.save(courseGroupsEntity);
+            }
+
+            boolean moodleUpdated = coursesService.updateMoodleCourse(coursesDto);
+            if (moodleUpdated) {
+                redirectAttributes.addFlashAttribute("successMessage", "Sửa khóa học thành công!");
+                return "redirect:/user/courses";
+            } else {
+                model.addAttribute("errorMessage", "Cập nhật không thành công. Vui lòng thử lại!");
+                List<CategoryHierarchyDTO> categoriesHierarchy = categoriesService.getParentChildCategories();
+                model.addAttribute("categoriesHierarchy", categoriesHierarchy);
+                model.addAttribute("coursesDto", coursesDto);
+                model.addAttribute("courseIdWeb", courseIdWeb);
+                return "admin/EditCourse";
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Course not found.");
+            return "redirect:/user/courses";
+        }
     }
 
 //dành cho: admin-gv

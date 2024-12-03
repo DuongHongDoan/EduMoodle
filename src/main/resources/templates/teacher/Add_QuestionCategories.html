@@ -16,48 +16,58 @@
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
 
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            font-size: 16px;
+        /*body {*/
+        /*    font-family: 'Roboto', sans-serif;*/
+        /*    background-color: #f4f6f9;*/
+        /*    color: #333;*/
+        /*    font-size: 16px;*/
+        /*}*/
+
+        .container-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 30px;
+            max-width: 100%;
+            overflow-x: auto;
         }
 
-        .container1 {
-            padding-top: 30px;
-        }
-
-        .add-category-form {
-            max-width: 700px;
-            margin: 0 auto;
+        .container1, .container2 {
+            flex: 1;
+            min-width: 48%; /* Giới hạn chiều rộng để hai container không quá lớn */
             background: #ffffff;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             padding: 30px 40px;
-            transition: all 0.3s;
         }
 
-        .add-category-form:hover {
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        .container1 {
+            /* Container1 sẽ nằm bên trái */
+            margin-right: 10px; /* Tạo khoảng cách giữa hai container */
         }
 
-        .add-category-form h1 {
+        .container2 {
+            /* Container2 sẽ nằm bên phải */
+        }
+
+        h1 {
             text-align: center;
-            color: #007bff;
+            color: #101214;
             font-weight: 700;
             margin-bottom: 20px;
-            font-size: 2em;
+            font-size: 1.8em;
         }
 
+        /* Điều chỉnh các thành phần form */
         .form-group {
+            margin-top: 40px;
             margin-bottom: 20px;
         }
 
         .form-control {
-            border: 1px solid #ced4da;
             border-radius: 5px;
             padding: 10px;
-            transition: border-color 0.3s;
+            border: 1px solid #ced4da;
         }
 
         .form-control:focus {
@@ -65,9 +75,13 @@
             box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         }
 
+        .btn-container {
+            text-align: right;
+            margin-top: 20px;
+        }
+
         .btn {
-            width: auto;
-            padding: 5px 10px;
+            padding: 10px 15px;
             font-size: 0.9em;
             border-radius: 5px;
             transition: background-color 0.3s;
@@ -83,98 +97,102 @@
             border-color: #0056b3;
         }
 
-        .btn-secondary {
-            margin-top: 10px;
-        }
         .required {
-            color: red;
-            font-weight: bold;
+            color: red; /* Màu đỏ cho dấu * */
         }
 
     </style>
 </head>
 
-<body>
-<div class="container1 add-category-form" layout:fragment="body">
-    <h1>Thêm Danh Mục Câu Hỏi</h1>
+<body layout:fragment="body">
+<div class="container-wrapper">
+    <div class="container1 add-category-form">
 
-    <form th:action="@{/uploadExcel}" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="courseId" th:value="${courseId}" />
 
-        <!-- Chọn danh mục cha -->
-        <div class="form-group">
-            <label for="parentCategoryForColumn2">Chọn danh mục cha: <span class="required">*</span></label>
-            <select name="parentCategoryForColumn2" id="parentCategoryForColumn2" class="form-control" required>
-                <option value="">-- Chọn danh mục --</option>
-                <th:block th:each="category : ${parentCategories}">
-                    <option th:value="${category.id}" th:text="${category.name}"></option>
-                    <!-- Gọi fragment đệ quy nếu tồn tại danh mục con -->
-                    <th:block th:if="${category.children != null}">
-                        <th:block th:insert="this :: renderOptions(children=${category.children}, indent='&nbsp;&nbsp;&nbsp;&nbsp;')"/>
+        <form th:action="@{/uploadExcel}" method="post" enctype="multipart/form-data">
+            <h1>Tải ma trận ngân hàng đề thi</h1>
+            <input type="hidden" name="courseId" th:value="${courseId}" />
+
+            <!-- Chọn danh mục cha -->
+            <div class="form-group">
+                <label for="parentCategoryForColumn2">Chọn danh mục cha: <span class="required">*</span></label>
+                <select name="parentCategoryForColumn2" id="parentCategoryForColumn2" class="form-control" required>
+                    <option value="">-- Chọn danh mục --</option>
+                    <option value="0">Top</option>
+                    <th:block th:each="category : ${parentCategories}">
+                        <option th:value="${category.id}" th:text="${category.name}"></option>
                     </th:block>
-                </th:block>
-            </select>
-        </div>
+                </select>
+            </div>
 
 
-        <div class="form-group">
-            <label for="file">Chọn file Excel: <span class="required">*</span></label>
-            <input type="file" id="file" name="file" class="form-control" required />
-        </div>
+            <div class="form-group">
+                <label for="file">Chọn file Excel: <span class="required">*</span></label>
+                <input type="file" id="file" name="file" class="form-control" required accept=".xls,.xlsx" />
 
-        <button type="submit" class="btn btn-primary">Tải lên</button>
-    </form>
+            </div>
 
+            <button type="submit" class="btn btn-primary">Tải lên</button>
+            <br>
 
-    <!-- Form thêm danh mục câu hỏi -->
-    <form th:action="@{/teacher/courses/view/Add_QuestionCategories}" method="post">
-        <input type="hidden" name="courseid" th:value="${courseId}" />
+            <div >
+                <a th:href="@{/teacher/courses/view/list_question(courseId=${courseId})}" class="back-btn">Danh sách danh mục</a>
+            </div>
+        </form>
+    </div>
 
-        <div class="form-group">
-            <label for="name">Tên Danh Mục: <span class="required">*</span></label>
-            <input type="text" id="name" name="name" class="form-control" placeholder="Nhập tên danh mục" required />
-        </div>
+    <div class="container2">
+        <!-- Form thêm danh mục câu hỏi -->
+        <form th:action="@{/teacher/courses/view/Add_QuestionCategories}" method="post">
 
-        <div class="form-group">
-            <label for="info">Thông Tin:</label>
-            <textarea id="info" name="info" class="form-control" rows="4" placeholder="Nhập thông tin về danh mục"></textarea>
-        </div>
+            <h1>Thêm Danh Mục Câu Hỏi</h1>
+            <input type="hidden" name="courseid" th:value="${courseId}" />
 
-        <div class="form-group">
-            <label for="parent">Danh Mục Cha:<span class="required">*</span></label>
-            <select id="parent" name="parent" class="form-control">
-                <option value="">-- Chọn danh mục --</option>
-                <th:block th:each="category : ${categories}">
-                    <option th:value="${category.id}" th:text="${category.name}"></option>
-                </th:block>
-                <!--                <option value="0">&#45;&#45; Không có &#45;&#45;</option>-->
-                <th:block th:each="category : ${parentCategories}">
-                    <option th:value="${category.id}" th:text="${category.name}"></option>
-                    <!-- Gọi fragment đệ quy để xử lý danh mục con -->
-                    <th:block th:if="${category.children != null}">
-                        <th:block th:insert="this :: renderOptions(children=${category.children}, indent='&nbsp;&nbsp;&nbsp;&nbsp;')"/>
+            <div class="form-group">
+                <label for="name">Tên Danh Mục: <span class="required">*</span></label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Nhập tên danh mục" required />
+            </div>
+
+            <div class="form-group">
+                <label for="info">Thông Tin:</label>
+                <textarea id="info" name="info" class="form-control" rows="4" placeholder="Nhập thông tin về danh mục"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="parent">Danh Mục Cha:<span class="required">*</span></label>
+                <select id="parent" name="parent" class="form-control">
+                    <option value="">-- Chọn danh mục --</option>
+                    <option value="0">Top</option>
+                    <th:block th:each="category : ${categories}">
+                        <option th:value="${category.id}" th:text="${category.name}"></option>
                     </th:block>
-                </th:block>
-
-                <!-- Fragment đệ quy -->
-                <th:block th:fragment="renderOptions(children, indent)">
-                    <th:block th:each="child : ${children}">
-                        <option th:value="${child.id}" th:text="${indent + child.name}"></option>
-                        <!-- Gọi lại fragment nếu tồn tại danh mục con -->
-                        <th:block th:if="${child.children != null}">
-                            <th:block th:insert="this :: renderOptions(children=${child.children}, indent=${indent + '&nbsp;&nbsp;&nbsp;&nbsp;'})"/>
+                    <!--                <option value="0">&#45;&#45; Không có &#45;&#45;</option>-->
+                    <th:block th:each="category : ${parentCategories}">
+                        <option th:value="${category.id}" th:text="${category.name}"></option>
+                        <!-- Gọi fragment đệ quy để xử lý danh mục con -->
+                        <th:block th:if="${category.children != null}">
+                            <th:block th:insert="~{this :: renderOptions(children=${category.children}, indent='&nbsp;&nbsp;&nbsp;&nbsp;')}"/>
                         </th:block>
                     </th:block>
-                </th:block>
 
-            </select>
-        </div>
+                    <!-- Fragment đệ quy -->
+                    <th:block th:fragment="renderOptions(children, indent)">
+                        <th:block th:each="child : ${children}">
+                            <option th:value="${child.id}" th:text="${indent + child.name}"></option>
+                            <!-- Gọi lại fragment nếu tồn tại danh mục con -->
+                            <th:block th:if="${child.children != null}">
+                                <th:block th:insert="~{this :: renderOptions(children=${child.children}, indent=${indent + '&nbsp;&nbsp;&nbsp;&nbsp;'})}"/>
+                            </th:block>
+                        </th:block>
+                    </th:block>
 
-        <button type="submit" class="btn btn-primary">Thêm Danh Mục</button>
-        <div class="btn-container">
-            <a th:href="@{/teacher/courses/view/list_question(courseId=${courseId})}" class="btn btn-secondary mt-3">Danh sách danh mục</a>
-        </div>
-    </form>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Thêm Danh Mục</button>
+
+        </form>
+    </div>
 </div>
 </body>
 </html>

@@ -1,6 +1,5 @@
 package com.example.edumoodle.Service;
 
-
 import com.example.edumoodle.DTO.QuestionAnswersDTO;
 import com.example.edumoodle.DTO.QuestionsDTO;
 import com.example.edumoodle.DTO.QuestionsResponseDTO;
@@ -52,7 +51,7 @@ public class QuestionsService {
         this.restTemplate = new RestTemplate();
     }
 
-    public QuestionsResponseDTO getQuestionsByCategory(Long categoryId) {
+    public QuestionsResponseDTO getQuestionsByCategory(Integer categoryId) {
         // Định nghĩa tên hàm API của Moodle
         String apiMoodleFunc = "local_question_get_question_by_category";
 
@@ -460,4 +459,3 @@ public class QuestionsService {
         }
     }
 }
-

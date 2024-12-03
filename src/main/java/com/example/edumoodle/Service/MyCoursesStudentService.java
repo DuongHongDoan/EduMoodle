@@ -429,6 +429,7 @@ public class MyCoursesStudentService {
         String getQuizDetailsFunction = "mod_quiz_get_quizzes_by_courses";
         Double maxGrade = null;
         Integer numberOfQuestions = null;
+        String quizName = null; // Thêm biến để lưu tên bài kiểm tra
 
         try {
             String getQuizDetailsUrl = domainName + "/webservice/rest/server.php" +
@@ -452,6 +453,8 @@ public class MyCoursesStudentService {
                     if (quizDetails.optString("id").equals(quizId)) {
                         maxGrade = quizDetails.optDouble("grade", 0.0); // Lấy maxGrade
                         numberOfQuestions = quizDetails.optInt("sumgrades", 0); // Lấy sumgrades làm số câu hỏi
+                        quizName = quizDetails.optString("name", ""); // Lấy tên bài kiểm tra
+                        System.out.println("quiz nam ne: " + quizName);
                         System.out.println("Max Grade: " + maxGrade + ", Total Questions: " + numberOfQuestions);
                         break;  // Thoát vòng lặp sau khi tìm thấy quiz tương ứng
                     }
@@ -465,7 +468,7 @@ public class MyCoursesStudentService {
             System.out.println("Error: " + e.getMessage());
         }
 
-        return new QuizDetails(maxGrade, numberOfQuestions); // Trả về chi tiết quiz
+        return new QuizDetails(maxGrade, numberOfQuestions, quizName); // Trả về chi tiết quiz
     }
 
     // bai thi
@@ -549,7 +552,11 @@ public class MyCoursesStudentService {
 
                 // Lấy nội dung câu hỏi
                 String questionText = doc.select(".qtext").text();
-                String correctResponse = cleanResponse(doc.select(".rightanswer").text().replace("The correct answer is: ", ""));
+                String correctResponse = cleanResponse(
+                        doc.select(".rightanswer").text()
+                                .replace("The correct answer is: ", "")
+                                .replaceAll("Đáp án chính xác là \"(.*?)\"", "$1")
+                );
 
                 // Lấy tất cả các phương án trả lời
                 Elements answerElements = doc.select(".answer .r0, .answer .r1");
@@ -590,7 +597,7 @@ public class MyCoursesStudentService {
     }
     // Hàm để loại bỏ các ký tự như a., b., c. từ câu trả lời
     private String cleanResponse(String response) {
-        return response.replaceAll("^[a-d]\\.", "").trim(); // Loại bỏ a., b., c., d. ở đầu và khoảng trắng thừa
+        return response.replaceAll("^[a-zA-Z]\\.\\s*", "").trim();
     }
 
     // Lưu khóa học vừa truy cập vào cơ sở dữ liệu

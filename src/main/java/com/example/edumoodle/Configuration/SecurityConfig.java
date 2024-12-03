@@ -39,7 +39,7 @@ public class SecurityConfig {
 
         http.csrf().disable().authorizeHttpRequests()
                 .requestMatchers("/user/home", "/user/courses/search", "/user/courses", "/user/courses/category").permitAll()
-                .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN", "editingteacher")
                 .requestMatchers("/manage/**").hasAnyAuthority("editingteacher", "ADMIN")
                 .requestMatchers("/user/**").hasAnyAuthority("editingteacher", "student")
                 .anyRequest().authenticated().and()

@@ -5,121 +5,132 @@
       xmlns:sec="http://www.w3.org/1999/xhtml"
       layout:decorate="~{layout}">
 <head>
-  <title th:utext="'Course: ' + ${courseDetails.fullname}" layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">{Găn tên khóa học}</title>
-  <style>
-    .courses-name {
-        border-bottom: 2px solid #1f5ca9;
-    }
+    <title th:utext="'Course: ' + ${courseDetails.fullname}" layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">{Găn tên khóa học}</title>
+    <style>
+        body {
+           display: flex;
+           flex-direction: column;
+           min-height: 100vh;
+           margin: 0;
+       }
 
-    .tab-content {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 0.25rem;
-        border: 1px solid #dee2e6;
-    }
+       /* Content area grows to fill available space */
+       .content {
+           flex: 1;
+       }
+       .courses-name {
+           border-bottom: 2px solid #1f5ca9;
+       }
 
-    .topic-name {
-        font-size: 1.5rem;
-    }
+       .tab-content {
+           background-color: #f8f9fa;
+           padding: 1rem;
+           border-radius: 0.25rem;
+           border: 1px solid #dee2e6;
+       }
 
-    .module-list li{
-        list-style: none;
-        font-size: 1.2rem;
-        border: 1px solid #e1e1e1;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 8px;
-    }
+       .topic-name {
+           font-size: 1.5rem;
+       }
 
-    .module-list li a {
-        text-decoration: none;
-    }
+       .module-list li{
+           list-style: none;
+           font-size: 1.2rem;
+           border: 1px solid #e1e1e1;
+           border-radius: 10px;
+           padding: 12px;
+           margin-bottom: 8px;
+       }
 
-    .activity-name-link:hover,
-    .activity-add-text:hover{
-        text-decoration: underline;
-    }
+       .module-list li a {
+           text-decoration: none;
+       }
 
-    .btn-cate i {
-        margin-right: 5px;
-    }
+       .activity-name-link:hover,
+       .activity-add-text:hover{
+           text-decoration: underline;
+       }
 
-    .btn-create:hover {
-        background-color: #7ac7e3 !important;
-    }
-    .listStudent {
-        list-style: none;
-        font-size: 1.2rem;
-    }
+       .btn-cate i {
+           margin-right: 5px;
+       }
 
-    .listStudent li {
-        margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #e1e1e1;
-    }
+       .btn-create:hover {
+           background-color: #7ac7e3 !important;
+       }
+       .listStudent {
+           list-style: none;
+           font-size: 1.2rem;
+       }
 
-    .action-icons {
-        font-size: 1.2rem;
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        cursor: pointer;
-        justify-content: end;
-    }
+       .listStudent li {
+           margin-bottom: 12px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           border-bottom: 1px solid #e1e1e1;
+       }
 
-    .gv-sv {
-        border-bottom: 1px solid #dee2e6;
-    }
+       .action-icons {
+           font-size: 1.2rem;
+           display: flex;
+           align-items: center;
+           gap: 11px;
+           cursor: pointer;
+           justify-content: end;
+       }
 
-    .btn-add-resource, .bi-pencil-fill, .bi-trash, .btn-add-topic, hr {
-        display: none;
-    }
+       .gv-sv {
+           border-bottom: 1px solid #dee2e6;
+       }
 
-<!--      bảng điểm số -->
-      /* General table styling */
-        #gradesTable {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        #gradesTable th, #gradesTable td {
-            padding: 8px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        #gradesTable thead {
-            background-color: #f2f2f2;
-        }
+       .btn-add-resource, .bi-pencil-fill, .bi-trash, .btn-add-topic, hr {
+           display: none;
+       }
 
-        /* Course Name Row */
-        .course-name-row {
-            font-weight: bold;
-            background-color: #e7f3ff;
-        }
+       <!--      bảng điểm số -->
+       /* General table styling */
+       #gradesTable {
+           width: 100%;
+           border-collapse: collapse;
+       }
+       #gradesTable th, #gradesTable td {
+           padding: 8px;
+           text-align: left;
+           border: 1px solid #ddd;
+       }
+       #gradesTable thead {
+           background-color: #f2f2f2;
+       }
 
-        /* Indent for Quiz/Test rows */
-        .grade-item-row .item-name {
-            padding-left: 20px;
-        }
+       /* Course Name Row */
+       .course-name-row {
+           font-weight: bold;
+           background-color: #e7f3ff;
+       }
 
-        /* Item type and name styling */
-        .item-type {
-            display: block;
-            font-weight: bold;
-        }
+       /* Indent for Quiz/Test rows */
+       .grade-item-row .item-name {
+           padding-left: 20px;
+       }
 
-        /* Student name styling */
-        .student-name {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-        }
-  </style>
+       /* Item type and name styling */
+       .item-type {
+           display: block;
+           font-weight: bold;
+       }
+
+       /* Student name styling */
+       .student-name {
+           font-size: 1.2em;
+           font-weight: bold;
+           margin-bottom: 15px;
+           color: #333;
+       }
+    </style>
 </head>
 <body>
-<div class="container mt-3 mb-3" layout:fragment="body">
+<div class="container mt-3 mb-3 content" layout:fragment="body">
     <!-- phần thông báo chỉ xuất hiện khi nhấn nút xóa người dùng -->
     <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${successMessage}"></span>
@@ -137,16 +148,16 @@
         </div>
     </div>
 
-    <div class="row mt-3" sec:authorize="hasAuthority('editingteacher')">
+    <div class="row mt-3" sec:authorize="hasAuthority('editingteacher') or hasAuthority('student')" th:if="${teacherUserName} != ${username}">
         <p>Bạn không thể tự đăng ký vào khóa học</p>
     </div>
-    <div class="row mt-3" sec:authorize="hasAuthority('editingteacher')">
-        <a th:href="@{/user/home}">Quay lại trang chủ</a>
+    <div class="row mt-3" sec:authorize="hasAuthority('editingteacher') or hasAuthority('student')" th:if="${teacherUserName} != ${username}">
+        <a th:href="@{/user/courses}">Quay lại trang chủ</a>
     </div>
 
-    <div class="row mt-3" sec:authorize="hasAuthority('ADMIN')">
+    <div class="row mt-3" th:if="${teacherUserName} == ${username}">
         <div class="col">
-          <!-- Tab navigation -->
+            <!-- Tab navigation -->
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher') or hasAuthority('student')" class="nav-item" role="presentation">
                     <button class="nav-link active" id="khoahoc-tab" data-bs-toggle="tab" data-bs-target="#khoahoc" type="button" role="tab" aria-controls="khoahoc" aria-selected="true">Khóa học</button>
@@ -165,9 +176,9 @@
                 </li>
             </ul>
 
-          <!-- Tab content -->
+            <!-- Tab content -->
             <div class="tab-content" id="myTabContent">
-              <!-- Tab Khóa học -->
+                <!-- Tab Khóa học -->
                 <div class="tab-pane fade active show" id="khoahoc" role="tabpanel" aria-labelledby="khoahoc-tab">
                     <div class="accordion mt-3" id="accordionExample">
                         <div sec:authorize="hasAuthority('ADMIN')  or hasAuthority('editingteacher')" class="col mb-3 d-flex justify-content-end">
@@ -248,13 +259,13 @@
                                             <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'quiz'}" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-check2-square"></i>
                                                 <span th:utext="${module.name}" class="activity-name">Module Name</span>
-<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                                 <input type="text" class="edit-activity-input" style="display: none;" />
                                             </a>
                                             <a sec:authorize="hasAuthority('student')" th:if="${module.modname == 'quiz'}" th:href="@{/user/quizCourseStudent(quizId=${module.instance}, moodleCourseId=${courseDetails.id}, userId=${userId})}" style="margin-left: 12px;" class="activity-name-link">
                                                 <i class="bi bi-check2-square"></i>
                                                 <span th:utext="${module.name}" class="activity-name">Module Name</span>
-<!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
+                                                <!--                                                (<span th:utext="${module.modname}">Module Type</span>)-->
                                                 <input type="text" class="edit-activity-input" style="display: none;" />
                                             </a>
                                             <a sec:authorize="hasAuthority('ADMIN') or hasAuthority('editingteacher')" th:if="${module.modname == 'quiz'}" th:href="@{/manage/courses/report(courseId=${courseDetails.id}, quizId=${module.instance})}" title="Xem kết quả các bài kiểm tra">
@@ -470,12 +481,12 @@
                 </div>
                 <!-- Tab Điểm số -->
                 <div class="tab-pane fade" id="grades" role="tabpanel" aria-labelledby="grade-tab">
-<!--                    <div class="row">-->
-<!--                        <h4 class="mb-3">Điểm số</h4>-->
-<!--                    </div>-->
-<!--                    <div class="row">-->
+                    <!--                    <div class="row">-->
+                    <!--                        <h4 class="mb-3">Điểm số</h4>-->
+                    <!--                    </div>-->
+                    <!--                    <div class="row">-->
 
-<!--                    </div>-->
+                    <!--                    </div>-->
                     <div th:if="${grades != null}">
                         <table border="1" id="gradesTable">
                             <thead>

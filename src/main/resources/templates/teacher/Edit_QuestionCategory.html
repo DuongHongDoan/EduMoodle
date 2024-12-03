@@ -24,10 +24,12 @@
         }
 
         h2 {
-            font-size: 22px;
+            font-size: 30px;
             color: #333;
+            font-weight: bold;:
             text-align: center;
             margin-bottom: 20px;
+            text-align: center;
         }
 
         .alert {
@@ -37,12 +39,13 @@
         .form-group label {
             font-weight: bold;
             color: #555;
+            font-size:17px;
         }
 
         .form-control {
             border-radius: 5px;
             box-shadow: none;
-            font-size: 14px;
+            font-size: 16px;
             padding: 8px 12px;
         }
 
@@ -54,7 +57,7 @@
         .btn {
             border-radius: 5px;
             padding: 8px 16px;
-            font-size: 14px;
+            font-size: 16px;
             text-transform: uppercase;
         }
 
@@ -103,7 +106,7 @@
 </head>
 <body>
 <div class="container1 mt-5" layout:fragment="body">
-    <h2>Cập Nhật Danh Mục Câu Hỏi</h2>
+    <h2>Cập Nhật Danh Mục Câu hỏi</h2>
 
     <!-- Hiển thị thông báo nếu có -->
     <div th:if="${message}" class="alert alert-success">
@@ -127,11 +130,8 @@
             <label for="info">Mô Tả</label>
             <textarea class="form-control" id="info" name="info" rows="3" th:text="${info}"></textarea>
         </div>
-
-        <div class="form-group">
-            <label for="contextId">Context ID</label>
-            <input type="number" class="form-control" id="contextId" name="contextId" th:value="${contextId}" required>
-        </div>
+        <!-- Loại bỏ phần hiển thị Context ID và thay bằng input ẩn -->
+        <input type="hidden" name="contextId" th:value="${contextId}">
 
         <div class="form-group">
             <label for="parent">Danh Mục Cha</label>
@@ -141,6 +141,7 @@
                         th:text="${category.name}"
                         th:selected="${category.id == parent}"></option>
             </select>
+
         </div>
 
 

@@ -5,10 +5,22 @@
       layout:decorate="~{layout}">
 <head>
   <meta charset="utf-8"/>
-<!--  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
+  <!--  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>-->
   <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Details quiz</title> <!-- Cập nhật tiêu đề -->
 
   <style>
+    body {
+       display: flex;
+       flex-direction: column;
+       min-height: 100vh;
+       margin: 0;
+   }
+
+   /* Content area grows to fill available space */
+   .content {
+       flex: 1;
+   }
+
     /* Style cho bảng và nút bấm */
     table {
       width: 100%;
@@ -71,17 +83,17 @@
   </style>
 </head>
 <body id="page-top" layout:fragment="body">
-<div class="container">
+<div class="container content">
 
   <!-- Nút Preview Quiz để bắt đầu làm bài -->
-<!--  <form th:action="@{/user/quiz/start}" method="get">-->
-<!--    <input type="hidden" name="quizId" th:value="${quizId}" />-->
-<!--    <input type="hidden" name="userId" th:value="${userId}" />-->
-<!--    <input type="hidden" name="attemptId" th:value="${attemptId}" /> &lt;!&ndash; Truyền attemptId khi bắt đầu lại bài kiểm tra &ndash;&gt;-->
-<!--    <button type="submit" class="btn">Requiz</button>-->
-<!--  </form>-->
+  <!--  <form th:action="@{/user/quiz/start}" method="get">-->
+  <!--    <input type="hidden" name="quizId" th:value="${quizId}" />-->
+  <!--    <input type="hidden" name="userId" th:value="${userId}" />-->
+  <!--    <input type="hidden" name="attemptId" th:value="${attemptId}" /> &lt;!&ndash; Truyền attemptId khi bắt đầu lại bài kiểm tra &ndash;&gt;-->
+  <!--    <button type="submit" class="btn">Requiz</button>-->
+  <!--  </form>-->
 
-  <h2 style="text-align: center">Chi tiết bài kiểm tra</h2>
+  <h2 style="text-align: center; margin-top: 10px">Chi tiết bài kiểm tra</h2>
 
   <!-- Kiểm tra nếu danh sách quizDetails rỗng -->
   <div th:if="${#lists.isEmpty(quizDetails)}">
@@ -132,6 +144,11 @@
             <!-- Trường ẩn để truyền giá trị đã tính toán của Score/MaxGrade -->
             <input type="hidden" name="scoreMaxGrade" th:value="${(attempt.score / numberOfQuestions) * maxGrade} + ' / ' + ${maxGrade}" />
 
+            <!-- Trường ẩn để truyền tên khóa học -->
+            <input type="hidden" name="courseName" th:value="${courseName}" />
+
+            <!-- Trường ẩn để truyền tên bài kiểm tra -->
+            <input type="hidden" name="quizName" th:value="${quizName}" />
             <button type="submit" class="btn">Xem lại</button>
           </form>
         </td>
